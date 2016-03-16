@@ -1,0 +1,162 @@
+#!/bin/bash
+#######################################################
+#
+#  A simple script designed to download and build the 
+#  latest PETSc and move it into place so that one need
+#  only perform: 
+#
+#  module load advanced_modules petsc-head
+#
+#####
+#
+# Start User Configuration
+#
+#######################################################
+
+# The module we use to build PETSc:
+if [ `uname` == "Darwin" ]; then
+  export BUILD_MODULE=mpich-3.1.4_clang
+else
+  export BUILD_MODULE=openmpi-1.8.4_gcc
+fi
+
+# Installation directory
+export INSTALL_DIR=$HOME/petsc_head
+
+# PETSc download URL
+export PETSC_URL=http://ftp.mcs.anl.gov/pub/petsc/petsc-dev.tar.gz
+
+#######################################################
+#
+# End User Configuration
+#
+#######################################################
+
+# Set the environment the way we like it
+unset MODULEPATH
+. /opt/moose/Modules/3.2.10/init/bash
+module purge
+module load advanced_modules cmake $BUILD_MODULE
+
+if [ -z $http_proxy ]; then
+	echo -e '\n\nWarning: http_proxy environment variable not set.\nNote: PETSc configure script (Python in particular) requires a proper syntax:\n\n\thttp_proxy=http://yourproxy.com:8080\n\nIf you do not sit behind a proxy, you can ignore this message. If the download \nappears to do nothing, then you probably need to set the above http_proxy variable.\n\n'
+	sleep 5
+elif [ `echo $http_proxy | grep http -c` -eq 0 ]; then
+	export http_proxy='http://'$http_proxy
+	echo $http_proxy
+fi
+
+############################
+### Backup previous petsc dir, download new tarball and extract it
+if [ -d $INSTALL_DIR/petsc ]; then
+  BACKUP_STATE='true'
+  if [ -d $INSTALL_DIR/petsc_$(date +%m-%d-%Y) ]; then
+    rm -rf $INSTALL_DIR/petsc_$(date +%m-%d-%Y)
+  fi
+  mv $INSTALL_DIR/petsc $INSTALL_DIR/petsc_$(date +%m-%d-%Y)
+fi
+mkdir -p $INSTALL_DIR
+
+# Clean old stuff, Download nightly snapshot, and extract it
+rm -rf $INSTALL_DIR/tmp_petsc-builds
+mkdir -p $INSTALL_DIR/tmp_petsc-builds
+cd $INSTALL_DIR/tmp_petsc-builds
+echo -e 'Downloading PETSc nightly build...'
+if [ -z $http_proxy ]; then
+  curl -O $PETSC_URL
+else
+  curl --proxy1.0 $http_proxy -O $PETSC_URL
+fi
+echo -e 'Extracting...'
+tar -xf petsc-dev.tar.gz -C .
+if [ $? -ne 0 ]; then 
+  echo -e '\n\nExtraction failed.\nCurrupt/Failed download? Perhaps you need to authenticate to the proxy?'
+  rm -rf $INSTALL_DIR/tmp_petsc-builds
+  if [ -z $BACKUP_STATE ]; then
+    exit 1
+  else
+    echo -e '\nNote: This script backed up a previous petsc head build:\n\n\t'$INSTALL_DIR'petsc_'$(date +%m-%d-%Y)'\n\nMove this back into place if you wish to preserve it:\n\n\trm -rf '$INSTALL_DIR'/petsc\n\tmv '$INSTALL_DIR'/petsc_'$(date +%m-%d-%Y)' '$INSTALL_DIR'/petsc\n\nExiting due to failure...'
+    exit 1
+  fi
+fi
+
+# Attempt to discover what directory just got extracted and cd into it. PETSc has changed this on me several times
+export TMP_PETSC_DIR=`find . -maxdepth 1 -type d -name "petsc-*"`
+cd $TMP_PETSC_DIR
+if [ $? -ne 0 ]; then
+  echo 'could not change into the build directory. It is likely this script needs to be updated.'
+  exit 1
+fi
+###
+############################
+
+echo -e '\n###############################\nBuild PETSc using the following modules:\n'
+module list
+echo -e '\nCC='$CC'\nCXX='$CXX'\nmpicc: '$(which mpicc)'\nmpicxx: '$(which mpicxx)'\n###############################'
+echo -e '\nContinuing in 5 seconds...'
+sleep 5
+
+# Configure PETSc the way we like it
+unset CC; unset CXX; unset FC; unset F77; unset F90
+./configure --prefix=$INSTALL_DIR/petsc \
+--download-hypre=1 \
+--with-ssl=0 \
+--with-debugging=0 \
+--with-pic=1 \
+--with-shared-libraries=1 \
+--with-cc=mpicc \
+--with-cxx=mpicxx \
+--with-fc=mpif90 \
+--download-fblaslapack=1 \
+--download-metis=1 \
+--download-parmetis=1 \
+--download-superlu_dist=1 \
+CC=mpicc CXX=mpicxx FC=mpif90 F77=mpif77 F90=mpif90 \
+CFLAGS='-fPIC -fopenmp' \
+CXXFLAGS='-fPIC -fopenmp' \
+FFLAGS='-fPIC -fopenmp' \
+FCFLAGS='-fPIC -fopenmp' \
+F90FLAGS='-fPIC -fopenmp' \
+F77FLAGS='-fPIC -fopenmp' \
+PETSC_DIR=`pwd`
+
+if [ $? -ne 0 ]; then
+  echo -e 'Configure failed with arch: '$BUILD_MODULE'\nYou can try switching to a different arch by editing '$0'\nand changing the variable BUILD_MODULE near the top of that file.'
+  exit 1
+fi
+# As long as the build steps never change this will work (but things always change, so this will break one day):
+# BUILD
+echo -e '\nRunning: make PETSC_DIR='`pwd`' '`perl -ne 'print "$&\n" if /PETSC_ARCH=[\w-]+/' $INSTALL_DIR/tmp_petsc-builds/$TMP_PETSC_DIR/configure.log`' all'
+make PETSC_DIR=`pwd` `perl -ne 'print "$&\n" if /PETSC_ARCH=[\w-]+/' $INSTALL_DIR/tmp_petsc-builds/$TMP_PETSC_DIR/configure.log` all
+if [ $? -ne 0 ]; then
+  echo -e '\nBuild failed...'
+  if [ -z $BACKUP_STATE ]; then
+    exit 1
+  else
+    echo -e '\nNote: This script backed up a previous petsc head build:\n\n\t'$INSTALL_DIR'/petsc_'$(date +%m-%d-%Y)'\n\nMove this back into place if you wish to preserve it:\n\n\trm -rf '$INSTALL_DIR'/petsc\n\tmv '$INSTALL_DIR'/petsc_'$(date +%m-%d-%Y)' '$INSTALL_DIR'/petsc\n\nExiting due to failure...'
+    exit 1
+  fi
+fi
+echo -e 'MAKE all completed'
+
+#INSTALL
+echo 'Running: make PETSC_DIR='`pwd`' '`perl -ne 'print "$&\n" if /PETSC_ARCH=[\w-]+/' $INSTALL_DIR/tmp_petsc-builds/$TMP_PETSC_DIR/configure.log`' install'
+make PETSC_DIR=`pwd` `perl -ne 'print "$&\n" if /PETSC_ARCH=[\w-]+/' $INSTALL_DIR/tmp_petsc-builds/$TMP_PETSC_DIR/configure.log` install
+if [ $? -ne 0 ]; then 
+  echo -e '\nInstall failed...'
+  if [ -z $BACKUP_STATE ]; then
+    exit 1
+  else
+    echo -e '\nNote: This script backed up a previous petsc head build:\n\n\t'$INSTALL_DIR'/petsc_'$(date +%m-%d-%Y)'\n\nMove this back into place if you wish to preserve it:\n\n\trm -rf '$INSTALL_DIR'/petsc\n\tmv '$INSTALL_DIR'/petsc_'$(date +%m-%d-%Y)' '$INSTALL_DIR'/petsc\n\nExiting due to failure...'
+    exit 1
+  fi
+fi
+echo 'MAKE install completed'
+
+#TEST
+echo 'Running: make PETSC_DIR='$INSTALL_DIR'/petsc test'
+# Donno why, but we end up outside the build directory, so get us back in there!
+cd $INSTALL_DIR/tmp_petsc-builds/$TMP_PETSC_DIR
+make PETSC_DIR=$INSTALL_DIR/petsc test
+echo -e '\nMAKE test complete.\n\n\tIf all the tests passed, you can now:\n\nmodule load advanced_modules petsc-head\n\n\tto use the PETSc libraries you just installed.'
+

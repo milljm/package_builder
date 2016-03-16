@@ -1,0 +1,4 @@
+#!/bin/bash
+set -e
+chown -R root:root /opt/moose
+echo -e '\nPost Install Notes\n\nAdd the following lines to your ~/.bashrc file to source the MOOSE compiler stack. Once complete it will be necessary to close any running terminals and re-open them to. Begin copy:\n\n\n## Uncomment the following line to enable pretty prompt:\n#export MOOSE_PROMPT=true\n\n## Uncomment the following line to enable autojump:\n#export MOOSE_JUMP=true\n\n## Source the MOOSE profile if moose_profile exists:\nif [ -f /opt/moose/environments/moose_profile ]; then\n  . /opt/moose/environments/moose_profile\nfi'

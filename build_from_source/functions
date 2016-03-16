@@ -1,0 +1,106 @@
+#!/bin/bash
+####
+# set common functions
+pause() {
+    if [ "$DEBUG" = true ]; then
+	read -p "Press Enter to continue.."
+    fi
+}
+
+download() {
+    if [ $DOWNLOAD = 'false' ]; then return; fi
+    for url in ${DOWNLOAD[*]}; do
+	echo 'Attempting to download file: '$url
+	if [ -f $DOWNLOAD_DIR/`basename $url` ]; then
+	    echo -e 'file already downloaded, skipping'
+	else
+	    curl -L -O $url
+	    if [ $? -ne 0 ]; then echo 'Failed to download '$url; cleanup 1; fi
+	    mv -f `basename $url` $DOWNLOAD_DIR/
+	fi
+    done
+}
+
+extract() {
+    if [ $EXTRACT = 'false' ]; then return; fi
+    for DFILE in ${EXTRACT[*]}; do
+	echo "Extracting "$DOWNLOAD_DIR/$DFILE" ..."
+	tar -xf $DOWNLOAD_DIR/$DFILE -C .
+	if [ $? -ne 0 ]; then
+	    echo -e 'Failed to extract '$DFILE '\n\n########################################\n\tIMPORTANT: You will need to delete the following file manually before re-running the build script.\n\tOtherwise this script will simply try to extract the same `failed` file.\n\tFile type is reporting as: '`file $DOWNLOAD_DIR/$DFILE | cut -d: -f2`'\n\n\t'$DOWNLOAD_DIR/$DFILE'\n\n########################################\n'
+	    cleanup 1
+	fi
+    done
+    cd $(echo ${EXTRACT[0]} | sed -e 's/[^a-zA-z]/ /g' | cut -d\  -f1)*
+}
+
+configure() {
+    if [ "$CONFIGURE" = 'false' ]; then return; fi
+    echo -e 'Configure '$PACKAGE' with the following options: '$CONFIGURE
+    pause
+    eval $CONFIGURE
+    if [ $? -ne 0 ]; then echo 'Failed to configure using following options: '$CONFIGURE; cleanup 1; fi
+    pause
+}
+
+build() {
+    if [ $BUILD = 'false' ]; then return; fi
+    echo -e 'Building '$PACKAGE' with JOB count: '$MOOSE_JOBS
+    pause
+    load_average=`bc -l <<< "scale=2; $MOOSE_JOBS/$MAX_JOBS"`
+    #make -l $load_average -j $MOOSE_JOBS
+    make -j $MOOSE_JOBS
+    if [ $? -ne 0 ]; then echo 'Failed to make '$1; cleanup 1; fi
+    pause
+}
+
+make_install() {
+    if [ $INSTALL = 'false' ]; then return; fi
+    echo -e 'Installing '$PACKAGE'...'
+    pause
+    make install
+    pause
+    if [ $? -ne 0 ]; then echo 'Failed to install '$1; cleanup 1; fi
+}
+
+cleanup() {
+    if [ $1 == 0 ]; then
+	echo 'Deleting temporary build location: '$src_temp
+	rm -rf $src_temp
+    else
+	echo 'Error while working on: '$PACKAGE' located at: '$src_temp
+    fi
+	exit $1
+}
+CONTINUE=false
+for OPERATING_SYSTEM in ${ARCH[*]}; do
+    if [ $OPERATING_SYSTEM = `uname` ]; then CONTINUE=true; fi
+done
+PROGRESS=$RELATIVE_DIR/progress
+if ! [ -f $PROGRESS ]; then touch $PROGRESS; fi
+if [ $CONTINUE = true ]; then
+    error=''
+    for dependency in ${DEP[*]}; do
+	if [ `grep -ci ^$dependency $PROGRESS` -eq 0 ]; then
+	    error+=$dependency' '
+	fi
+    done
+    if ! [ -z "$error" ]; then
+	echo -e '\nDependencies not met: '$error
+	exit 0
+    fi
+    export src_temp=`mktemp -d /tmp/src_temp_$PACKAGE.XXXXXX`
+    cd $src_temp
+    download
+    extract
+    pre_run $src_temp
+    configure
+    build
+    make_install
+    post_run $src_temp
+    echo $PACKAGE >> $PROGRESS
+    cleanup 0
+else
+    echo -e "This platform does not support "$PACKAGE
+    echo "$PACKAGE n/a" >> $PROGRESS
+fi
