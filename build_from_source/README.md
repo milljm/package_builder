@@ -24,7 +24,7 @@ ncurses-devel
 libedit-devel
 zlib-devel
 ```
-Note: For Darwin machines, simply having the Xcode Command Line Tools package will suffice.
+Note: For Darwin machines, simply having the Xcode Command Line Tools package will suffice.<br />
 Note: Install the 'devel' arch type for all of the above where labeled.
 
 The following is a list of executable binaries the scripts make use of:
