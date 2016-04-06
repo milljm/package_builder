@@ -145,6 +145,7 @@ def verifyArgs(args):
 def parseArguments(args=None):
   parser = argparse.ArgumentParser(description='Create Redistributable Package')
   parser.add_argument('-p', '--packages-dir', help='Directory where you installed everything to (/opt/moose)')
+  parser.add_argument('--package-type', help='Specify type of package to build. Valid values: deb rpm pkg')
   parser.add_argument('-f', '--force', action='store_const', const=True, default=False, help='Overwrites previous redistributable package build attempt')
   return verifyArgs(parser.parse_args(args))
 
