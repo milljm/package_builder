@@ -1,28 +1,14 @@
 #!/usr/bin/env python
 import os, sys, argparse, shutil, platform, subprocess, tempfile
 
-### PackageMaker location (default on OS X)
-_package_maker = '/Applications/PackageMaker.app/Contents/MacOS/PackageMaker'
-
-### List of OS X versions that need a symbolic link to openmp
-_need_symbolic_link = ['10.11', '10.12']
-
-### A dictionary of package types corresponding to OS type
-_pathetic_dict = {RPM : ['FEDORA', 'SUSE', 'CENTOS', 'RHEL'],
-                  DEB : ['UBUNTU', 'MINT', 'DEBIAN', 'KUBUNTU'],
-                  PKG : ['DARWIN']}
-
-### Conversion of OS X version to release name
-_mac_version_to_name = {'10.9'  : 'mavericks',
-                        '10.10' : 'yosemite',
-                        '10.11' : 'elcapitan',
-                        '10.12' : 'fuji'}
 
 class PackageCreator:
   """
 Base class for building packages
 """
-  def __init__(self):
+  def __init__(self, args):
+    self.args = args
+    self.uname = platform.platform()
     if self.uname.upper().find('DARWIN') != -1:
       self.system = 'darwin'
       self.version = '.'.join(platform.mac_ver()[0].split('.')[:-1])
@@ -31,7 +17,6 @@ Base class for building packages
       self.system, self.version, self.release = platform.linux_distribution()
 
     self.temp_dir = tempfile.mkdtemp()
-    self.uname = platform.platform()
     self.redistributable_version = self._get_build_version()
     self.redistributable_name = self.release + '-environment_' + str(self.redistributable_version) + '.' + self.__class__.__name__.lower()
 
@@ -48,20 +33,25 @@ Base class for building packages
         version_file.write(str(new_version))
         return new_version
 
+  def clean_up(self):
+    shutil.rmtree(self.temp_dir)
+
   def prepare_area(self):
     try:
-      #shutil.copytree(os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), self.__class__.__name__.lower()), self.temp_dir, symlinks=False, ignore=None)
-      print 'copy tree:\n', os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), self.__class__.__name__.lower()) , self.temp_dir
+      shutil.copytree(os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), self.__class__.__name__.lower()), \
+                      os.path.join(self.temp_dir, self.__class__.__name__.lower()), symlinks=False, ignore=None)
     except os.error, err:
-      return False, err
+      print err
+      return False
     return True
 
-  def create_tarball(self, source):
+  def create_tarball(self):
     try:
-      #shutil.make_archive(os.path.join(self.temp_dir, self.__class__.__name__.lower()), 'gztar', source)
-      print 'Create tarball:', os.path.join(self.temp_dir, self.__class__.__name__.lower()), 'gztar', source
+      print 'Creating tarball...'
+      shutil.make_archive(os.path.join(self.temp_dir, self.__class__.__name__.lower(), 'payload'), 'gztar', self.args.packages_dir)
     except os.error, err:
-      return False, err
+      print err
+      return False
     return True
 
   def create_redistributable(self):
@@ -69,6 +59,7 @@ Base class for building packages
 
   def commit_version_change(self):
     return True
+
 
 class DEB(PackageCreator):
   """
@@ -76,8 +67,7 @@ Class for building Debian based packages
 """
   def create_redistributable(self):
     return True
-  def commit_version_change(self):
-    return True
+
 
 class RPM(PackageCreator):
   """
@@ -85,46 +75,30 @@ Class for building RedHat based packages
 """
   def create_redistributable(self):
     return True
-  def commit_version_change(self):
-    return True
 
 
 class PKG(PackageCreator):
   """
 Class for building Macintosh Packages
 """
-  def __init__(self, args):
-    self.args = args
-    self.arch = OSArch()
-    self.redistributable_version = self._get_build_version()
-    self.redistributable_name = self.arch.release + '-environment_' + str(self.redistributable_version) + '.pkg'
-
-  def _get_build_version(self):
-    # Increment our redistributable version
-    with open(os.path.join(args.relative_path, 'pkg/OSX', self.arch.version + '_build'), 'a') as version_file:
-      new_version = int(version_file.read()) + 1
-      version_file.truncate(0)
-      version_file.seek(0)
-      version_file.write(str(new_version))
-      return new_version
-
   def prepare_area(self):
-    if prepare_area(self.args, self.arch):
-      # Iterate through all files in the template pmdoc directory and modify version specs
-      for directory, directories, files in os.walk(os.path.join(self.arch.temp_dir, '-'.join([self.arch.system, self.arch.version]), 'OSX.pmdoc')):
+    create_template = PackageCreator.prepare_area(self)
+    if create_template:
+      for directory, directories, files in os.walk(os.path.join(self.temp_dir, 'pkg/OSX.pmdoc')):
         for xml_file in files:
-          with open(os.path.join(self.arch.temp_dir, '-'.join([self.arch.system, self.arch.version]), 'OSX.pmdoc', xml_file), 'a') as tmp_file:
+          with open(os.path.join(self.temp_dir, 'pkg/OSX.pmdoc', xml_file), 'r+') as tmp_file:
             xml_string = tmp_file.read()
             tmp_file.truncate(0)
             tmp_file.seek(0)
-            xml_string = xml_string.replace('<MAC_VERSION>', self.arch.version)
-            xml_string = xml_string.replace('<REDISTRIBUTABLE_FILE>', self.arch.redistributable_name)
+            xml_string = xml_string.replace('<TEMP_DIR>', os.path.join(self.temp_dir, 'pkg/OSX'))
+            xml_string = xml_string.replace('<MAC_VERSION>', self.version)
+            xml_string = xml_string.replace('<REDISTRIBUTABLE_FILE>', self.redistributable_name)
             tmp_file.write(xml_string)
 
       # Iterate through the all control files that redistributable package uses during installation and
       # make some path/version specific changes based on machine type
       for html_file in ['README_Panel.html', 'Welcome_Panel.html', 'cleanup_post.sh', 'payload_post.sh', 'common_post.sh', 'environment_post.sh']:
-        with open(os.path.join(self.arch.temp_dir, '-'.join([self.arch.system, self.arch.version]), 'OSX', html_file), 'a') as tmp_file:
+        with open(os.path.join(self.temp_dir, 'pkg/OSX', html_file), 'r+') as tmp_file:
           html_str = tmp_file.read()
           tmp_file.truncate(0)
           tmp_file.seek(0)
@@ -132,7 +106,7 @@ Class for building Macintosh Packages
           # If we are only building a package for OS X El Capitan (10.11), set a special
           # switch that allows the installer to create a symbolic link to our openMP
           # implementation (DYLD_LIBRARY_PATH issue)
-          if html_file == 'common_post.sh' and self.arch.version in _need_symbolic_link:
+          if html_file == 'common_post.sh' and self.version in _need_symbolic_link:
             html_str = html_str.replace('<BOOL>', '1')
           else:
             html_str = html_str.replace('<BOOL>', '0')
@@ -140,24 +114,14 @@ Class for building Macintosh Packages
           html_str = html_str.replace('<PACKAGES_DIR>', self.args.packages_dir)
           html_str = html_str.replace('<REDISTRIBUTABLE_VERSION>', 'Package version: ' + str(self.redistributable_version))
           tmp_file.write(html_str)
-      return True
-    return False
-
-  def create_tarball(self):
-    print 'Building tarball. This step can take a while...'
-    os.chdir(self.args.packages_dir)
-    try:
-      shutil.make_archive(os.path.join(self.arch.temp_dir, '-'.join([self.arch.system, self.arch.version]), 'OSX', 'payload'), 'gztar', '.')
-      print 'Tarball created'
-    except os.error, err:
-      print 'there was an error building tarball:', err
+      return True      
+    else:
       return False
-    return True
 
   def create_redistributable(self):
-    os.chdir(os.path.join(self.arch.temp_dir, '-'.join([self.arch.system, self.arch.version])))
+    os.chdir(self.temp_dir)
     print 'Building redistributable package. This step can also take some time...'
-    package_builder = subprocess.Popen([self.args.package_maker, '--doc', os.path.join(self.arch.temp_dir, '-'.join([self.arch.system, self.arch.version]), 'OSX.pmdoc')],
+    package_builder = subprocess.Popen([self.args.package_maker, '--doc', os.path.join(self.temp_dir, 'pkg/OSX.pmdoc')],
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE,
                                        shell=False)
@@ -167,12 +131,16 @@ Class for building Macintosh Packages
       print 'There was error building the redistributable package using PackageMaker:\n\n', results[1]
       return False
     else:
+      shutil.move(os.path.join(self.temp_dir, 'osx.pkg'), os.path.join(self.args.relative_path, 'osx.pkg'))
+      print 'Redistributable built! You should now sign the package using the following command:\n\n\t' \
+          'productsign --sign "Developer ID Installer: BATTELLE ENERGY ALLIANCE, LLC (J2Y4H5G88N)"', \
+          os.path.join(self.args.relative_path, 'osx.pkg'), \
+          os.path.join(self.args.relative_path, self.redistributable_name), \
+          '\n\nOnce complete, you can verify your package has been correctly signed by running the following command:\n\n\t', \
+          'spctl -a -v --type install', os.path.join(self.args.relative_path, self.redistributable_name), \
+          '\n\nFollowing that, your package (', os.path.join(self.args.relative_path, self.redistributable_name), \
+          ')is ready for distribution'
       return True
-
-  def commit_version_change(self):
-    ### TODO
-    # Interface with git and commit/push the changes upstream
-    return True
 
 def verifyArgs(args):
   fail = False
@@ -230,10 +198,27 @@ def parseArguments(args=None):
   return verifyArgs(parser.parse_args(args))
 
 
+### PackageMaker location (default on OS X)
+_package_maker = '/Applications/PackageMaker.app/Contents/MacOS/PackageMaker'
+
+### List of OS X versions that need a symbolic link to openmp
+_need_symbolic_link = ['10.11', '10.12']
+
+### A dictionary of class pointers corresponding to OS type
+_pathetic_dict = { RPM : ['FEDORA', 'SUSE', 'CENTOS', 'RHEL'],
+                   DEB : ['UBUNTU', 'MINT', 'DEBIAN', 'KUBUNTU'],
+                   PKG : ['DARWIN']}
+
+### Conversion of OS X version to release name
+_mac_version_to_name = {'10.9'  : 'mavericks',
+                        '10.10' : 'yosemite',
+                        '10.11' : 'elcapitan',
+                        '10.12' : 'fuji'}
+
 if __name__ == '__main__':
   args = parseArguments()
   package = args.package_type(args)
   if package.prepare_area():
     if package.create_tarball():
       if package.create_redistributable():
-        print 'profit!'
+        package.clean_up()
