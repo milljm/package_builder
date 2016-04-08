@@ -1,21 +1,8 @@
 Package: moose-environment
-Version: 1.1-39
+Version: 1.1-<VERSION>
 Architecture: amd64
 Depends: build-essential, gfortran, freeglut3, tcl, m4, libblas-dev, liblapack-dev
 Maintainer: Jason Miller <jason.miller@inl.gov>
 Description: MOOSE Compiler Stack
- This package contians pre-compilied binaries for; 
- GCC 5.2.0
- Clang 3.7.0
- TBB (Intel's Threading Building Blocks)
- OpenMPI 1.8.4
- PETSc-3.5.4
- PETSc-3.6.1
- CPPUnit
- CCACHE
- Modules 3.2.10
- Autojump
- CMake 3.2.3
- Trilinos 11.4 and DTK (Data Transfer Kit)
- Miniconda
- SEACAS tools
+ This package contians pre-compilied binaries for 
+ neccessary for MOOSE Application development

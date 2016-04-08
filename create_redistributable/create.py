@@ -65,7 +65,34 @@ class DEB(PackageCreator):
   """
 Class for building Debian based packages
 """
+  def prepare_area(self):
+    create_template = PackageCreator.prepare_area(self)  
+    if create_template:
+      for directory, directories, files in os.walk(os.path.join(self.temp_dir, 'deb/DEBIAN')):
+        for xml_file in files:
+          with open(os.path.join(self.temp_dir, 'deb/DEBIAN', xml_file), 'r+') as tmp_file:
+            xml_string = tmp_file.read()
+            tmp_file.truncate(0)
+            tmp_file.seek(0)
+            xml_string = xml_string.replace('<VERSION>', self.version)
+            xml_string = xml_string.replace('<PACKAGES_DIR>', self.packages_dir)
+            tmp_file.write(xml_string)
+
+  def create_tarball(self):
+    # We only need a link to packages_dir instead of a tarball
+    return self.create_link(self)
+    
+  def create_link(self):
+    # Note: os.path.join drops previous paths when it encounters an absolute path
+    os.makedirs(os.path.join(self.temp_dir, 'deb', *[x for x in os.path.dirname(self.packages_dir).split(os.sep)]))
+    os.symlink(self.packages, os.path.join(self.temp_dir, 'deb', *[x for x in self.packages_dir.splot(os.sep)]))
+
   def create_redistributable(self):
+    os.chdir(self.temp_dir)
+    package_builder = subprocess.Popen(['dpkg', '-b', deb],
+                                       stdout=subprocess.PIPE, 
+                                       stderr=subprocess.PIPE)
+    
     return True
 
 

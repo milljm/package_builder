@@ -1,0 +1,5 @@
+#!/bin/bash
+set -e
+chown -R root:root <PACKAGES_DIR>
+echo -e '\n\tAdd the following lines to your ~/.bashrc file to source the MOOSE compiler stack:\n\n\n## Uncomment the following line to enable pretty prompt:\n#export MOOSE_PROMPT=true\n\n## Uncomment the following line to enable autojump:\n#export MOOSE_JUMP=true\n\n## Source the MOOSE profile if moose_profile exists:\nif [ -f <PACKAGES_DIR>/environments/moose_profile ]; then\n  . <PACKAGES_DIR>/environments/moose_profile\nfi'
+

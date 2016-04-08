@@ -1,0 +1,4 @@
+#!/bin/bash
+if ! [ -d <PACKAGES_DIR> ]; then
+        mkdir -p <PACKAGES_DIR>
+fi
