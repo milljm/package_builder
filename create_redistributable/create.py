@@ -66,7 +66,7 @@ class DEB(PackageCreator):
 Class for building Debian based packages
 """
   def prepare_area(self):
-    create_template = PackageCreator.prepare_area(self)  
+    create_template = PackageCreator.prepare_area(self)
     if create_template:
       for directory, directories, files in os.walk(os.path.join(self.temp_dir, 'deb/DEBIAN')):
         for xml_file in files:
@@ -81,7 +81,7 @@ Class for building Debian based packages
   def create_tarball(self):
     # We only need a link to packages_dir instead of a tarball
     return self.create_link(self)
-    
+
   def create_link(self):
     # Note: os.path.join drops previous paths when it encounters an absolute path
     os.makedirs(os.path.join(self.temp_dir, 'deb', *[x for x in os.path.dirname(self.packages_dir).split(os.sep)]))
@@ -89,12 +89,17 @@ Class for building Debian based packages
 
   def create_redistributable(self):
     os.chdir(self.temp_dir)
-    package_builder = subprocess.Popen(['dpkg', '-b', deb],
-                                       stdout=subprocess.PIPE, 
+    package_builder = subprocess.Popen(['dpkg', '-b', 'deb'],
+                                       stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE)
-    
-    return True
-
+    results = package_builder.communicate()
+    if len(results[1]) >= 1:
+      print 'There was error building the redistributable package using dpkg:\n\n', results[1]
+      return False
+    else:
+      shutil.move(os.path.join(self.temp_dir, 'deb.deb'), os.path.join(self.args.relative_path, self.redistributable_name))
+      print 'Redistributable built and available at:', os.path.join(self.args.relative_path, self.redistributable_name)
+      return True
 
 class RPM(PackageCreator):
   """
@@ -141,7 +146,7 @@ Class for building Macintosh Packages
           html_str = html_str.replace('<PACKAGES_DIR>', self.args.packages_dir)
           html_str = html_str.replace('<REDISTRIBUTABLE_VERSION>', 'Package version: ' + str(self.redistributable_version))
           tmp_file.write(html_str)
-      return True      
+      return True
     else:
       return False
 
