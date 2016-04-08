@@ -14,11 +14,15 @@ Base class for building packages
       self.version = '.'.join(platform.mac_ver()[0].split('.')[:-1])
       self.release = _mac_version_to_name[self.version]
     else:
-      self.system, self.version, self.release = platform.linux_distribution()
+      self.release, self.version, self.system = platform.linux_distribution()
 
+
+    # moose-environment_ubuntu-'$human_readable'.x86_64.deb
     self.temp_dir = tempfile.mkdtemp()
     self.redistributable_version = self._get_build_version()
-    self.redistributable_name = self.release + '-environment_' + str(self.redistributable_version) + '.' + self.__class__.__name__.lower()
+    self.redistributable_name = 'moose-environment_' + \
+                                '-'.join([self.release, self.system, str(self.redistributable_version), 'x86_64']) + \
+                                '.' + self.__class__.__name__.lower()
 
   def _get_build_version(self):
     if not os.path.exists(os.path.join(args.relative_path, self.__class__.__name__.lower(), self.version + '_build')):
@@ -74,18 +78,24 @@ Class for building Debian based packages
             xml_string = tmp_file.read()
             tmp_file.truncate(0)
             tmp_file.seek(0)
-            xml_string = xml_string.replace('<VERSION>', self.version)
-            xml_string = xml_string.replace('<PACKAGES_DIR>', self.packages_dir)
+            xml_string = xml_string.replace('<VERSION>', str(self.redistributable_version))
+            xml_string = xml_string.replace('<PACKAGES_DIR>', self.args.packages_dir)
             tmp_file.write(xml_string)
+      return True
 
   def create_tarball(self):
-    # We only need a link to packages_dir instead of a tarball
-    return self.create_link(self)
+    # We need to copy files instead of using a tarball
+    return self.copy_files()
 
-  def create_link(self):
+  def copy_files(self):
     # Note: os.path.join drops previous paths when it encounters an absolute path
-    os.makedirs(os.path.join(self.temp_dir, 'deb', *[x for x in os.path.dirname(self.packages_dir).split(os.sep)]))
-    os.symlink(self.packages, os.path.join(self.temp_dir, 'deb', *[x for x in self.packages_dir.splot(os.sep)]))
+    print 'Copying', self.args.packages_dir, 'to temp directory:', self.temp_dir
+    os.makedirs(os.path.join(self.temp_dir, 'deb', *[x for x in os.path.dirname(self.args.packages_dir).split(os.sep)]))
+    shutil.copytree(self.args.packages_dir,
+                    os.path.join(self.temp_dir, 'deb', os.path.basename(self.args.packages_dir)),
+                    symlinks=False, ignore=None)
+    # os.symlink(self.args.packages_dir, os.path.join(self.temp_dir, 'deb', *[x for x in self.args.packages_dir.split(os.sep)]))
+    return True
 
   def create_redistributable(self):
     os.chdir(self.temp_dir)
