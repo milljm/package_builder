@@ -16,8 +16,6 @@ Base class for building packages
     else:
       self.release, self.version, self.system = platform.linux_distribution()
 
-
-    # moose-environment_ubuntu-'$human_readable'.x86_64.deb
     self.temp_dir = tempfile.mkdtemp()
     self.redistributable_version = self._get_build_version()
     self.redistributable_name = 'moose-environment_' + \
@@ -43,7 +41,7 @@ Base class for building packages
   def prepare_area(self):
     try:
       shutil.copytree(os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), self.__class__.__name__.lower()), \
-                      os.path.join(self.temp_dir, self.__class__.__name__.lower()), symlinks=False, ignore=None)
+                      os.path.join(self.temp_dir, self.__class__.__name__.lower()), symlinks=True, ignore=None)
     except os.error, err:
       print err
       return False
@@ -89,11 +87,12 @@ Class for building Debian based packages
 
   def copy_files(self):
     # Note: os.path.join drops previous paths when it encounters an absolute path
-    print 'Copying', self.args.packages_dir, 'to temp directory:', self.temp_dir
+    # therefor we must trick it
+    print 'Copying', self.args.packages_dir, 'to temp directory:', os.path.join(self.temp_dir, 'deb')
     os.makedirs(os.path.join(self.temp_dir, 'deb', *[x for x in os.path.dirname(self.args.packages_dir).split(os.sep)]))
     shutil.copytree(self.args.packages_dir,
-                    os.path.join(self.temp_dir, 'deb', os.path.basename(self.args.packages_dir)),
-                    symlinks=False, ignore=None)
+                    os.path.join(self.temp_dir, 'deb', *[x for x in self.args.packages_dir.split(os.sep)]),
+                    symlinks=True, ignore=None)
     # os.symlink(self.args.packages_dir, os.path.join(self.temp_dir, 'deb', *[x for x in self.args.packages_dir.split(os.sep)]))
     return True
 
