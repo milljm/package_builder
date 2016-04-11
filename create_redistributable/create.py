@@ -8,6 +8,7 @@ Base class for building packages
 """
   def __init__(self, args):
     self.args = args
+    self.base_name = _base_name
     self.uname = platform.platform()
     if self.uname.upper().find('DARWIN') != -1:
       self.system = 'darwin'
@@ -18,7 +19,7 @@ Base class for building packages
 
     self.temp_dir = tempfile.mkdtemp()
     self.redistributable_version = self._get_build_version()
-    self.redistributable_name = 'moose-environment_' + \
+    self.redistributable_name = self.base_name + '_' + \
                                 '-'.join([self.release, self.system, str(self.redistributable_version), 'x86_64']) + \
                                 '.' + self.__class__.__name__.lower()
 
@@ -93,7 +94,6 @@ Class for building Debian based packages
     shutil.copytree(self.args.packages_dir,
                     os.path.join(self.temp_dir, 'deb', *[x for x in self.args.packages_dir.split(os.sep)]),
                     symlinks=True, ignore=None)
-    # os.symlink(self.args.packages_dir, os.path.join(self.temp_dir, 'deb', *[x for x in self.args.packages_dir.split(os.sep)]))
     return True
 
   def create_redistributable(self):
@@ -114,9 +114,63 @@ class RPM(PackageCreator):
   """
 Class for building RedHat based packages
 """
-  def create_redistributable(self):
-    return True
+  def _get_requirements(self):
+    # RPM based distros have different package names for 'fortran'
+    # so try and discover exactly which package that actually is
+    rpm_process = subprocess.Popen(['rpm', '-qa', 'gcc-*fortran'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    rpm_results = rpm_process.communicate()[0]
+    requirements = '-'.join(rpm_results.split('-')[:2])
+    if requirements is not '':
+      return requirements
+    else:
+      print 'ERROR: I could not determine what fortran package to\n' \
+      'include in the list of requirements the redistributable\n' \
+      'will inform the user to install if they do not have it.\n\n' \
+      'This either means my regular expression no longer works,\n' \
+      'or you do not currently have a fortran compiler installed\n' \
+      'via YOUR PACKAGE MANAGER (yum, zypper, dnf, etc).'
+      return False
 
+  def prepare_area(self):
+    requirements = self._get_requirements()
+    create_template = PackageCreator.prepare_area(self)
+    if create_template and requirements:
+      for directory, directories, files in os.walk(os.path.join(self.temp_dir, 'rpm/SPECS')):
+        for xml_file in files:
+          with open(os.path.join(self.temp_dir, 'rpm/SPECS', xml_file), 'r+') as tmp_file:
+            xml_string = tmp_file.read()
+            tmp_file.truncate(0)
+            tmp_file.seek(0)
+            xml_string = xml_string.replace('<VERSION>', str(self.redistributable_version))
+            xml_string = xml_string.replace('<PACKAGES_DIR>', self.args.packages_dir)
+            xml_string = xml_string.replace('<PACKAGES_BASENAME>', os.path.join(*[x for x in os.path.dirname(self.args.packages_dir).split(os.sep)]))
+            xml_string = xml_string.replace('<PACKAGES_PARENT>', os.path.basename(self.args.packages_dir))
+            xml_string = xml_string.replace('<REQUIREMENTS>', requirements)
+            tmp_file.write(xml_string)
+      for directory in ['BUILD', 'BUILDROOT', 'RPMS', 'SRPMS', 'SOURCES']:
+        os.makedirs(os.path.join(self.temp_dir, 'rpm', directory))
+      return True
+
+  def create_tarball(self):
+    tarball_results = PackageCreator.create_tarball(self)
+    if tarball_results:
+      # move tarball into position inside the SOURCES directory
+      shutil.move(os.path.join(self.temp_dir, 'rpm/payload.tar.gz'), os.path.join(self.temp_dir, 'rpm/SOURCES', self.base_name + '.tar.gz' ))
+      return False
+
+  def create_redistributable(self):
+    os.chdir(self.temp_dir)
+    package_builder = subprocess.Popen(['dpkg', '-b', 'deb'],
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE)
+    results = package_builder.communicate()
+    if len(results[1]) >= 1:
+      print 'There was error building the redistributable package using dpkg:\n\n', results[1]
+      return False
+    else:
+      shutil.move(os.path.join(self.temp_dir, 'deb.deb'), os.path.join(self.args.relative_path, self.redistributable_name))
+      print 'Redistributable built and available at:', os.path.join(self.args.relative_path, self.redistributable_name)
+      return True
 
 class PKG(PackageCreator):
   """
@@ -238,6 +292,11 @@ def parseArguments(args=None):
   parser.add_argument('--package-type', help='Specify type of package to build. Valid values: deb rpm pkg')
   return verifyArgs(parser.parse_args(args))
 
+
+### Base Name (name that preceeds all system and version information
+#   when determining the name of the redistributable
+# (_base_name_system-release-version_x86_64.deb)
+_base_name = 'moose-environment'
 
 ### PackageMaker location (default on OS X)
 _package_maker = '/Applications/PackageMaker.app/Contents/MacOS/PackageMaker'

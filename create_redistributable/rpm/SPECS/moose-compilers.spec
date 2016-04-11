@@ -17,13 +17,13 @@
 
 Name: moose-environment
 Version: 1.1
-Release: 43%{?dist}
+Release: <VERSION>%{?dist}
 License: None
 Summary: Compilers neccessary to utilize the MOOSE Framework
 Url: http://mooseframework.org
 Group: Development/Libraries
 Source: %{name}.tar.gz
-Requires: libX11-devel gcc-c++ gcc-fortran make freeglut-devel m4 blas-devel lapack-devel
+Requires: libbX11-devel gcc-c++ make freeglut-devel m4 blas-devel lapack-devel <REQUIREMENTS>
 BuildRoot: %{_tmppath}/%{name}-build
 AutoReqProv: no
 
@@ -33,17 +33,17 @@ AutoReqProv: no
 This package contains the neccessary libraries/binaries to utilize the MOOSE framework and assocaited applications.
 
 %prep
-%setup -q -n opt
+%setup -q -n <PACKAGES_BASENAME>
 
 %build
 
 
 %install
-install -d %{buildroot}/opt
-mv -f moose %{buildroot}/opt/
+install -d %{buildroot}/<PACKAGES_BASENAME>
+mv -f <PACKAGES_PARENT> %{buildroot}/<PACKAGES_BASENAME>/
 
 %post
-echo -e '\n\tAdd the following lines to your ~/.bashrc file to source the MOOSE compiler stack:\n\n\n## Uncomment the following line to enable pretty prompt:\n#export MOOSE_PROMPT=true\n\n## Uncomment the following line to enable autojump:\n#export MOOSE_JUMP=true\n\n## Source the MOOSE profile if moose_profile exists:\nif [ -f /opt/moose/environments/moose_profile ]; then\n  . /opt/moose/environments/moose_profile\nfi'
+echo -e '\n\tAdd the following lines to your ~/.bashrc file to source the MOOSE compiler stack:\n\n\n## Uncomment the following line to enable pretty prompt:\n#export MOOSE_PROMPT=true\n\n## Uncomment the following line to enable autojump:\n#export MOOSE_JUMP=true\n\n## Source the MOOSE profile if moose_profile exists:\nif [ -f <PACKAGES_DIR>/environments/moose_profile ]; then\n  . <PACKAGES_DIR>/environments/moose_profile\nfi'
 
 
 %postun
@@ -53,6 +53,6 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root)
-/opt/moose
+<PACKAGES_DIR>
 
 %changelog
