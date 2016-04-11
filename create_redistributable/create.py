@@ -51,7 +51,7 @@ Base class for building packages
   def create_tarball(self):
     try:
       print 'Creating tarball...'
-      shutil.make_archive(os.path.join(self.temp_dir, self.__class__.__name__.lower(), 'payload'), 'gztar', self.args.packages_dir)
+      shutil.make_archive(os.path.join(self.temp_dir, self.__class__.__name__.lower(), 'payload'), 'gztar', os.path.sep, self.args.packages_dir)
     except os.error, err:
       print err
       return False
@@ -156,11 +156,11 @@ Class for building RedHat based packages
     if tarball_results:
       # move tarball into position inside the SOURCES directory
       shutil.move(os.path.join(self.temp_dir, 'rpm/payload.tar.gz'), os.path.join(self.temp_dir, 'rpm/SOURCES', self.base_name + '.tar.gz' ))
-      return False
+      return True
 
   def create_redistributable(self):
     os.chdir(self.temp_dir)
-    package_builder = subprocess.Popen(['dpkg', '-b', 'deb'],
+    package_builder = subprocess.Popen(['rpmbuild', '-ba', 'rpm/SOURCES/moose-compilers.spec'],
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE)
     results = package_builder.communicate()
@@ -168,7 +168,12 @@ Class for building RedHat based packages
       print 'There was error building the redistributable package using dpkg:\n\n', results[1]
       return False
     else:
-      shutil.move(os.path.join(self.temp_dir, 'deb.deb'), os.path.join(self.args.relative_path, self.redistributable_name))
+      ### TODO
+      # get major_version from spec file instead of arbitrarily setting it
+      major_version = '1.1'
+      shutil.move(os.path.join(self.temp_dir, 'RPMS/x86_64/',
+                               '-'.join[self.base_name, major_version, self.version] + '.x86_64.rpm'),
+                  os.path.join(self.args.relative_path, self.redistributable_name))
       print 'Redistributable built and available at:', os.path.join(self.args.relative_path, self.redistributable_name)
       return True
 
