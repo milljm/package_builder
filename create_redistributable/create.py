@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os, sys, argparse, shlex, shutil, platform, subprocess, tempfile
+import os, sys, re, argparse, shlex, shutil, platform, subprocess, tempfile
 
 
 class PackageCreator:
@@ -11,16 +11,18 @@ Base class for building packages
     self.base_name = _base_name
     self.uname = platform.platform()
     if self.uname.upper().find('DARWIN') != -1:
-      self.system = 'darwin'
       self.version = '.'.join(platform.mac_ver()[0].split('.')[:-1])
       self.release = _mac_version_to_name[self.version]
+      self.arch = 'x86_64'
     else:
-      self.release, self.version, self.system = platform.linux_distribution()
-
+      # Stupid SUSE with a trailing white space in release!
+      # Just strip all spaces if they are present anyway...
+      self.release, self.version, self.arch = [x.strip(' ') for x in platform.linux_distribution()]
     self.temp_dir = tempfile.mkdtemp()
     self.redistributable_version = self._get_build_version()
-    self.redistributable_name = self.base_name + '_' + \
-                                '-'.join([self.release, self.system, str(self.redistributable_version), 'x86_64']) + \
+    self.redistributable_name = self.base_name + '_' +\
+                                '-'.join([str(self.redistributable_version), self.release, self.version]) + \
+                                '_' + self.arch + \
                                 '.' + self.__class__.__name__.lower()
 
   def _get_build_version(self):
@@ -148,18 +150,18 @@ Class for building RedHat based packages
     requirements = self._get_requirements()
     create_template = PackageCreator.prepare_area(self)
     if create_template and requirements:
-      for directory, directories, files in os.walk(os.path.join(self.temp_dir, 'rpm/SPECS')):
-        for xml_file in files:
-          with open(os.path.join(self.temp_dir, 'rpm/SPECS', xml_file), 'r+') as tmp_file:
-            xml_string = tmp_file.read()
-            tmp_file.truncate(0)
-            tmp_file.seek(0)
-            xml_string = xml_string.replace('<VERSION>', str(self.redistributable_version))
-            xml_string = xml_string.replace('<PACKAGES_DIR>', self.args.packages_dir)
-            xml_string = xml_string.replace('<PACKAGES_BASENAME>', os.path.join(*[x for x in os.path.dirname(self.args.packages_dir).split(os.sep)]))
-            xml_string = xml_string.replace('<PACKAGES_PARENT>', os.path.basename(self.args.packages_dir))
-            xml_string = xml_string.replace('<REQUIREMENTS>', ' '.join(requirements))
-            tmp_file.write(xml_string)
+      with open(os.path.join(self.temp_dir, 'rpm/SPECS/moose-compilers.spec'), 'r+') as tmp_file:
+        xml_string = tmp_file.read()
+        # set major_version based on spec file
+        self.major_version = re.findall(r'Version: (\d.\d)', xml_string)[0]
+        tmp_file.truncate(0)
+        tmp_file.seek(0)
+        xml_string = xml_string.replace('<VERSION>', str(self.redistributable_version))
+        xml_string = xml_string.replace('<PACKAGES_DIR>', self.args.packages_dir)
+        xml_string = xml_string.replace('<PACKAGES_BASENAME>', os.path.join(*[x for x in os.path.dirname(self.args.packages_dir).split(os.sep)]))
+        xml_string = xml_string.replace('<PACKAGES_PARENT>', os.path.basename(self.args.packages_dir))
+        xml_string = xml_string.replace('<REQUIREMENTS>', ' '.join(requirements))
+        tmp_file.write(xml_string)
       for directory in ['BUILD', 'BUILDROOT', 'RPMS', 'SRPMS', 'SOURCES']:
         os.makedirs(os.path.join(self.temp_dir, 'rpm', directory))
       return True
@@ -184,11 +186,10 @@ Class for building RedHat based packages
       print 'There was error building the redistributable package using rpmbuild:\n\n', results[1]
       return False
     else:
-      ### TODO
-      # get major_version from spec file instead of arbitrarily setting it
-      major_version = '1.1'
-      shutil.move(os.path.join(self.temp_dir, 'RPMS/x86_64/',
-                               '-'.join([self.base_name, major_version, self.version]) + '.x86_64.rpm'),
+      shutil.move(os.path.join(self.temp_dir, 'rpm/RPMS/x86_64/',
+                               '-'.join([self.base_name,
+                                         self.major_version,
+                                         str(self.redistributable_version)]) + '.x86_64.rpm'),
                   os.path.join(self.args.relative_path, self.redistributable_name))
       print 'Redistributable built and available at:', os.path.join(self.args.relative_path, self.redistributable_name)
       return True
@@ -248,14 +249,15 @@ Class for building Macintosh Packages
       return False
     else:
       shutil.move(os.path.join(self.temp_dir, 'osx.pkg'), os.path.join(self.args.relative_path, 'osx.pkg'))
-      print 'Redistributable built! You should now sign the package using the following command:\n\n\t' \
-          'productsign --sign "Developer ID Installer: BATTELLE ENERGY ALLIANCE, LLC (J2Y4H5G88N)"', \
-          os.path.join(self.args.relative_path, 'osx.pkg'), \
-          os.path.join(self.args.relative_path, self.redistributable_name), \
-          '\n\nOnce complete, you can verify your package has been correctly signed by running the following command:\n\n\t', \
-          'spctl -a -v --type install', os.path.join(self.args.relative_path, self.redistributable_name), \
-          '\n\nFollowing that, your package (', os.path.join(self.args.relative_path, self.redistributable_name), \
-          ')is ready for distribution'
+      print 'Redistributable built!\n', \
+        'Optional: You should now sign the package using the following command:\n\n\t', \
+        'productsign --sign "Developer ID Installer: BATTELLE ENERGY ALLIANCE, LLC (J2Y4H5G88N)"', \
+        os.path.join(self.args.relative_path, 'osx.pkg'), os.path.join(self.args.relative_path, self.redistributable_name), \
+        '\n\nOnce complete, you can verify your package has been correctly signed by running\n', \
+        'the following command:\n\n\t', \
+        'spctl -a -v --type install', os.path.join(self.args.relative_path, self.redistributable_name), \
+        '\n\nIf you choose not to sign your package, the package is currently located at:\n\n\t', \
+        os.path.join(self.args.relative_path, 'osx.pkg'), '\n'
       return True
 
 def verifyArgs(args):
@@ -312,6 +314,7 @@ def parseArguments(args=None):
   parser = argparse.ArgumentParser(description='Create Redistributable Package')
   parser.add_argument('-p', '--packages-dir', help='Directory where you installed everything to (/opt/moose)')
   parser.add_argument('--package-type', help='Specify type of package to build. Valid values: deb rpm pkg')
+  parser.add_argument('-k', '--keep-temporary-files', action='store_const', const=True, default=False, help='Keep temporary directory after package is created (default False')
   return verifyArgs(parser.parse_args(args))
 
 
@@ -344,4 +347,5 @@ if __name__ == '__main__':
     if package.create_tarball():
       if package.create_redistributable():
         print 'Finished successfully. Removing temporary files..'
-  package.clean_up()
+  if not args.keep_temporary_files:
+    package.clean_up()
