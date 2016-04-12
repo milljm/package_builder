@@ -174,7 +174,6 @@ Class for building RedHat based packages
   def create_redistributable(self):
     print 'Building redistributable using rpmbuild... This can take a long time'
     os.chdir(self.temp_dir)
-    command = "rpmbuild -bb --define='_topdir %s' %s" % (os.path.join(self.temp_dir, 'rpm'), os.path.join(self.temp_dir, 'rpm/SPECS/moose-compilers.spec'))
     package_builder = subprocess.Popen(['rpmbuild', '-bb',
                                         '--define=_topdir %s' % (os.path.join(self.temp_dir, 'rpm')),
                                         os.path.join(self.temp_dir, 'rpm/SPECS/moose-compilers.spec')],
