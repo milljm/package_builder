@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os, sys, argparse, shutil, platform, subprocess, tempfile
+import os, sys, argparse, shlex, shutil, platform, subprocess, tempfile
 
 
 class PackageCreator:
@@ -48,10 +48,10 @@ Base class for building packages
       return False
     return True
 
-  def create_tarball(self):
+  def create_tarball(self, tar_format='gztar'):
     try:
       print 'Creating tarball...'
-      shutil.make_archive(os.path.join(self.temp_dir, self.__class__.__name__.lower(), 'payload'), 'gztar', os.path.sep, self.args.packages_dir)
+      shutil.make_archive(os.path.join(self.temp_dir, self.__class__.__name__.lower(), 'payload'), tar_format, os.path.sep, self.args.packages_dir)
     except os.error, err:
       print err
       return False
@@ -152,20 +152,21 @@ Class for building RedHat based packages
       return True
 
   def create_tarball(self):
-    tarball_results = PackageCreator.create_tarball(self)
+    tarball_results = PackageCreator.create_tarball(self, 'tar')
     if tarball_results:
       # move tarball into position inside the SOURCES directory
-      shutil.move(os.path.join(self.temp_dir, 'rpm/payload.tar.gz'), os.path.join(self.temp_dir, 'rpm/SOURCES', self.base_name + '.tar.gz' ))
+      shutil.move(os.path.join(self.temp_dir, 'rpm/payload.tar'), os.path.join(self.temp_dir, 'rpm/SOURCES', self.base_name + '.tar' ))
       return True
 
   def create_redistributable(self):
     os.chdir(self.temp_dir)
-    package_builder = subprocess.Popen(['rpmbuild', '-ba', 'rpm/SOURCES/moose-compilers.spec'],
+    command = "rpmbuild -bb --define='_topdir %s' %s" % (os.path.join(self.temp_dir, 'rpm'), os.path.join(self.temp_dir, 'rpm/SPECS/moose-compilers.spec'))
+    package_builder = subprocess.Popen(shlex.split(command),
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE)
     results = package_builder.communicate()
     if len(results[1]) >= 1:
-      print 'There was error building the redistributable package using dpkg:\n\n', results[1]
+      print 'There was error building the redistributable package using rpmbuild:\n\n', results[1]
       return False
     else:
       ### TODO

@@ -22,7 +22,7 @@ License: None
 Summary: Compilers neccessary to utilize the MOOSE Framework
 Url: http://mooseframework.org
 Group: Development/Libraries
-Source: %{name}.tar.gz
+Source: %{name}.tar
 Requires: libbX11-devel gcc-c++ make freeglut-devel m4 blas-devel lapack-devel <REQUIREMENTS>
 BuildRoot: %{_tmppath}/%{name}-build
 AutoReqProv: no
