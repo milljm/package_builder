@@ -97,7 +97,7 @@ Class for building Debian based packages
     return True
 
   def create_redistributable(self):
-    print 'Building redistributable using dpkg...'
+    print 'Building redistributable using dpkg... This can take a long time'
     os.chdir(self.temp_dir)
     package_builder = subprocess.Popen(['dpkg', '-b', 'deb'],
                                        stdout=subprocess.PIPE,
@@ -160,14 +160,16 @@ Class for building RedHat based packages
       return True
 
   def create_redistributable(self):
-    print 'Building redistributable using rpmbuild...'
+    print 'Building redistributable using rpmbuild... This can take a long time'
     os.chdir(self.temp_dir)
     command = "rpmbuild -bb --define='_topdir %s' %s" % (os.path.join(self.temp_dir, 'rpm'), os.path.join(self.temp_dir, 'rpm/SPECS/moose-compilers.spec'))
-    package_builder = subprocess.Popen(shlex.split(command),
+    package_builder = subprocess.Popen(['rpmbuild', '-bb',
+                                        '--define=_topdir %s' % (os.path.join(self.temp_dir, 'rpm')),
+                                        os.path.join(self.temp_dir, 'rpm/SPECS/moose-compilers.spec')],
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE)
     results = package_builder.communicate()
-    if len(results[1]) >= 1:
+    if results[1].find('error') != -1:
       print 'There was error building the redistributable package using rpmbuild:\n\n', results[1]
       return False
     else:
@@ -223,7 +225,7 @@ Class for building Macintosh Packages
 
   def create_redistributable(self):
     os.chdir(self.temp_dir)
-    print 'Building redistributable package. This step can also take some time...'
+    print 'Building redistributable using PackageMaker... This can take a long time'
     package_builder = subprocess.Popen([self.args.package_maker, '--doc', os.path.join(self.temp_dir, 'pkg/OSX.pmdoc')],
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE,
@@ -280,6 +282,7 @@ def verifyArgs(args):
     fail = True
 
   # Is what we are trying to distribute available?
+  args.packages_dir = args.packages_dir.rstrip(os.path.sep)
   if args.packages_dir:
     if not os.path.exists(args.packages_dir):
       print '* Error: path provided:', args.packages_dir, 'not found'
@@ -329,4 +332,5 @@ if __name__ == '__main__':
   if package.prepare_area():
     if package.create_tarball():
       if package.create_redistributable():
-        package.clean_up()
+        print 'Finished successfully. Removing temporary files..'
+  package.clean_up()
