@@ -97,6 +97,7 @@ Class for building Debian based packages
     return True
 
   def create_redistributable(self):
+    print 'Building redistributable using dpkg...'
     os.chdir(self.temp_dir)
     package_builder = subprocess.Popen(['dpkg', '-b', 'deb'],
                                        stdout=subprocess.PIPE,
@@ -159,6 +160,7 @@ Class for building RedHat based packages
       return True
 
   def create_redistributable(self):
+    print 'Building redistributable using rpmbuild...'
     os.chdir(self.temp_dir)
     command = "rpmbuild -bb --define='_topdir %s' %s" % (os.path.join(self.temp_dir, 'rpm'), os.path.join(self.temp_dir, 'rpm/SPECS/moose-compilers.spec'))
     package_builder = subprocess.Popen(shlex.split(command),
