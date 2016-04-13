@@ -26,12 +26,12 @@ Base class for building packages
                                 '.' + self.__class__.__name__.lower()
 
   def _get_build_version(self):
-    if not os.path.exists(os.path.join(args.relative_path, self.__class__.__name__.lower(), self.version + '_build')):
-      with open(os.path.join(args.relative_path, self.__class__.__name__.lower(), self.version + '_build'), 'w') as version_file:
+    if not os.path.exists(os.path.join(args.relative_path, self.__class__.__name__.lower(), self.release + '-' + self.version + '_build')):
+      with open(os.path.join(args.relative_path, self.__class__.__name__.lower(), self.release + '-' + self.version + '_build'), 'w') as version_file:
         version_file.write('1')
         return '1'
     else:
-      with open(os.path.join(args.relative_path, self.__class__.__name__.lower(), self.version + '_build'), 'r+') as version_file:
+      with open(os.path.join(args.relative_path, self.__class__.__name__.lower(), self.release + '-' + self.version + '_build'), 'r+') as version_file:
         new_version = int(version_file.read()) + 1
         version_file.truncate(0)
         version_file.seek(0)
@@ -186,11 +186,9 @@ Class for building RedHat based packages
       print 'There was error building the redistributable package using rpmbuild:\n\n', results[1]
       return False
     else:
-      shutil.move(os.path.join(self.temp_dir, 'rpm/RPMS/x86_64/',
-                               '-'.join([self.base_name,
-                                         self.major_version,
-                                         str(self.redistributable_version)]) + '.x86_64.rpm'),
-                  os.path.join(self.args.relative_path, self.redistributable_name))
+      # There is only going to be one file in the following location
+      for rpm_file in os.listdir(os.path.join(self.temp_dir, 'rpm/RPMS/x86_64/')):
+        shutil.move(os.path.join(self.temp_dir, 'rpm/RPMS/x86_64', rpm_file), os.path.join(self.args.relative_path, self.redistributable_name))
       print 'Redistributable built and available at:', os.path.join(self.args.relative_path, self.redistributable_name)
       return True
 
