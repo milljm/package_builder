@@ -146,6 +146,7 @@ def parseArguments(args=None):
   parser.add_argument('-m', '--max-jobs', default='2', help='Specify max modules to run simultaneously')
   parser.add_argument('-j', '--cpu-count', default='4', help='Specify CPU count (used when make -j <number>)')
   parser.add_argument('-d', '--delete-downloads', action='store_const', const=True, default=False, help='Delete downloads when successful build completes?')
+  parser.add_argument('--download-only', action='store_const', const=True, default=False, help='Download files used in created the package only')
   return verifyArgs(parser.parse_args(args))
 
 if __name__ == '__main__':
@@ -159,6 +160,11 @@ if __name__ == '__main__':
   args = parseArguments()
   os.environ['RELATIVE_DIR'] = os.path.join(os.path.abspath(os.path.dirname(__file__)))
   os.environ['DOWNLOAD_DIR'] = '/tmp/moose_package_download_temp'
+  if args.download_only:
+    print 'Downloads will be saved to: /tmp/moose_package_download_temp' 
+    os.environ['DOWNOAD_ONLY'] = 'True'
+  else:
+    os.environ['DOWNOAD_ONLY'] = 'False'
   os.environ['PACKAGES_DIR'] = args.prefix
   os.environ['MOOSE_JOBS'] = args.cpu_count
   os.environ['MAX_JOBS'] = args.max_jobs

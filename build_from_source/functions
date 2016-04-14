@@ -92,14 +92,16 @@ if [ $CONTINUE = true ]; then
     export src_temp=`mktemp -d /tmp/src_temp_$PACKAGE.XXXXXX`
     cd $src_temp
     download
-    extract
-    pre_run $src_temp
-    configure
-    build
-    make_install
-    post_run $src_temp
+    if [ $DOWNLOAD_ONLY == 'False' ]; then
+      extract
+      pre_run $src_temp
+      configure
+      build
+      make_install
+      post_run $src_temp
+      cleanup 0
+    fi
     echo $PACKAGE >> $PROGRESS
-    cleanup 0
 else
     echo -e "This platform does not support "$PACKAGE
     echo "$PACKAGE n/a" >> $PROGRESS
