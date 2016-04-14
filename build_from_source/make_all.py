@@ -106,7 +106,7 @@ def launchJob(module):
 def getList():
   job_list = os.listdir(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'packages'))
   return solveDEP(job_list)
-  
+
 def verifyArgs(args):
   if args.prefix is None:
     print 'You must specify a directory to install everything into'
@@ -161,7 +161,7 @@ if __name__ == '__main__':
   os.environ['RELATIVE_DIR'] = os.path.join(os.path.abspath(os.path.dirname(__file__)))
   os.environ['DOWNLOAD_DIR'] = '/tmp/moose_package_download_temp'
   if args.download_only:
-    print 'Downloads will be saved to: /tmp/moose_package_download_temp' 
+    print 'Downloads will be saved to: /tmp/moose_package_download_temp'
     os.environ['DOWNOAD_ONLY'] = 'True'
   else:
     os.environ['DOWNOAD_ONLY'] = 'False'
