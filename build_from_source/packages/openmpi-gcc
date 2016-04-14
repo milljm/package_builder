@@ -13,7 +13,7 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='https://mooseframework.org/source_packages/openmpi-1.8.4.tar.gz'
+DOWNLOAD='http://mooseframework.org/source_packages/openmpi-1.8.4.tar.gz'
 EXTRACT='openmpi-1.8.4.tar.gz'
 CONFIGURE="../configure --prefix=$PACKAGES_DIR/openmpi/openmpi-1.8.4/gcc-opt \
 CC=gcc CXX=g++ FC=gfortran F77=gfortran \

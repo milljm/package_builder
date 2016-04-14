@@ -13,7 +13,7 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='https://mooseframework.org/source_packages/tbb44_20150728oss_src.tgz'
+DOWNLOAD='http://mooseframework.org/source_packages/tbb44_20150728oss_src.tgz'
 EXTRACT='tbb44_20150728oss_src.tgz'
 CONFIGURE='false'
 BUILD='true'

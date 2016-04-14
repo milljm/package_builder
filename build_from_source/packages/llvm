@@ -13,7 +13,7 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD=(https://mooseframework.org/source_packages/llvm-3.7.0.src.tar.xz https://mooseframework.org/source_packages/cfe-3.7.0.src.tar.xz https://mooseframework.org/source_packages/compiler-rt-3.7.0.src.tar.xz https://mooseframework.org/source_packages/libcxx-3.7.0.src.tar.xz https://mooseframework.org/source_packages/libcxxabi-3.7.0.src.tar.xz https://mooseframework.org/source_packages/openmp-3.7.0.src.tar.xz https://mooseframework.org/source_packages/clang-tools-extra-3.7.0.src.tar.xz)
+DOWNLOAD=(http://mooseframework.org/source_packages/llvm-3.7.0.src.tar.xz http://mooseframework.org/source_packages/cfe-3.7.0.src.tar.xz http://mooseframework.org/source_packages/compiler-rt-3.7.0.src.tar.xz http://mooseframework.org/source_packages/libcxx-3.7.0.src.tar.xz http://mooseframework.org/source_packages/libcxxabi-3.7.0.src.tar.xz http://mooseframework.org/source_packages/openmp-3.7.0.src.tar.xz http://mooseframework.org/source_packages/clang-tools-extra-3.7.0.src.tar.xz)
 EXTRACT=(llvm-3.7.0.src.tar.xz cfe-3.7.0.src.tar.xz compiler-rt-3.7.0.src.tar.xz libcxx-3.7.0.src.tar.xz libcxxabi-3.7.0.src.tar.xz openmp-3.7.0.src.tar.xz clang-tools-extra-3.7.0.src.tar.xz)
 CONFIGURE="cmake -DCMAKE_INSTALL_RPATH:STRING=$PACKAGES_DIR/${PACKAGE}_3.7.0/lib -DCLANG_DEFAULT_OPENMP_RUNTIME=libomp -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/${PACKAGE}_3.7.0 -DCMAKE_INSTALL_NAME_DIR:STRING=$PACKAGES_DIR/${PACKAGE}_3.7.0/lib -DCMAKE_MACOSX_RPATH:BOOL=OFF ../llvm"
 BUILD='true'

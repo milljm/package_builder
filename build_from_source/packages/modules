@@ -13,7 +13,7 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='https://mooseframework.org/source_packages/modules-3.2.10.tar.gz'
+DOWNLOAD='http://mooseframework.org/source_packages/modules-3.2.10.tar.gz'
 EXTRACT='modules-3.2.10.tar.gz'
 if [ `uname` = "Darwin" ]; then
     CONFIGURE="./configure --prefix=$PACKAGES_DIR"

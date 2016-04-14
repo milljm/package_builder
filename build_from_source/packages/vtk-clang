@@ -13,7 +13,7 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='https://mooseframework.org/source_packages/VTK-6.3.0.3tar.gz'
+DOWNLOAD='http://mooseframework.org/source_packages/VTK-6.3.0.3tar.gz'
 EXTRACT='VTK-6.3.0.tar.gz'
 CONFIGURE="cmake ../VTK-6.3.0 -DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/vtk-6.3/clang-opt -DCMAKE_INSTALL_RPATH:STRING=$PACKAGES_DIR/vtk-6.3/clang-opt/lib -DCMAKE_INSTALL_RPATH_USE_LINK_PATH:BOOL=ON -DCMAKE_INSTALL_NAME_DIR:STRING=$PACKAGES_DIR/vtk-6.3/clang-opt/lib -DCMAKE_MACOSX_RPATH:BOOL=ON -DVTK_WRAP_PYTHON=ON -Wno-dev"
 BUILD='true'

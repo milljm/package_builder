@@ -13,7 +13,7 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='https://mooseframework.org/source_packages/graphviz-2.38.0.tar.gz'
+DOWNLOAD='http://mooseframework.org/source_packages/graphviz-2.38.0.tar.gz'
 EXTRACT='graphviz-2.38.0.tar.gz'
 CONFIGURE="./configure --prefix=$PACKAGES_DIR/$PACKAGE --with-x=no --with-qt=no --with-tcl=no --with-tdl=no"
 BUILD='true'

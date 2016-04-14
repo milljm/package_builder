@@ -14,9 +14,9 @@ ARCH=(Darwin Linux)
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
 if [ `uname` = "Darwin" ]; then
-    DOWNLOAD='https://mooseframework.org/source_packages/Miniconda-3.8.3-MacOSX-x86_64.sh'
+    DOWNLOAD='http://mooseframework.org/source_packages/Miniconda-3.8.3-MacOSX-x86_64.sh'
 else
-    DOWNLOAD='https://mooseframework.org/source_packages/Miniconda-3.8.3-Linux-x86_64.sh'
+    DOWNLOAD='http://mooseframework.org/source_packages/Miniconda-3.8.3-Linux-x86_64.sh'
 fi
 EXTRACT='false'
 CONFIGURE="false"
