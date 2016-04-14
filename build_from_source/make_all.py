@@ -162,9 +162,9 @@ if __name__ == '__main__':
   os.environ['DOWNLOAD_DIR'] = '/tmp/moose_package_download_temp'
   if args.download_only:
     print 'Downloads will be saved to: /tmp/moose_package_download_temp'
-    os.environ['DOWNOAD_ONLY'] = 'True'
+    os.environ['DOWNLOAD_ONLY'] = 'True'
   else:
-    os.environ['DOWNOAD_ONLY'] = 'False'
+    os.environ['DOWNLOAD_ONLY'] = 'False'
   os.environ['PACKAGES_DIR'] = args.prefix
   os.environ['MOOSE_JOBS'] = args.cpu_count
   os.environ['MAX_JOBS'] = args.max_jobs
