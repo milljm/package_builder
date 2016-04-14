@@ -292,8 +292,8 @@ def verifyArgs(args):
     fail = True
 
   # Is what we are trying to distribute available?
-  args.packages_dir = args.packages_dir.rstrip(os.path.sep)
   if args.packages_dir:
+    args.packages_dir = args.packages_dir.rstrip(os.path.sep)
     if not os.path.exists(args.packages_dir):
       print '* Error: path provided:', args.packages_dir, 'not found'
       fail = True
