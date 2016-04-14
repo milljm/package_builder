@@ -13,17 +13,16 @@ Base class for building packages
     if self.uname.upper().find('DARWIN') != -1:
       self.version = '.'.join(platform.mac_ver()[0].split('.')[:-1])
       self.release = _mac_version_to_name[self.version]
-      self.arch = 'x86_64'
     else:
-      # Stupid SUSE with a trailing white space in release!
-      # Just strip all spaces if they are present anyway...
-      self.release, self.version, self.arch = [x.strip(' ') for x in platform.linux_distribution()]
+      # Strip all spaces if they are present...
+      self.release, self.version, junk = [x.replace(' ', '') for x in platform.linux_distribution()]
+    self.arch = platform.machine()
     self.temp_dir = tempfile.mkdtemp()
     self.redistributable_version = self._get_build_version()
-    self.redistributable_name = self.base_name + '_' +\
-                                '-'.join([str(self.redistributable_version), self.release, self.version]) + \
-                                '_' + self.arch + \
-                                '.' + self.__class__.__name__.lower()
+    self.redistributable_name = '-'.join([self.base_name, str(self.redistributable_version)]) + '_' + \
+                                '-'.join([self.release, self.version]) + '_' + \
+                                self.arch + '.' + \
+                                self.__class__.__name__.lower()
 
   def _get_build_version(self):
     if not os.path.exists(os.path.join(args.relative_path, self.__class__.__name__.lower(), self.release + '-' + self.version + '_build')):
