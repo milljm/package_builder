@@ -89,10 +89,12 @@ if [ $CONTINUE = true ]; then
 	echo -e '\nDependencies not met: '$error
 	exit 0
     fi
-    export src_temp=`mktemp -d /tmp/src_temp_$PACKAGE.XXXXXX`
-    cd $src_temp
-    download
-    if [ $DOWNLOAD_ONLY == 'False' ]; then
+    if [ $DOWNLOAD_ONLY == "True" ]; then
+      download
+    else
+      export src_temp=`mktemp -d /tmp/src_temp_$PACKAGE.XXXXXX`
+      cd $src_temp
+      download
       extract
       pre_run $src_temp
       configure
