@@ -13,7 +13,7 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='http://ftp.gnu.org/gnu/automake/automake-1.13.tar.gz'
+DOWNLOAD='https://mooseframework.org/source_packages/automake-1.13.tar.gz'
 EXTRACT='automake-1.13.tar.gz'
 CONFIGURE="./configure --prefix=$PACKAGES_DIR/autotools"
 BUILD='true'

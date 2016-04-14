@@ -13,7 +13,7 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='http://sourceforge.net/projects/cppunit/files/cppunit/1.12.1/cppunit-1.12.1.tar.gz'
+DOWNLOAD='https://mooseframework.org/source_packages/cppunit-1.12.1.tar.gz'
 EXTRACT='cppunit-1.12.1.tar.gz'
 CONFIGURE='false'
 BUILD='true'

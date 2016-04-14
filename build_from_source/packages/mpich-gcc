@@ -13,7 +13,7 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='http://www.mpich.org/static/downloads/3.1.4/mpich-3.1.4.tar.gz'
+DOWNLOAD='https://mooseframework.org/source_packages/mpich-3.1.4.tar.gz'
 EXTRACT='mpich-3.1.4.tar.gz'
 CONFIGURE="../configure --prefix=$PACKAGES_DIR/mpich/mpich-3.1.4/gcc-opt --enable-shared --enable-sharedlibs=gcc --enable-fast=03 --enable-debuginfo --enable-totalview --enable-two-level-namespace CC=gcc CXX=g++ FC=gfortran F77=gfortran F90='' CFLAGS='' CXXFLAGS='' FFLAGS='' FCFLAGS='' F90FLAGS='' F77FLAGS=''"
 BUILD='true'

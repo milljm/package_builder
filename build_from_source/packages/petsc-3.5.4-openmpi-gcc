@@ -13,7 +13,7 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.5.4.tar.gz'
+DOWNLOAD='https://mooseframework.org/source_packages/petsc-3.5.4.tar.gz'
 EXTRACT='petsc-3.5.4.tar.gz'
 CONFIGURE="./configure \
 --prefix=$PACKAGES_DIR/petsc/openmpi_petsc-3.5.4/gcc-opt-superlu \

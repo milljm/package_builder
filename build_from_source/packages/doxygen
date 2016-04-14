@@ -13,7 +13,7 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='http://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.11.src.tar.gz'
+DOWNLOAD='https://mooseframework.org/source_packages/doxygen-1.8.11.src.tar.gz'
 EXTRACT='doxygen-1.8.11.src.tar.gz'
 CONFIGURE="cmake -DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/$PACKAGE -Wno-dev .."
 BUILD='true'

@@ -13,7 +13,7 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='http://mirrors-usa.go-parts.com/gcc/releases/gcc-5.3.0/gcc-5.3.0.tar.gz'
+DOWNLOAD='https://mooseframework.org/source_packages/gcc-5.3.0.tar.gz'
 EXTRACT='gcc-5.3.0.tar.gz'
 CONFIGURE="../gcc-5.3.0/configure --prefix=$PACKAGES_DIR/${PACKAGE}_5.3.0 --disable-multilib --enable-languages=c,c++,fortran --enable-lto"
 BUILD='true'

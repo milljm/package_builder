@@ -13,7 +13,7 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='http://prdownloads.sourceforge.net/tcl/tcl8.5.14-src.tar.gz'
+DOWNLOAD='https://mooseframework.org/source_packages/tcl8.5.14-src.tar.gz'
 EXTRACT='tcl8.5.14-src.tar.gz'
 CONFIGURE="./configure --prefix=$PACKAGES_DIR/$PACKAGE"
 BUILD='true'
