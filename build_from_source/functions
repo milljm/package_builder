@@ -101,9 +101,9 @@ if [ $CONTINUE = true ]; then
       build
       make_install
       post_run $src_temp
-      cleanup 0
     fi
     echo $PACKAGE >> $PROGRESS
+    cleanup 0
 else
     echo -e "This platform does not support "$PACKAGE
     echo "$PACKAGE n/a" >> $PROGRESS
