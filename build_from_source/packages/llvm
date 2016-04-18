@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules cmake gcc)
+DEP=(modules miniconda cmake gcc)
 PACKAGE='llvm'
 
 #####
@@ -39,7 +39,7 @@ pre_run() {
     echo -e 'Done'
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/3.2.10/init/bash
-    module load advanced_modules cmake
+    module load advanced_modules cmake miniconda
     if [ `uname` != "Darwin" ]; then
       module load gcc_5.3.0
       export CC=gcc; export CXX=g++

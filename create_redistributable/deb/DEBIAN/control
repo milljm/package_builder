@@ -4,5 +4,5 @@ Architecture: amd64
 Depends: build-essential, gfortran, freeglut3, tcl, m4, libblas-dev, liblapack-dev
 Maintainer: Jason Miller <jason.miller@inl.gov>
 Description: MOOSE Compiler Stack
- This package contians pre-compilied binaries for 
+ This package contians pre-compilied binaries
  neccessary for MOOSE Application development
