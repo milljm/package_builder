@@ -2,21 +2,21 @@
 #############
 ## Specifics
 ##
-DEP=(modules cmake gcc llvm mpich-clang)
-PACKAGE='petsc-3.6.3-mpich-clang'
+DEP=(modules cmake gcc mpich-gcc)
+PACKAGE='petsc-3.6.4-mpich-gcc'
 
 #####
 # Set the operating system allowed to build this module
 #
-ARCH=(Darwin)
+ARCH=(Darwin Linux)
 
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='http://mooseframework.org/source_packages/petsc-3.6.3.tar.gz'
-EXTRACT='petsc-3.6.3.tar.gz'
+DOWNLOAD='http://mooseframework.org/source_packages/petsc-3.6.4.tar.gz'
+EXTRACT='petsc-3.6.4.tar.gz'
 CONFIGURE="./configure \
---prefix=$PACKAGES_DIR/petsc/mpich_petsc-3.6.3/clang-opt-superlu \
+--prefix=$PACKAGES_DIR/petsc/mpich_petsc-3.6.4/gcc-opt-superlu \
 --download-hypre=1 \
 --with-ssl=0 \
 --with-debugging=no \
@@ -45,33 +45,33 @@ INSTALL='false'
 pre_run() {
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/3.2.10/init/bash
-    module load advanced_modules cmake mpich-3.1.4_clang
+    module load advanced_modules cmake mpich-3.1.4_gcc
 }
 
 post_run() {
     if [ `uname` = "Darwin" ]; then
-	make PETSC_DIR=$1/petsc-3.6.3 PETSC_ARCH=arch-darwin-c-opt all
+	make PETSC_DIR=$1/petsc-3.6.4 PETSC_ARCH=arch-darwin-c-opt all
 	if [ $? -ne 0 ]; then echo "Error while building PETSc"; cleanup 1; fi
-	make PETSC_DIR=$1/petsc-3.6.3 PETSC_ARCH=arch-darwin-c-opt install
+	make PETSC_DIR=$1/petsc-3.6.4 PETSC_ARCH=arch-darwin-c-opt install
 	if [ $? -ne 0 ]; then echo "Error while installing PETSc"; cleanup 1; fi
     else
-	make PETSC_DIR=$1/petsc-3.6.3 PETSC_ARCH=arch-linux2-c-opt all
+	make PETSC_DIR=$1/petsc-3.6.4 PETSC_ARCH=arch-linux2-c-opt all
 	if [ $? -ne 0 ]; then echo "Error while building PETSc"; cleanup 1; fi
-	make PETSC_DIR=$1/petsc-3.6.3 PETSC_ARCH=arch-linux2-c-opt install
+	make PETSC_DIR=$1/petsc-3.6.4 PETSC_ARCH=arch-linux2-c-opt install
 	if [ $? -ne 0 ]; then echo "Error while installing PETSc"; cleanup 1; fi
     fi
-    cat <<EOF > $PACKAGES_DIR/Modules/3.2.10/modulefiles/moose/.mpich_petsc-3.6.3-clang
+    cat <<EOF > $PACKAGES_DIR/Modules/3.2.10/modulefiles/moose/.mpich_petsc-3.6.4-gcc
 #%Module1.0#####################################################################
 ##
-## MPICH Clang PETSC 3.6.3 superlu modulefile
+## MPICH GCC PETSC 3.6.4 superlu modulefile
 ##
 ##
 ##
 set         BASE_PATH        $PACKAGES_DIR
-setenv      PETSC_DIR        \$BASE_PATH/petsc/mpich_petsc-3.6.3/clang-opt-superlu
+setenv      PETSC_DIR        \$BASE_PATH/petsc/mpich_petsc-3.6.4/gcc-opt-superlu
 EOF
-    cd $PACKAGES_DIR/Modules/3.2.10/mpich_clang
-    ln -s ../modulefiles/moose/.mpich_petsc-3.6.3-clang petsc-3.6.3
+    cd $PACKAGES_DIR/Modules/3.2.10/mpich_gcc
+    ln -s ../modulefiles/moose/.mpich_petsc-3.6.4-gcc petsc-3.6.4
 }
 
 ##
