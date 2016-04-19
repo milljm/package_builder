@@ -41,7 +41,7 @@ pre_run() {
     source $PACKAGES_DIR/Modules/3.2.10/init/bash
     module load advanced_modules cmake miniconda
     if [ `uname` != "Darwin" ]; then
-      module load gcc_5.3.0
+      module load gcc
       export CC=gcc; export CXX=g++
     fi
     cat <<EOF > $PACKAGES_DIR/Modules/3.2.10/modulefiles/moose/.clang
