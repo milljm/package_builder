@@ -3,23 +3,23 @@
 ## Specifics
 ##
 DEP=(modules cmake gcc openmpi-gcc)
-PACKAGE='petsc-3.6.3-openmpi-gcc-dbg'
+PACKAGE='petsc-3.6.4-openmpi-gcc'
 
 #####
 # Set the operating system allowed to build this module
 #
-ARCH=(Linux)
+ARCH=(Darwin Linux)
 
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='http://mooseframework.org/source_packages/petsc-3.6.3.tar.gz'
-EXTRACT='petsc-3.6.3.tar.gz'
+DOWNLOAD='http://mooseframework.org/source_packages/petsc-3.6.4.tar.gz'
+EXTRACT='petsc-3.6.4.tar.gz'
 CONFIGURE="./configure \
---prefix=$PACKAGES_DIR/petsc/openmpi_petsc-3.6.3/gcc-dbg-superlu \
+--prefix=$PACKAGES_DIR/petsc/openmpi_petsc-3.6.4/gcc-opt-superlu \
 --download-hypre=1 \
 --with-ssl=0 \
---with-debugging=1 \
+--with-debugging=no \
 --with-pic=1 \
 --with-shared-libraries=1 \
 --with-cc=mpicc \
@@ -50,28 +50,28 @@ pre_run() {
 
 post_run() {
     if [ `uname` = "Darwin" ]; then
-	make PETSC_DIR=$1/petsc-3.6.3 PETSC_ARCH=arch-darwin-c-debug all
+	make PETSC_DIR=$1/petsc-3.6.4 PETSC_ARCH=arch-darwin-c-opt all
 	if [ $? -ne 0 ]; then echo "Error while building PETSc"; cleanup 1; fi
-	make PETSC_DIR=$1/petsc-3.6.3 PETSC_ARCH=arch-darwin-c-debug install
+	make PETSC_DIR=$1/petsc-3.6.4 PETSC_ARCH=arch-darwin-c-opt install
 	if [ $? -ne 0 ]; then echo "Error while installing PETSc"; cleanup 1; fi
     else
-	make PETSC_DIR=$1/petsc-3.6.3 PETSC_ARCH=arch-linux2-c-debug all
+	make PETSC_DIR=$1/petsc-3.6.4 PETSC_ARCH=arch-linux2-c-opt all
 	if [ $? -ne 0 ]; then echo "Error while building PETSc"; cleanup 1; fi
-	make PETSC_DIR=$1/petsc-3.6.3 PETSC_ARCH=arch-linux2-c-debug install
+	make PETSC_DIR=$1/petsc-3.6.4 PETSC_ARCH=arch-linux2-c-opt install
 	if [ $? -ne 0 ]; then echo "Error while installing PETSc"; cleanup 1; fi
     fi
-    cat <<EOF > $PACKAGES_DIR/Modules/3.2.10/modulefiles/moose/.openmpi_petsc-3.6.3-gcc-dbg
+    cat <<EOF > $PACKAGES_DIR/Modules/3.2.10/modulefiles/moose/.openmpi_petsc-3.6.4-gcc
 #%Module1.0#####################################################################
 ##
-## OpenMPI GCC PETSC 3.6.3 superlu Debug modulefile
+## OpenMPI GCC PETSC 3.6.4 superlu modulefile
 ##
 ##
 ##
 set         BASE_PATH        $PACKAGES_DIR
-setenv      PETSC_DIR        \$BASE_PATH/petsc/openmpi_petsc-3.6.3/gcc-dbg-superlu
+setenv      PETSC_DIR        \$BASE_PATH/petsc/openmpi_petsc-3.6.4/gcc-opt-superlu
 EOF
     cd $PACKAGES_DIR/Modules/3.2.10/openmpi_gcc
-    ln -s ../modulefiles/moose/.openmpi_petsc-3.6.3-gcc-dbg petsc-3.6.3-dbg
+    ln -s ../modulefiles/moose/.openmpi_petsc-3.6.4-gcc petsc-3.6.4
 }
 
 ##

@@ -22,7 +22,7 @@ INSTALL='true'
 pre_run() {
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/3.2.10/init/bash
-    module load advanced_modules gcc_5.3.0
+    module load advanced_modules gcc
     # we have to run this our selves with out error checking. Mac machines appear to exhibit a bug:
     #
     # rm: conftest.dSYS: is a directory

@@ -52,8 +52,8 @@ setenv       GCC_LIB                     \$GCC_PATH/lib:\$GCC_PATH/lib/i386
 setenv       GCC_MAN                     \$GCC_PATH/share/man
 EOF
     cd $PACKAGES_DIR/Modules/3.2.10/adv_modules
-    ln -s ../modulefiles/moose/.gcc_5.3.0 gcc_5.3.0
-    module load gcc_5.3.0
+    ln -s ../modulefiles/moose/.gcc_5.3.0 gcc
+    module load gcc
     cd $GCC_BIN/../
     for sfile in `find . -type f -name "*.la"`; do
 	if [ `grep -c "$src_temp" $sfile` -ge 1 ]; then
