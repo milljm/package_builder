@@ -37,7 +37,7 @@ pre_run() {
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/3.2.10/modulefiles/moose/.cppunit-clang
+    cat <<EOF > $PACKAGES_DIR/Modules/3.2.10/modulefiles/moose/.cppunit-1.12.1-clang
 #%Module1.0#####################################################################
 ##
 ## CPPUnit Clang 
@@ -55,7 +55,7 @@ prepend-path INCLUDE                     \$CPPUNIT_PATH/include
 prepend-path PATH                        \$CPPUNIT_PATH/bin
 EOF
     cd $PACKAGES_DIR/Modules/3.2.10/adv_modules
-    ln -s ../modulefiles/moose/.cppunit-clang cppunit-clang
+    ln -s ../modulefiles/moose/.cppunit-1.12.1-clang cppunit-clang
 }
 ##
 ## End Specifics

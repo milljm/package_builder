@@ -35,7 +35,7 @@ set              BASE_PATH        $PACKAGES_DIR
 prepend-path     PATH               \$BASE_PATH/ccache/bin
 prepend-path     MANPATH            \$BASE_PATH/ccache/share/man
 
-if {[is-loaded moose/.clang]} {
+if {[is-loaded moose/.clang_3.7.0] || [is-loaded clang]} {
   setenv           CC                 "ccache clang"
   setenv           CXX                "ccache clang++"
 } else {

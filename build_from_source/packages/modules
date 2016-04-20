@@ -94,8 +94,8 @@ if { [uname sysname] != "Darwin" } {
   module load moose/.mpich_petsc-3.6.4-clang
 } 
 module load moose/.vtk6-clang
-module load moose/.tbb
-module load moose/.cppunit-clang
+module load moose/.tbb44_20150728
+module load moose/.cppunit-1.12.1-clang
 
 # If MOOSE_DIR is set, help the user out by prepending the moose/python path
 if { [ info exists ::env(MOOSE_DIR) ] } {
@@ -121,8 +121,8 @@ if { [uname sysname] != "Darwin" } {
   module load moose/.mpich-3.1.4_gcc
   module load moose/.mpich_petsc-3.6.4-gcc
 }
-module load moose/.tbb
-module load moose/.cppunit-gcc
+module load moose/.tbb44_20150728
+module load moose/.cppunit-1.12.1-gcc
 
 
 # If MOOSE_DIR is set, help the user out by prepending the moose/python path

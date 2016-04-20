@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-import os, sys, re, argparse, shlex, shutil, platform, subprocess, tempfile
-
+import os, sys, re, argparse, shlex, shutil, subprocess, tempfile, platform
 
 class PackageCreator:
   """
@@ -10,19 +9,47 @@ Base class for building packages
     self.args = args
     self.base_name = _base_name
     self.uname = platform.platform()
+    self.arch = platform.machine()
     if self.uname.upper().find('DARWIN') != -1:
       self.version = '.'.join(platform.mac_ver()[0].split('.')[:-1])
       self.release = _mac_version_to_name[self.version]
     else:
-      # Strip all spaces if they are present...
+      # See if linux_distribution is going to provide anything useful
       self.release, self.version, junk = [x.replace(' ', '') for x in platform.linux_distribution()]
-    self.arch = platform.machine()
-    self.temp_dir = tempfile.mkdtemp()
+      if self._linux_detection() is not True:
+        if self.args.force is not True:
+          print 'I am unable to properly determine your system release or version:', \
+            '\n\t', ' '.join(platform.linux_distribution()), \
+            '\nSometimes using a non-system specific version of python (like miniconda) will', \
+            '\nreport platform identifiers incorrectly. Please make sure that `python` is', \
+            '\n/usr/bin/python'
+          sys.exit(1)
+        else:
+          print 'You have opted to force package creation regardless of package name.', \
+            '\nThis will cause the finished package to be named non-accordingly,', \
+            '\nas well as not being easily version controlled.'
+          self.release = 'generic'
+          self.version = '1.0'
     self.redistributable_version = self._get_build_version()
     self.redistributable_name = '-'.join([self.base_name, str(self.redistributable_version)]) + '_' + \
                                 '-'.join([self.release, self.version]) + '_' + \
                                 self.arch + '.' + \
                                 self.__class__.__name__.lower()
+
+    self.temp_dir = tempfile.mkdtemp()
+
+  def _linux_detection(self):
+    try:
+      lsb_release_process = subprocess.Popen(['lsb_release', '-a'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
+      lsb_release_stdout = lsb_release_process.communicate()[0]
+      for identifier in platform.linux_distribution():
+        if lsb_release_stdout.find(identifier) == -1:
+          return False
+    except:
+      # not every Linux OS has lsb_release, so we do not want to exit due to this
+      print 'Warning: lsb_release binary is not installed. This _may_ cause an error', \
+        '\nlater on when attempting to name the package accordingly.'
+    return True
 
   def _get_build_version(self):
     if not os.path.exists(os.path.join(args.relative_path, self.__class__.__name__.lower(), self.release + '-' + self.version + '_build')):
@@ -311,6 +338,7 @@ def parseArguments(args=None):
   parser = argparse.ArgumentParser(description='Create Redistributable Package')
   parser.add_argument('-p', '--packages-dir', help='Directory where you installed everything to (/opt/moose)')
   parser.add_argument('--package-type', help='Specify type of package to build. Valid values: deb rpm pkg')
+  parser.add_argument('--force', action='store_const', const=True, default=False, help='Force building package even if script could not determine OS release version')
   parser.add_argument('-k', '--keep-temporary-files', action='store_const', const=True, default=False, help='Keep temporary directory after package is created (default False')
   return verifyArgs(parser.parse_args(args))
 

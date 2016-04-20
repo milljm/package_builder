@@ -44,7 +44,7 @@ pre_run() {
       module load gcc
       export CC=gcc; export CXX=g++
     fi
-    cat <<EOF > $PACKAGES_DIR/Modules/3.2.10/modulefiles/moose/.clang
+    cat <<EOF > $PACKAGES_DIR/Modules/3.2.10/modulefiles/moose/.clang_3.7.0
 #%Module1.0#####################################################################
 ##
 ## Clang 3.7.0 modulefile
@@ -71,7 +71,7 @@ EOF
 
 post_run() {
     cd $PACKAGES_DIR/Modules/3.2.10/adv_modules
-    ln -s ../modulefiles/moose/.clang clang
+    ln -s ../modulefiles/moose/.clang_3.7.0 clang
     if [ `uname` = "Darwin" ]; then
 	cat <<'EOF' > $PACKAGES_DIR/${PACKAGE}_3.7.0/lib/change_links.sh
 #!/bin/bash

@@ -59,7 +59,7 @@ setenv          MPI_HOME          \$MPI_PATH
 prepend-path    PATH              \$MPI_PATH/bin
 
 EOF
-    cat <<EOF > $PACKAGES_DIR/Modules/3.2.10/adv_modules/openmpi-1.8.4_gcc
+    cat <<EOF > $PACKAGES_DIR/Modules/3.2.10/adv_modules/openmpi-gcc
 #%Module1.0#####################################################################
 ##
 ## OpenMPI GCC
@@ -94,7 +94,7 @@ prepend-path    PATH              \$MPI_PATH/bin
 
 append-path     MODULEPATH        \$BASE_PATH/Modules/3.2.10/openmpi_gcc
 EOF
-    module load advanced_modules openmpi-1.8.4_gcc
+    module load advanced_modules openmpi-gcc
     cd $MPI_HOME/lib
     for sfile in `find . -type f -name "*.la"`; do
 	if [ `grep -c 'src_temp_' $sfile` -ge 1 ]; then
