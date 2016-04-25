@@ -45,7 +45,7 @@ INSTALL='false'
 pre_run() {
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/3.2.10/init/bash
-    module load advanced_modules cmake openmpi-1.8.4_clang
+    module load advanced_modules cmake openmpi-clang
 }
 
 post_run() {

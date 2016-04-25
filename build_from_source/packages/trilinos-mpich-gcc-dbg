@@ -13,8 +13,8 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='http://mooseframework.org/source_packages/trilinos-11.14.3-Source.tar.gz'
-EXTRACT='trilinos-11.14.3-Source.tar.gz'
+DOWNLOAD='https://github.com/trilinos/Trilinos/archive/trilinos-release-12-6-2.tar.gz'
+EXTRACT='trilinos-release-12-6-2.tar.gz'
 CONFIGURE="
 cmake \
 -D CMAKE_INSTALL_PREFIX:PATH=$PACKAGES_DIR/trilinos/mpich-gcc-dbg \
@@ -55,16 +55,16 @@ INSTALL='true'
 pre_run() {
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/3.2.10/init/bash
-    module load advanced_modules cmake mpich-3.1.4_gcc
+    module load advanced_modules cmake mpich-gcc
     git clone https://github.com/ORNL-CEES/DataTransferKit.git
     cd DataTransferKit
-    git checkout 76502c937b4ec52b521b617f9cc399e98dc53f0d
+    git checkout b40e1cec6f00760efb1107161df5596f6486429f
     cd ../
     mkdir gcc-dbg; cd gcc-dbg
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/3.2.10/modulefiles/moose/.mpich-trilinos-gcc-dbg
+    cat <<EOF > $PACKAGES_DIR/Modules/3.2.10/modulefiles/moose/.mpich-trilinos-12.6.2-gcc-dbg
 #%Module1.0#####################################################################
 ##
 ##  Trilinos MPICH GCC Debug Module 
@@ -80,7 +80,7 @@ if { [uname sysname] != "Darwin" } {
 setenv       TRILINOS_DIR                \$BASE_PATH/trilinos/mpich-gcc-dbg
 EOF
     cd $PACKAGES_DIR/Modules/3.2.10/mpich_gcc
-    ln -s ../modulefiles/moose/.mpich-trilinos-gcc-dbg trilinos-dbg
+    ln -s ../modulefiles/moose/.mpich-trilinos-12.6.2-gcc-dbg trilinos-dbg
 }
 ##
 ## End Specifics

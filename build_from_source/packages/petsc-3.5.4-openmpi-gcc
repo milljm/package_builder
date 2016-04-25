@@ -46,7 +46,7 @@ INSTALL='false'
 pre_run() {
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/3.2.10/init/bash
-    module load advanced_modules cmake openmpi-1.8.4_gcc
+    module load advanced_modules cmake openmpi-gcc
     cat <<'EOF' > gcc_openmp.patch
 diff -ru a/config/BuildSystem/config/package.py b/config/BuildSystem/config/package.py
 --- a/config/BuildSystem/config/package.py  2015-05-23 10:57:09.000000000 -0600

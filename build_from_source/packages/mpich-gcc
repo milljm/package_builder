@@ -57,7 +57,7 @@ prepend-path    LIBRARY           \$BASE_PATH/tbb/lib
 prepend-path    CPATH             \$BASE_PATH/tbb/include
 
 EOF
-    cat <<EOF > $PACKAGES_DIR/Modules/3.2.10/adv_modules/mpich-3.1.4_gcc
+    cat <<EOF > $PACKAGES_DIR/Modules/3.2.10/adv_modules/mpich-gcc
 #%Module1.0#####################################################################
 ##
 ## MPICH GCC
@@ -93,7 +93,7 @@ prepend-path    CPATH             \$BASE_PATH/tbb/include
 
 append-path     MODULEPATH        \$BASE_PATH/Modules/3.2.10/mpich_gcc
 EOF
-    module load advanced_modules mpich-3.1.4_gcc
+    module load advanced_modules mpich-gcc
     cd $MPI_HOME/lib
     for sfile in `find . -type f -name "*.la"`; do
 	if [ `grep -c 'src_temp_' $sfile` -ge 1 ]; then
