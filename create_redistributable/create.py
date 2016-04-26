@@ -10,6 +10,7 @@ Base class for building packages
     self.base_name = _base_name
     self.uname = platform.platform()
     self.arch = platform.machine()
+    self.version_template = self._getVersionTemplate()
     if self.uname.upper().find('DARWIN') != -1:
       self.version = '.'.join(platform.mac_ver()[0].split('.')[:-1])
       self.release = _mac_version_to_name[self.version]
@@ -50,6 +51,15 @@ Base class for building packages
       print 'Warning: lsb_release binary is not installed. This _may_ cause an error', \
         '\nlater on when attempting to name the package accordingly.'
     return True
+
+  def _getVersionTemplate(self):
+    version_template = {}
+    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), '../common_files', 'version_template')) as template_file:
+      template = template_file.read()
+      for item in template.split('\n'):
+        if len(item):
+          version_template[item.split('=')[0]] = item.split('=')[1]
+    return version_template
 
   def _get_build_version(self):
     if not os.path.exists(os.path.join(args.relative_path, self.__class__.__name__.lower(), self.release + '-' + self.version + '_build')):
@@ -254,6 +264,10 @@ Class for building Macintosh Packages
 
           html_str = html_str.replace('<PACKAGES_DIR>', self.args.packages_dir)
           html_str = html_str.replace('<REDISTRIBUTABLE_VERSION>', 'Package version: ' + str(self.redistributable_version))
+
+          for item_list in self.version_template.iteritems():
+            html_str = html_str.replace('<' + item_list[0] + '>', item_list[1])
+
           tmp_file.write(html_str)
       return True
     else:
