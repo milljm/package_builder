@@ -141,7 +141,6 @@ EOF
 ##
 module load moose/.<MPICH>_gcc
 module load moose/.mpich_<PETSC_NEW>-gcc
-module load moose/.<VTK>-gcc
 module load moose/.<CPPUNIT>-gcc
 
 EOF

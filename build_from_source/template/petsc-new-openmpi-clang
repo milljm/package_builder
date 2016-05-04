@@ -141,7 +141,7 @@ EOF
 ##
 module load moose/.<OPENMPI>_clang
 module load moose/.openmpi_<PETSC_NEW>-clang
-module load moose/.<VTK>-clang
+module load moose/.<TBB>
 module load moose/.<CPPUNIT>-clang
 
 EOF
