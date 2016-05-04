@@ -100,7 +100,6 @@ EOF
 conflict moose-dev-gcc
 module load moose/.<MPICH>_clang
 module load moose/.mpich_<PETSC_NEW>-clang
-module load moose/.<VTK>-clang
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-clang
 
