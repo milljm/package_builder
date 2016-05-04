@@ -37,6 +37,16 @@ post_run() {
     mkdir -p $PACKAGES_DIR/Modules/<MODULES>/mpich_gcc
     mkdir -p $PACKAGES_DIR/Modules/<MODULES>/civet
     mkdir -p $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose
+    mkdir -p $PACKAGES_DIR/Modules/<MODULES>/modulefiles/civet
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/civet/.civet
+#%Module1.0#####################################################################
+##
+## Civet support modules
+##
+##
+set          BASE_PATH  $PACKAGES_DIR
+prepend-path MODULEPATH \$BASE_PATH/Modules/<MODULES>/civet
+EOF
     cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/advanced_modules
 #%Module1.0#####################################################################
 ##

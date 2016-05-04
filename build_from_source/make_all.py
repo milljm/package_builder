@@ -145,10 +145,12 @@ def verifyArgs(args):
     print 'You must specify a directory to install everything into'
     sys.exit(1)
   elif os.path.exists(args.prefix) is not True:
-    print 'The path specified does not exist. Please create this path, and chown it appropriately before continuing'
-    sys.exit(1)
+    try:
+      os.makedirs(args.prefix)
+    except:
+      print 'The path specified does not exist. Please create this path, and chown it appropriately before continuing'
+      sys.exit(1)
   else:
-    args.prefix = args.prefix.rstrip(os.path.sep)
     try:
       test_writeable = open(os.path.join(args.prefix, 'test_write'), 'a')
       test_writeable.close()
@@ -156,6 +158,7 @@ def verifyArgs(args):
     except:
       print 'Unable to write to specified prefix location. Please chown this location manually before continuing'
       sys.exit(1)
+  args.prefix = args.prefix.rstrip(os.path.sep)
   return args
 
 def which(program):
