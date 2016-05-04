@@ -125,7 +125,7 @@ if { [uname sysname] != "Darwin" } {
 module load moose/.<MPICH>_gcc
 module load moose/.mpich_<PETSC_NEW>-gcc
 module load moose/.<TBB>
-module load moose/.<CPPUNIT>
+module load moose/.<CPPUNIT>-gcc
 
 # If MOOSE_DIR is set, help the user out by prepending the moose/python path
 if { [ info exists ::env(MOOSE_DIR) ] } {
