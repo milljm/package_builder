@@ -40,6 +40,7 @@ module load moose/.<VTK>-gcc
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-gcc
 module load moose/.mpich_<TRILINOS>-gcc-opt
+module load ccache
 module load moose-tools
 
 EOF
@@ -60,6 +61,7 @@ module load moose/.<VTK>-gcc
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-gcc
 module load moose/.mpich_<TRILINOS>-gcc-dbg
+module load ccache
 module load moose-tools
 
 EOF
@@ -78,6 +80,7 @@ module load moose/.mpich_<PETSC_OLD>-gcc
 module load moose/.<VTK>-gcc
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-gcc
+module load ccache
 module load moose-tools
 
 EOF
@@ -94,6 +97,7 @@ module load moose/.<MPICH>_gcc
 module load moose/.mpich_<PETSC_OLD>-gcc
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-gcc
+module load ccache
 module load moose-tools
 
 EOF
@@ -114,6 +118,7 @@ module load moose/.<VTK>-clang
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-clang
 module load moose/.openmpi_<TRILINOS>-clang-opt
+module load ccache
 module load moose-tools
 
 EOF
@@ -134,6 +139,7 @@ module load moose/.<VTK>-clang
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-clang
 module load moose/.openmpi_<TRILINOS>-clang-dbg
+module load ccache
 module load moose-tools
 
 EOF
@@ -152,6 +158,7 @@ module load moose/.openmpi_<PETSC_OLD>-clang
 module load moose/.<VTK>-clang
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-clang
+module load ccache
 module load moose-tools
 
 EOF
@@ -168,6 +175,7 @@ module load moose/.<OPENMPI>_clang
 module load moose/.openmpi_<PETSC_OLD>-clang
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-clang
+module load ccache
 module load moose-tools
 
 EOF
@@ -188,6 +196,7 @@ module load moose/.<VTK>-gcc
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-gcc
 module load moose/.mpich_<TRILINOS>-gcc-opt
+module load ccache
 module load moose-tools
 
 EOF
@@ -208,6 +217,7 @@ module load moose/.<VTK>-gcc
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-gcc
 module load moose/.mpich_<TRILINOS>-gcc-dbg
+module load ccache
 module load moose-tools
 
 EOF
@@ -226,6 +236,7 @@ module load moose/.mpich_<PETSC_OLD>-gcc
 module load moose/.<VTK>-gcc
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-gcc
+module load ccache
 module load moose-tools
 
 EOF
@@ -242,6 +253,7 @@ module load moose/.<MPICH>_gcc
 module load moose/.mpich_<PETSC_OLD>-gcc
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-gcc
+module load ccache
 module load moose-tools
 
 EOF
@@ -262,6 +274,7 @@ module load moose/.<VTK>-clang
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-clang
 module load moose/.mpich_<TRILINOS>-clang-opt
+module load ccache
 module load moose-tools
 
 EOF
@@ -282,6 +295,7 @@ module load moose/.<VTK>-clang
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-clang
 module load moose/.mpich_<TRILINOS>-clang-dbg
+module load ccache
 module load moose-tools
 
 EOF
@@ -300,6 +314,7 @@ module load moose/.mpich_<PETSC_OLD>-clang
 module load moose/.<VTK>-clang
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-clang
+module load ccache
 module load moose-tools
 
 EOF
@@ -316,6 +331,7 @@ module load moose/.<MPICH>_clang
 module load moose/.mpich_<PETSC_OLD>-clang
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-clang
+module load ccache
 module load moose-tools
 
 EOF
@@ -336,6 +352,7 @@ module load moose/.<VTK>-gcc
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-gcc
 module load moose/.openmpi_<TRILINOS>-gcc-opt
+module load ccache
 module load moose-tools
 
 EOF
@@ -356,6 +373,7 @@ module load moose/.<VTK>-gcc
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-gcc
 module load moose/.openmpi_<TRILINOS>-gcc-dbg
+module load ccache
 module load moose-tools
 
 EOF
@@ -374,6 +392,7 @@ module load moose/.openmpi_<PETSC_NEW>-gcc
 module load moose/.<VTK>-gcc
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-gcc
+module load ccache
 module load moose-tools
 
 EOF
@@ -390,6 +409,7 @@ module load moose/.<OPENMPI>_gcc
 module load moose/.openmpi_<PETSC_NEW>-gcc
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-gcc
+module load ccache
 module load moose-tools
 
 EOF
@@ -410,6 +430,7 @@ module load moose/.<VTK>-clang
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-clang
 module load moose/.openmpi_<TRILINOS>-clang-opt
+module load ccache
 module load moose-tools
 
 EOF
@@ -430,6 +451,7 @@ module load moose/.<VTK>-clang
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-clang
 module load moose/.openmpi_<TRILINOS>-clang-dbg
+module load ccache
 module load moose-tools
 
 EOF
@@ -448,6 +470,7 @@ module load moose/.openmpi_<PETSC_NEW>-clang
 module load moose/.<VTK>-clang
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-clang
+module load ccache
 module load moose-tools
 
 EOF
@@ -464,6 +487,7 @@ module load moose/.<OPENMPI>_clang
 module load moose/.openmpi_<PETSC_NEW>-clang
 module load moose/.<CPPUNIT>-clang
 module load moose/.<TBB>
+module load ccache
 module load moose-tools
 
 EOF
@@ -484,6 +508,7 @@ module load moose/.<VTK>-gcc
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-gcc
 module load moose/.mpich_<TRILINOS>-gcc-opt
+module load ccache
 module load moose-tools
 
 EOF
@@ -504,6 +529,7 @@ module load moose/.<VTK>-gcc
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-gcc
 module load moose/.mpich_<TRILINOS>-gcc-dbg
+module load ccache
 module load moose-tools
 
 EOF
@@ -522,6 +548,7 @@ module load moose/.mpich_<PETSC_NEW>-gcc
 module load moose/.<VTK>-gcc
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-gcc
+module load ccache
 module load moose-tools
 
 EOF
@@ -538,6 +565,7 @@ module load moose/.<MPICH>_gcc
 module load moose/.mpich_<PETSC_NEW>-gcc
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-gcc
+module load ccache
 module load moose-tools
 
 EOF
@@ -558,6 +586,7 @@ module load moose/.<VTK>-clang
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-clang
 module load moose/.mpich_<TRILINOS>-clang-opt
+module load ccache
 module load moose-tools
 
 EOF
@@ -578,6 +607,7 @@ module load moose/.<VTK>-clang
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-clang
 module load moose/.mpich_<TRILINOS>-clang-dbg
+module load ccache
 module load moose-tools
 
 EOF
@@ -596,6 +626,7 @@ module load moose/.mpich_<PETSC_NEW>-clang
 module load moose/.<VTK>-clang
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-clang
+module load ccache
 module load moose-tools
 
 EOF
@@ -612,6 +643,7 @@ module load moose/.<MPICH>_clang
 module load moose/.mpich_<PETSC_NEW>-clang
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>-clang
+module load ccache
 module load moose-tools
 
 EOF
