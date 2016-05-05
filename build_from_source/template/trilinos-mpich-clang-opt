@@ -67,7 +67,7 @@ pre_run() {
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.mpich-<TRILINOS>-clang-opt
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.mpich_<TRILINOS>-clang-opt
 #%Module1.0#####################################################################
 ##
 ##  Trilinos MPICH Clang Optimized Module 

@@ -67,7 +67,7 @@ pre_run() {
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.mpich-<TRILINOS>-gcc-dbg
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.mpich_<TRILINOS>-gcc-dbg
 #%Module1.0#####################################################################
 ##
 ##  Trilinos MPICH GCC Debug Module 

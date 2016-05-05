@@ -67,7 +67,7 @@ pre_run() {
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.mpich-<TRILINOS>-clang-dbg
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.mpich_<TRILINOS>-clang-dbg
 #%Module1.0#####################################################################
 ##
 ##  Trilinos MPICH Clang Debug Module 

@@ -67,7 +67,7 @@ pre_run() {
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.openmpi-<TRILINOS>-gcc-opt
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.openmpi_<TRILINOS>-gcc-opt
 #%Module1.0#####################################################################
 ##
 ##  Trilinos OpenMPI GCC Optimized Module
