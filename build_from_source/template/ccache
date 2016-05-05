@@ -38,12 +38,19 @@ set              BASE_PATH        $PACKAGES_DIR
 prepend-path     PATH               \$BASE_PATH/ccache/bin
 prepend-path     MANPATH            \$BASE_PATH/ccache/share/man
 
+if {[is-loaded moose/.<GCC>] || [is-loaded gcc]} {
+  setenv           CC                 "ccache gcc"
+  setenv           CXX                "ccache g++"
+}
 if {[is-loaded moose/.<CLANG>] || [is-loaded clang]} {
   setenv           CC                 "ccache clang"
   setenv           CXX                "ccache clang++"
-} else {
-  setenv           CC                 "ccache gcc"
-  setenv           CXX                "ccache g++"
+}
+
+# Civet specific support for Intel compiler
+if {[is-loaded moose/.intel] || [is-loaded intel]} {
+  setenv           CC                 "ccache icc"
+  setenv           CXX                "ccache icpc"
 }
 
 setenv           CCACHE_SLOPPINESS  "time_macros" 
