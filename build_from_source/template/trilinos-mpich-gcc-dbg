@@ -83,7 +83,7 @@ if { [uname sysname] != "Darwin" } {
 setenv       TRILINOS_DIR                \$BASE_PATH/<TRILINOS>/mpich-gcc-dbg
 EOF
     cd $PACKAGES_DIR/Modules/<MODULES>/mpich_gcc
-    ln -s ../modulefiles/moose/.mpich-<TRILINOS>-gcc-dbg trilinos-dbg
+    ln -s ../modulefiles/moose/.mpich_<TRILINOS>-gcc-dbg trilinos-dbg
 }
 ##
 ## End Specifics

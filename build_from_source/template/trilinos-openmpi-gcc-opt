@@ -83,7 +83,7 @@ if { [uname sysname] != "Darwin" } {
 setenv       TRILINOS_DIR                \$BASE_PATH/<TRILINOS>/openmpi-gcc-opt
 EOF
     cd $PACKAGES_DIR/Modules/<MODULES>/openmpi_gcc
-    ln -s ../modulefiles/moose/.openmpi-<TRILINOS>-gcc-opt trilinos-opt
+    ln -s ../modulefiles/moose/.openmpi_<TRILINOS>-gcc-opt trilinos-opt
 }
 ##
 ## End Specifics
