@@ -52,7 +52,7 @@ setenv          VTK6_PYTHON_DIR               \$BASE_PATH/<VTK>/gcc-opt/lib/pyth
 EOF
     unset CC CXX
     cd $PACKAGES_DIR/Modules/<MODULES>/adv_modules
-    ln -s ../modulefiles/moose/.<VTK>-gcc <VTK>-gcc
+    ln -s ../modulefiles/moose/.<VTK>-gcc vtk-gcc
     
 }
 ##
