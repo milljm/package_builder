@@ -61,7 +61,7 @@ pre_run() {
     module load advanced_modules cmake mpich-clang
     git clone https://github.com/ORNL-CEES/DataTransferKit.git
     cd DataTransferKit
-    git checkout b40e1cec6f00760efb1107161df5596f6486429f
+    git checkout <DTK>
     cd ../
     mkdir clang-opt; cd clang-opt
 }
