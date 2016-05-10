@@ -1,7 +1,7 @@
 MPICH=mpich-3.2
 OPENMPI=openmpi-1.10.2
-PETSC_NEW=petsc-3.6.4
-PETSC_OLD=petsc-3.5.4
+PETSC_ALT=petsc-3.7.0
+PETSC_DEFAULT=petsc-3.6.4
 AUTOCONF=autoconf-2.69
 AUTOMAKE=automake-1.13
 GCC=gcc-5.3.0
