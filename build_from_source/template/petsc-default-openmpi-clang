@@ -2,8 +2,8 @@
 #############
 ## Specifics
 ##
-DEP=(modules cmake gcc llvm mpich-clang)
-PACKAGE='<PETSC_NEW>-mpich-clang-dbg'
+DEP=(modules cmake gcc llvm openmpi-clang)
+PACKAGE='<PETSC_DEFAULT>-openmpi-clang'
 
 #####
 # Set the operating system allowed to build this module
@@ -13,13 +13,13 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='http://mooseframework.org/source_packages/<PETSC_NEW>.tar.gz'
-EXTRACT='<PETSC_NEW>.tar.gz'
+DOWNLOAD='http://mooseframework.org/source_packages/<PETSC_DEFAULT>.tar.gz'
+EXTRACT='<PETSC_DEFAULT>.tar.gz'
 CONFIGURE="./configure \
---prefix=$PACKAGES_DIR/petsc/mpich_<PETSC_NEW>/clang-dbg-superlu \
+--prefix=$PACKAGES_DIR/petsc/openmpi_<PETSC_DEFAULT>/clang-opt-superlu \
 --download-hypre=1 \
 --with-ssl=0 \
---with-debugging=1 \
+--with-debugging=no \
 --with-pic=1 \
 --with-shared-libraries=1 \
 --with-cc=mpicc \
@@ -43,39 +43,38 @@ BUILD='false'
 INSTALL='false'
 
 pre_run() {
-    if [ -d $PACKAGES_DIR/petsc/mpich_<PETSC_NEW>/clang-dbg-superlu ]; then
-	rm -rf $PACKAGES_DIR/petsc/mpich_<PETSC_NEW>/clang-dbg-superlu
+    if [ -d $PACKAGES_DIR/petsc/openmpi_<PETSC_DEFAULT>/clang-opt-superlu ]; then
+	rm -rf $PACKAGES_DIR/petsc/openmpi_<PETSC_DEFAULT>/clang-opt-superlu
     fi
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
-    module load advanced_modules cmake mpich-clang
+    module load advanced_modules cmake openmpi-clang
 }
 
 post_run() {
     if [ `uname` = "Darwin" ]; then
-	make PETSC_DIR=$1/<PETSC_NEW> PETSC_ARCH=arch-darwin-c-debug all
-	if [ $? -ne 0 ]; then echo 'Failed to build'; cleanup 1; fi
-	make PETSC_DIR=$1/<PETSC_NEW> PETSC_ARCH=arch-darwin-c-debug install
-	if [ $? -ne 0 ]; then echo 'Failed to install'; cleanup 1; fi
+	    make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-darwin-c-opt all
+	    if [ $? -ne 0 ]; then echo "Error while building PETSc"; cleanup 1; fi
+	    make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-darwin-c-opt install
+	    if [ $? -ne 0 ]; then echo "Error while installing PETSc"; cleanup 1; fi
     else
-	make PETSC_DIR=$1/<PETSC_NEW> PETSC_ARCH=arch-linux2-c-debug all
-	if [ $? -ne 0 ]; then echo 'Failed to build'; cleanup 1; fi
-	make PETSC_DIR=$1/<PETSC_NEW> PETSC_ARCH=arch-linux2-c-debug install
-	if [ $? -ne 0 ]; then echo 'Failed to install'; cleanup 1; fi
+	    make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-opt all
+	    if [ $? -ne 0 ]; then echo "Error while building PETSc"; cleanup 1; fi
+	    make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-opt install
+	    if [ $? -ne 0 ]; then echo "Error while installing PETSc"; cleanup 1; fi
     fi
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.mpich_<PETSC_NEW>-clang-dbg
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.openmpi_<PETSC_DEFAULT>-clang
 #%Module1.0#####################################################################
 ##
-## MPICH Clang <PETSC_NEW> superlu Debug modulefile
+## OpenMPI Clang <PETSC_DEFAULT> superlu modulefile
 ##
 ##
 ##
 set         BASE_PATH        $PACKAGES_DIR
-setenv      PETSC_DIR        \$BASE_PATH/petsc/mpich_<PETSC_NEW>/clang-dbg-superlu
+setenv      PETSC_DIR        \$BASE_PATH/petsc/openmpi_<PETSC_DEFAULT>/clang-opt-superlu
 EOF
-    cd $PACKAGES_DIR/Modules/<MODULES>/mpich_clang
-    ln -s ../modulefiles/moose/.mpich_<PETSC_NEW>-clang-dbg <PETSC_NEW>-dbg
-
+    cd $PACKAGES_DIR/Modules/<MODULES>/openmpi_clang
+    ln -s ../modulefiles/moose/.openmpi_<PETSC_DEFAULT>-clang <PETSC_DEFAULT>
 }
 
 ##
