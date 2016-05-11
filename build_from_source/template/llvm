@@ -15,7 +15,12 @@ ARCH=(Darwin Linux)
 # This is useful for items like 'autojump' which requires a git clone/checkout
 DOWNLOAD=(http://mooseframework.org/source_packages/<LLVM>.src.tar.xz http://mooseframework.org/source_packages/<CFE>.src.tar.xz http://mooseframework.org/source_packages/<COMPILER_RT>.src.tar.xz http://mooseframework.org/source_packages/<LIBCXX>.src.tar.xz http://mooseframework.org/source_packages/<LIBCXXABI>.src.tar.xz http://mooseframework.org/source_packages/<OPENMP>.src.tar.xz http://mooseframework.org/source_packages/<CLANG_TOOLS_EXTRA>.src.tar.xz)
 EXTRACT=(<LLVM>.src.tar.xz <CFE>.src.tar.xz <COMPILER_RT>.src.tar.xz <LIBCXX>.src.tar.xz <LIBCXXABI>.src.tar.xz <OPENMP>.src.tar.xz <CLANG_TOOLS_EXTRA>.src.tar.xz)
-CONFIGURE="cmake -DCMAKE_INSTALL_RPATH:STRING=$PACKAGES_DIR/<LLVM>/lib -DCLANG_DEFAULT_OPENMP_RUNTIME=libomp -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/<LLVM> -DCMAKE_INSTALL_NAME_DIR:STRING=$PACKAGES_DIR/<LLVM>/lib -DCMAKE_MACOSX_RPATH:BOOL=OFF ../llvm"
+CONFIGURE="cmake -DCMAKE_INSTALL_RPATH:STRING=$PACKAGES_DIR/<LLVM>/lib \
+-DCLANG_DEFAULT_OPENMP_RUNTIME=libomp \
+-DCMAKE_BUILD_TYPE=Release \
+-DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/<LLVM> \
+-DCMAKE_INSTALL_NAME_DIR:STRING=$PACKAGES_DIR/<LLVM>/lib \
+-DCMAKE_MACOSX_RPATH:BOOL=OFF ../llvm"
 BUILD='true'
 INSTALL='true'
 
@@ -67,6 +72,11 @@ prepend-path    PATH                          \$BASE_PATH/<LLVM>/bin
 # Needed for OpenMP
 prepend-path    LIBRARY_PATH                  \$BASE_PATH/<LLVM>/lib
 
+# Needed for Python Clang bindings
+# >>> clang.cindex.Config.set_library_path(os.getenv('MOOSE_CLANG_LIB'))
+prepend-path    PYTHONPATH                    \$BASE_PATH/<LLVM>/bindings/python
+setenv          MOOSE_CLANG_LIB               \$BASE_PATH/<LLVM>/lib
+
 setenv          CC                            clang
 setenv          CXX                           clang++
 EOF
@@ -101,6 +111,7 @@ EOF
 	  sh change_links.sh
 	  rm -f change_links.sh
     fi
+    cp -R $1/llvm/tools/clang/bindings $PACKAGES_DIR/<LLVM>/
 }
 ##
 ## End Specifics
