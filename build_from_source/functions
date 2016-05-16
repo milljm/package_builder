@@ -74,7 +74,7 @@ cleanup() {
     if [ $1 == 0 ]; then
 	echo 'Deleting temporary build location: '$src_temp
 	rm -rf $src_temp
-    elif [ ! -z "$KEEP_FAILED" ]; then
+    elif [ -z "$KEEP_FAILED" ]; then
 	echo 'Error while working on: '$PACKAGE
 	rm -rf $src_temp
     else

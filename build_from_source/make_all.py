@@ -208,7 +208,7 @@ if __name__ == '__main__':
     os.environ['DOWNLOAD_ONLY'] = 'False'
 
   if args.keep_failed:
-    os.environ['KEEP_FAILED'] = 'False'
+    os.environ['KEEP_FAILED'] = 'True'
 
   if args.new_build:
     if os.path.exists(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'progress')):
