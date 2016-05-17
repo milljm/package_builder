@@ -2,26 +2,27 @@
 #############
 ## Specifics
 ##
-DEP=(modules cmake gcc openmpi-gcc)
-PACKAGE='<PETSC_ALT>-openmpi-gcc-dbg'
+DEP=(modules cmake gcc mpich-gcc)
+PACKAGE='<PETSC_DEFAULT>-64-mpich-gcc'
 
 #####
 # Set the operating system allowed to build this module
 #
-ARCH=(Darwin Linux)
+ARCH=(Linux)
 
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='http://mooseframework.org/source_packages/<PETSC_ALT>.tar.gz'
-EXTRACT='<PETSC_ALT>.tar.gz'
+DOWNLOAD='http://mooseframework.org/source_packages/<PETSC_DEFAULT>.tar.gz'
+EXTRACT='<PETSC_DEFAULT>.tar.gz'
 CONFIGURE="./configure \
---prefix=$PACKAGES_DIR/petsc/openmpi_<PETSC_ALT>/gcc-dbg-superlu \
+--prefix=$PACKAGES_DIR/petsc/mpich_<PETSC_DEFAULT>/gcc-opt-superlu-64 \
 --download-hypre=1 \
 --with-ssl=0 \
---with-debugging=1 \
+--with-debugging=no \
 --with-pic=1 \
 --with-shared-libraries=1 \
+--with-64-bit-indices \
 --with-cc=mpicc \
 --with-cxx=mpicxx \
 --with-fc=mpif90 \
@@ -43,39 +44,38 @@ BUILD='false'
 INSTALL='false'
 
 pre_run() {
-    if [ -d $PACKAGES_DIR/petsc/openmpi_<PETSC_ALT>/gcc-dbg-superlu ]; then
-	rm -rf $PACKAGES_DIR/petsc/openmpi_<PETSC_ALT>/gcc-dbg-superlu
+    if [ -d $PACKAGES_DIR/petsc/mpich_<PETSC_DEFAULT>/gcc-opt-superlu-64 ]; then
+	rm -rf $PACKAGES_DIR/petsc/mpich_<PETSC_DEFAULT>/gcc-opt-superlu-64
     fi
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
-    module load advanced_modules cmake openmpi-gcc
+    module load advanced_modules cmake mpich-gcc
 }
 
 post_run() {
     if [ `uname` = "Darwin" ]; then
-	make PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-darwin-c-debug all
-	if [ $? -ne 0 ]; then echo "Error while building PETSc"; cleanup 1; fi
-	make PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-darwin-c-debug install
-	if [ $? -ne 0 ]; then echo "Error while installing PETSc"; cleanup 1; fi
+	    make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-darwin-c-opt all
+	    if [ $? -ne 0 ]; then echo "Error while building PETSc"; cleanup 1; fi
+	    make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-darwin-c-opt install
+	    if [ $? -ne 0 ]; then echo "Error while installing PETSc"; cleanup 1; fi
     else
-	make PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-linux2-c-debug all
-	if [ $? -ne 0 ]; then echo "Error while building PETSc"; cleanup 1; fi
-	make PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-linux2-c-debug install
-	if [ $? -ne 0 ]; then echo "Error while installing PETSc"; cleanup 1; fi
+	    make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-opt all
+	    if [ $? -ne 0 ]; then echo "Error while building PETSc"; cleanup 1; fi
+	    make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-opt install
+	    if [ $? -ne 0 ]; then echo "Error while installing PETSc"; cleanup 1; fi
     fi
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.openmpi_<PETSC_ALT>-gcc-dbg
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.mpich_<PETSC_DEFAULT>-64-gcc
 #%Module1.0#####################################################################
 ##
-## OpenMPI GCC <PETSC_ALT> superlu Debug modulefile
+## MPICH GCC <PETSC_DEFAULT> superlu 64bit indices modulefile
 ##
 ##
 ##
 set         BASE_PATH        $PACKAGES_DIR
-setenv      PETSC_DIR        \$BASE_PATH/petsc/openmpi_<PETSC_ALT>/gcc-dbg-superlu
+setenv      PETSC_DIR        \$BASE_PATH/petsc/mpich_<PETSC_DEFAULT>/gcc-opt-superlu-64
 EOF
-    cd $PACKAGES_DIR/Modules/<MODULES>/openmpi_gcc
-    ln -s ../modulefiles/moose/.openmpi_<PETSC_ALT>-gcc-dbg <PETSC_ALT>-dbg
-
+    cd $PACKAGES_DIR/Modules/<MODULES>/mpich_gcc
+    ln -s ../modulefiles/moose/.mpich_<PETSC_DEFAULT>-64-gcc <PETSC_DEFAULT>-64
 }
 
 ##
