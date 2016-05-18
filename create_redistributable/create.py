@@ -95,20 +95,44 @@ Base class for building packages
       return False
     return True
 
+  def which(self, program):
+    def is_exe(fpath):
+      return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+    fpath, fname = os.path.split(program)
+    if fpath:
+      if is_exe(program):
+        return program
+    else:
+      for path in os.environ["PATH"].split(os.pathsep):
+        path = path.strip('"')
+        exe_file = os.path.join(path, program)
+        if is_exe(exe_file):
+          return exe_file
+      return None
+
   def create_redistributable(self):
     return True
 
   def commit_version_change(self):
     return True
 
+  def check_prereqs(self):
+    return True
 
 class DEB(PackageCreator):
   """
 Class for building Debian based packages
 """
+  def check_prereqs(self):
+    if self.which('dpkg'):
+      return True
+    print 'dpkg not found! Unable to build deb packages.'
+    return False
+
   def prepare_area(self):
+    prereqs = self.check_prereqs()
     create_template = PackageCreator.prepare_area(self)
-    if create_template:
+    if create_template and prereqs:
       for directory, directories, files in os.walk(os.path.join(self.temp_dir, 'deb/DEBIAN')):
         for xml_file in files:
           with open(os.path.join(self.temp_dir, 'deb/DEBIAN', xml_file), 'r+') as tmp_file:
@@ -153,6 +177,12 @@ class RPM(PackageCreator):
   """
 Class for building RedHat based packages
 """
+  def check_prereqs(self):
+    if self.which('rpmbuild'):
+      return True
+    print 'rpmbuild not found! Unable to build rpm packages.'
+    return False
+
   def _get_requirements(self):
     # RPM based distros have different package names for 'fortran'
     # and libX11-devel, so try and discover exactly which package
@@ -183,9 +213,10 @@ Class for building RedHat based packages
       return False
 
   def prepare_area(self):
+    prereqs = self.check_prereqs()
     requirements = self._get_requirements()
     create_template = PackageCreator.prepare_area(self)
-    if create_template and requirements:
+    if create_template and requirements and prereqs:
       with open(os.path.join(self.temp_dir, 'rpm/SPECS/moose-compilers.spec'), 'r+') as tmp_file:
         xml_string = tmp_file.read()
         # set major_version based on spec file
