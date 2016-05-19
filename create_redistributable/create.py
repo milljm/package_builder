@@ -143,6 +143,7 @@ Class for building Debian based packages
             xml_string = xml_string.replace('<PACKAGES_DIR>', self.args.packages_dir)
             tmp_file.write(xml_string)
       return True
+    return False
 
   def create_tarball(self):
     # We need to copy files instead of using a tarball
@@ -232,6 +233,7 @@ Class for building RedHat based packages
       for directory in ['BUILD', 'BUILDROOT', 'RPMS', 'SRPMS', 'SOURCES']:
         os.makedirs(os.path.join(self.temp_dir, 'rpm', directory))
       return True
+    return False
 
   def create_tarball(self):
     tarball_results = PackageCreator.create_tarball(self, 'tar')
@@ -239,6 +241,7 @@ Class for building RedHat based packages
       # move tarball into position inside the SOURCES directory
       shutil.move(os.path.join(self.temp_dir, 'rpm/payload.tar'), os.path.join(self.temp_dir, 'rpm/SOURCES', self.base_name + '.tar' ))
       return True
+    return False
 
   def create_redistributable(self):
     print 'Building redistributable using rpmbuild... This can take a long time'
@@ -301,8 +304,7 @@ Class for building Macintosh Packages
 
           tmp_file.write(html_str)
       return True
-    else:
-      return False
+    return False
 
   def create_redistributable(self):
     os.chdir(self.temp_dir)
