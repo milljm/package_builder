@@ -14,11 +14,7 @@
 #######################################################
 
 # The module we use to build PETSc:
-if [ `uname` == "Darwin" ]; then
-  export BUILD_MODULE=mpich-3.1.4_clang
-else
-  export BUILD_MODULE=openmpi-1.8.4_gcc
-fi
+export BUILD_MODULE=mpich-clang
 
 # Installation directory
 export INSTALL_DIR=$HOME/petsc_head
