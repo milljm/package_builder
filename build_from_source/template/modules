@@ -56,6 +56,45 @@ EOF
 set          BASE_PATH  $PACKAGES_DIR
 prepend-path MODULEPATH \$BASE_PATH/Modules/<MODULES>/adv_modules
 EOF
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/adv_modules/petsc-head
+#%Module1.0#####################################################################
+##
+## PETSC head (run $PACKAGES_DIR/build_PETSc-head to obtain/install latest PETSc) modulefile
+##
+##
+##
+proc ModulesHelp { } {
+        puts stderr "\n\tThis is the PETSc head module. You must run:"
+        puts stderr "\n\t\t/opt/moose/build_PETSc-head"
+        puts stderr "\n\tThat script builds everything you need. You"
+        puts stderr "\tonly need to run that script once, or as"
+        puts stderr "\toften as you like (script downloads nightly"
+        puts stderr "\tsnapshot).\n"
+}
+
+# If HOME is set, use that in an attempt to find petsc_head/petsc
+if { [ info exists ::env(HOME) ] } {
+  eval set [ array get env HOME ]
+  if [ file isdirectory \$HOME/petsc_head/petsc ] {
+    # Based on uname, we determine which compiler to use
+    if { [uname sysname] == "Darwin"} {
+      module load mpich-clang
+    } else {
+      module load mpich-gcc
+    }
+    setenv PETSC_DIR \$HOME/petsc_head/petsc
+  } else {
+      puts stderr "\n\tDirectory: \$HOME/petsc_head/petsc"
+      puts stderr "\tnot detected. You must first run:"
+      puts stderr "\n\t\t/opt/moose/build_PETSc-head"
+      puts stderr "\n\tThat script builds everything you need. You"
+      puts stderr "\tonly need to run that script once, or as"
+      puts stderr "\toften as you like (script downloads nightly"
+      puts stderr "\tsnapshot).\n"
+      break
+  }
+}
+EOF
     cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools
 #%Module1.0#####################################################################
 ##
