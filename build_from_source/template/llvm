@@ -13,36 +13,67 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD=(http://mooseframework.org/source_packages/<LLVM>.src.tar.xz http://mooseframework.org/source_packages/<CFE>.src.tar.xz http://mooseframework.org/source_packages/<COMPILER_RT>.src.tar.xz http://mooseframework.org/source_packages/<LIBCXX>.src.tar.xz http://mooseframework.org/source_packages/<LIBCXXABI>.src.tar.xz http://mooseframework.org/source_packages/<OPENMP>.src.tar.xz http://mooseframework.org/source_packages/<CLANG_TOOLS_EXTRA>.src.tar.xz)
-EXTRACT=(<LLVM>.src.tar.xz <CFE>.src.tar.xz <COMPILER_RT>.src.tar.xz <LIBCXX>.src.tar.xz <LIBCXXABI>.src.tar.xz <OPENMP>.src.tar.xz <CLANG_TOOLS_EXTRA>.src.tar.xz)
+DOWNLOAD="false"
+EXTRACT="false"
 CONFIGURE="cmake -DCMAKE_INSTALL_RPATH:STRING=$PACKAGES_DIR/<LLVM>/lib \
 -DCLANG_DEFAULT_OPENMP_RUNTIME=libomp \
 -DCMAKE_BUILD_TYPE=Release \
 -DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/<LLVM> \
 -DCMAKE_INSTALL_NAME_DIR:STRING=$PACKAGES_DIR/<LLVM>/lib \
--DCMAKE_MACOSX_RPATH:BOOL=OFF ../llvm"
+-DCMAKE_MACOSX_RPATH:BOOL=OFF \
+-G 'Unix Makefiles' ../llvm"
 BUILD='true'
 INSTALL='true'
 
 pre_run() {
     if [ -d $PACKAGES_DIR/<LLVM> ]; then
 	rm -rf $PACKAGES_DIR/<LLVM>
+	rm -f $PACKAGES_DIR/Modules/<MODULES>/adv_modules/clang
     fi
-    cd ../
-    mv <LLVM>.src llvm
-    if [ $? -ne 0 ]; then echo "Failed to move <LLVM>.src"; cleanup 1; fi
-    mv <CFE>.src llvm/tools/clang
-    if [ $? -ne 0 ]; then echo "Failed to move <CFE>.src"; cleanup 1; fi
-    mv <COMPILER_RT>.src llvm/projects/compiler-rt
-    if [ $? -ne 0 ]; then echo "Failed to move <COMPILER_RT>.src"; cleanup 1; fi
-    mv <LIBCXX>.src llvm/projects/libcxx
-    if [ $? -ne 0 ]; then echo "Failed to move <LIBCXX>.src"; cleanup 1; fi
-    mv <LIBCXXABI>.src llvm/projects/libcxxabi
-    if [ $? -ne 0 ]; then echo "Failed to move <LIBCXXABI>.src"; cleanup 1; fi
-    mv <OPENMP>.src llvm/projects/openmp
-    if [ $? -ne 0 ]; then echo "Failed to move <OPENMP>.src"; cleanup 1; fi
-    mv <CLANG_TOOLS_EXTRA>.src llvm/tools/clang/tools/extra
-    if [ $? -ne 0 ]; then echo "Failed to move <CLANG_TOOLS_EXTRA>.src"; cleanup 1; fi
+
+    # Checkout LLVM
+    cd $1
+    git clone https://github.com/llvm-mirror/llvm.git
+    if [ $? -ne 0 ]; then echo 'Failed to download llvm'; cleanup 1; fi
+    cd $1/llvm; git checkout <LLVM_RELEASE>
+
+    # Checkout Clang
+    cd $1/llvm/tools
+    git clone https://github.com/llvm-mirror/clang.git
+    if [ $? -ne 0 ]; then echo 'Failed to download clang'; cleanup 1; fi
+    cd $1/llvm/tools/clang; git checkout <LLVM_RELEASE>
+
+    # Checkout Compiler-RT
+    cd $1/llvm/projects
+    git clone https://github.com/llvm-mirror/compiler-rt.git
+    if [ $? -ne 0 ]; then echo 'Failed to download compiler-rt'; cleanup 1; fi
+    cd $1/llvm/projects/compiler-rt; git checkout <LLVM_RELEASE>
+
+    # Checkout LLVM-libcxx
+    cd $1/llvm/projects
+    git clone https://github.com/llvm-mirror/libcxx.git
+    if [ $? -ne 0 ]; then echo 'Failed to download libcxx'; cleanup 1; fi
+    cd $1/llvm/projects/libcxx; git checkout <LLVM_RELEASE>
+
+    # Checkout LLVM-libcxxabi
+    cd $1/llvm/projects
+    git clone https://github.com/llvm-mirror/libcxxabi.git
+    if [ $? -ne 0 ]; then echo 'Failed to download libcxxabi'; cleanup 1; fi
+    cd $1/llvm/projects/libcxxabi; git checkout <LLVM_RELEASE>
+
+    # Checkout LLVM-OpenMP
+    cd $1/llvm/projects
+    git clone https://github.com/llvm-mirror/openmp.git
+    if [ $? -ne 0 ]; then echo 'Failed to download openmp'; cleanup 1; fi
+    cd $1/llvm/projects/openmp; git checkout <LLVM_RELEASE>
+
+    # Checkout Clang-Extras
+    cd $1/llvm/tools/clang/tools
+    git clone https://github.com/llvm-mirror/clang-tools-extra.git extra
+    if [ $? -ne 0 ]; then echo 'Failed to download clang tools extra'; cleanup 1; fi
+    cd $1/llvm/tools/clang/tools/extra; git checkout <LLVM_RELEASE>
+
+    cd $1
     mkdir build; cd build
     echo -e 'Done'
     unset MODULEPATH
