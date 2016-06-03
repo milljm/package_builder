@@ -1,7 +1,7 @@
 Package: moose-environment
 Version: 1.1-<VERSION>
 Architecture: amd64
-Depends: build-essential, gfortran, freeglut3, tcl, m4, libblas-dev, liblapack-dev
+Depends: build-essential gfortran tcl git m4 freeglut3 doxygen libblas-dev liblapack-dev libx11-dev libnuma-dev libcurl4-gnutls-dev zlib1g-dev libhwloc-dev
 Maintainer: Jason Miller <jason.miller@inl.gov>
 Description: MOOSE Compiler Stack
  This package contians pre-compilied binaries
