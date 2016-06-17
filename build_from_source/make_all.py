@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-import os, sys, subprocess, argparse, time, datetime, re, shutil, tempfile
+import os, sys, subprocess, argparse, time, datetime, re, shutil, tempfile, platform
 
 # Pre-requirements that we are aware of that on some linux machines is not sometimes available by default:
 prereqs = ['bison', 'flex', 'git', 'curl', 'make', 'bc', 'patch', 'bzip2', 'uniq']
 
 def startJobs(args):
   (master_list, previous_progress) = getList()
-  version_template = getTemplate()
+  version_template = getTemplate(args)
   active_jobs = []
   # Do these sets in order (for)
   for set_of_jobs in master_list:
@@ -131,9 +131,9 @@ def getList():
   job_list = os.listdir(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'template'))
   return solveDEP(job_list)
 
-def getTemplate():
+def getTemplate(args):
   version_template = {}
-  with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), '../common_files', 'version_template')) as template_file:
+  with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), '../common_files', args.me + '-version_template')) as template_file:
     template = template_file.read()
     for item in template.split('\n'):
       if len(item):
@@ -141,6 +141,10 @@ def getTemplate():
   return version_template
 
 def verifyArgs(args):
+  if platform.platform().upper().find('DARWIN') != -1:
+    args.me = 'darwin'
+  else:
+    args.me = 'linux'
   if args.prefix is None:
     print 'You must specify a directory to install everything into'
     sys.exit(1)

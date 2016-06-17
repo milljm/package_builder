@@ -12,10 +12,12 @@ Base class for building packages
     self.arch = platform.machine()
     self.version_template = self._getVersionTemplate()
     if self.uname.upper().find('DARWIN') != -1:
+      self.me = 'darwin'
       self.version = '.'.join(platform.mac_ver()[0].split('.')[:-1])
       self.release = _mac_version_to_name[self.version]
     else:
       # See if linux_distribution is going to provide anything useful
+      self.me = 'linux'
       self.release, self.version, junk = [x.replace(' ', '') for x in platform.linux_distribution()]
       if self._linux_detection() is not True:
         if self.args.force is not True:
@@ -54,7 +56,7 @@ Base class for building packages
 
   def _getVersionTemplate(self):
     version_template = {}
-    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), '../common_files', 'version_template')) as template_file:
+    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), '../common_files', self.me + '-version_template')) as template_file:
       template = template_file.read()
       for item in template.split('\n'):
         if len(item):
