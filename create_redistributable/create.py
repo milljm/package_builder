@@ -10,7 +10,6 @@ Base class for building packages
     self.base_name = _base_name
     self.uname = platform.platform()
     self.arch = platform.machine()
-    self.version_template = self._getVersionTemplate()
     if self.uname.upper().find('DARWIN') != -1:
       self.me = 'darwin'
       self.version = '.'.join(platform.mac_ver()[0].split('.')[:-1])
@@ -33,6 +32,7 @@ Base class for building packages
             '\nas well as not being easily version controlled.'
           self.release = 'generic'
           self.version = '1.0'
+    self.version_template = self._getVersionTemplate()
     self.redistributable_version = self._get_build_version()
     self.redistributable_name = '-'.join([self.base_name, str(self.redistributable_version)]) + '_' + \
                                 '-'.join([self.release, self.version]) + '_' + \
