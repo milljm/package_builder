@@ -362,7 +362,7 @@ def verifyArgs(args):
 
   # Check to see if Package Maker even exists. Its the
   # point to this script after all
-  if args.package_type == 'PKG' and not os.path.exists(args.package_maker):
+  if args.package_type == PKG and not os.path.exists(args.package_maker):
     print '* Error: Package Maker does not appear to be installed in its default\n' \
       'location of:\n', args.package_maker, '\n'
     fail = True
