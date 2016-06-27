@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 import os, sys, subprocess, argparse, time, datetime, re, shutil, tempfile, platform
 
 # Pre-requirements that we are aware of that on some linux machines is not sometimes available by default:
