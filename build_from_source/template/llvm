@@ -15,13 +15,7 @@ ARCH=(Darwin Linux)
 # This is useful for items like 'autojump' which requires a git clone/checkout
 DOWNLOAD="false"
 EXTRACT="false"
-CONFIGURE="cmake -DCMAKE_INSTALL_RPATH:STRING=$PACKAGES_DIR/<LLVM>/lib \
--DCLANG_DEFAULT_OPENMP_RUNTIME=libomp \
--DCMAKE_BUILD_TYPE=Release \
--DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/<LLVM> \
--DCMAKE_INSTALL_NAME_DIR:STRING=$PACKAGES_DIR/<LLVM>/lib \
--DCMAKE_MACOSX_RPATH:BOOL=OFF \
--G 'Unix Makefiles' ../llvm"
+CONFIGURE="false"
 BUILD='true'
 INSTALL='true'
 
@@ -82,6 +76,26 @@ pre_run() {
     if [ `uname` != "Darwin" ]; then
       module load gcc
       export CC=gcc; export CXX=g++
+      cmake -DCMAKE_INSTALL_RPATH:STRING=$PACKAGES_DIR/<LLVM>/lib \
+-DCLANG_DEFAULT_OPENMP_RUNTIME=libomp \
+-DGCC_INSTALL_PREFIX=$PACKAGES_DIR/<GCC> \
+-DCMAKE_CXX_COMPILER=$PACKAGES_DIR/<GCC>/bin/g++ \
+-DCMAKE_C_COMPILER=$PACKAGES_DIR/<GCC>/bin/gcc \
+-DCMAKE_BUILD_TYPE=Release \
+-DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/<LLVM> \
+-DCMAKE_INSTALL_NAME_DIR:STRING=$PACKAGES_DIR/<LLVM>/lib \
+-DCMAKE_MACOSX_RPATH:BOOL=OFF \
+-DPYTHON_EXECUTABLE=`which python2.7` \
+-G 'Unix Makefiles' ../llvm
+    else
+      cmake -DCMAKE_INSTALL_RPATH:STRING=$PACKAGES_DIR/<LLVM>/lib \
+-DCLANG_DEFAULT_OPENMP_RUNTIME=libomp \
+-DCMAKE_BUILD_TYPE=Release \
+-DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/<LLVM> \
+-DCMAKE_INSTALL_NAME_DIR:STRING=$PACKAGES_DIR/<LLVM>/lib \
+-DCMAKE_MACOSX_RPATH:BOOL=OFF \
+-DPYTHON_EXECUTABLE=`which python2.7` \
+../llvm
     fi
     cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<CLANG>
 #%Module1.0#####################################################################
