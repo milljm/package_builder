@@ -158,9 +158,6 @@ EOF
 ##
 ##
 conflict moose-dev-clang
-if { [uname sysname] != "Darwin" } {
-  module load moose/.<VTK>-gcc
-}
 module load moose/.<MPICH>_gcc
 module load moose/.mpich_<PETSC_DEFAULT>-gcc
 module load moose/.<TBB>
