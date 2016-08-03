@@ -54,7 +54,6 @@ build() {
     if [ $BUILD = 'false' ]; then return; fi
     echo -e 'Building '$PACKAGE' with JOB count: '$MOOSE_JOBS
     pause
-    load_average=`bc -l <<< "scale=2; $MOOSE_JOBS/$MAX_JOBS"`
     # If $MAX is set, use all available CPUs for this one job
     if [ ! -z $MAX ]; then
 	if [ `uname -s` == 'Darwin' ]; then

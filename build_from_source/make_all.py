@@ -23,7 +23,7 @@ def startJobs(args):
           # TODO, fix this in the solverDEP define
           job_list.remove(job)
           continue
-        if len(active_jobs) < int(args.max_jobs):
+        if len(active_jobs) < int(args.max_modules):
           if not any(x[1] == job for x in active_jobs):
             print '\tLaunching job', job
             active_jobs.append(launchJob(version_template, job))
@@ -222,7 +222,7 @@ if __name__ == '__main__':
 
   os.environ['PACKAGES_DIR'] = args.prefix
   os.environ['MOOSE_JOBS'] = args.cpu_count
-  os.environ['MAX_JOBS'] = args.max_jobs
+  os.environ['MAX_MODULES'] = args.max_modules
   os.environ['TEMP_PREFIX'] = tempfile.gettempdir()
   os.environ['DEBUG'] = 'false'
   if not os.path.exists(download_directory):
