@@ -2,15 +2,16 @@
 import os, sys, subprocess, argparse, time, datetime, re, shutil, tempfile, platform
 
 # Pre-requirements that we are aware of that on some linux machines is not sometimes available by default:
-prereqs = ['bison', 'flex', 'git', 'curl', 'make', 'bc', 'patch', 'bzip2', 'uniq']
+prereqs = ['bison', 'flex', 'git', 'curl', 'make', 'patch', 'bzip2', 'uniq']
 
 def startJobs(args):
   (master_list, previous_progress) = getList()
   version_template = getTemplate(args)
   active_jobs = []
   # Do these sets in order (for)
-  for set_of_jobs in master_list:
+  for idx, set_of_jobs in enumerate(master_list):
     # Do any job within these sets in any order (while)
+    print 'On set', idx + 1, 'of', len(master_list), 'containing', len(list(set_of_jobs)), 'jobs'
     job_list = list(set_of_jobs)
     while job_list:
       for job in job_list:
@@ -25,7 +26,7 @@ def startJobs(args):
           continue
         if len(active_jobs) < int(args.max_modules):
           if not any(x[1] == job for x in active_jobs):
-            print '\tLaunching job', job
+            print '\tLaunching', job
             active_jobs.append(launchJob(version_template, job))
         else:
           # Max jobs reached, start checking for results
@@ -48,7 +49,14 @@ def startJobs(args):
           if temp_output.find('This platform does not support') != -1:
             print module, 'not required on this platform'
           else:
-            print module, 'built. Time:', str(datetime.timedelta(seconds=int(time.time()) - int(delta)))
+            if len(job_list) == 0:
+              print '\t', module, 'built. Time:', \
+              str(datetime.timedelta(seconds=int(time.time()) - int(delta))), \
+              'set', idx + 1, 'complete'
+            else:
+              print '\t', module, 'built. Time:', \
+              str(datetime.timedelta(seconds=int(time.time()) - int(delta))), \
+              len(job_list), 'to go...'
   return True
 
 def spinwait(jobs):
