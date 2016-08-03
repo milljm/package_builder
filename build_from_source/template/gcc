@@ -27,9 +27,13 @@ pre_run() {
     ./contrib/download_prerequisites
     if [ $? -ne 0 ]; then echo 'Failed to download prerequisites'; cleanup 1; fi
     mkdir ../gcc_build; cd ../gcc_build
+    # I've notice by the time we make it to this module (gcc), everything else is
+    # on hold because everything else is requiring gcc to be completed.
+    MAX=true
 }
 
 post_run() {
+    unset MAX
     cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<GCC>
 #%Module1.0#####################################################################
 ##

@@ -184,7 +184,7 @@ def which(program):
 def parseArguments(args=None):
   parser = argparse.ArgumentParser(description='Create MOOSE Environment')
   parser.add_argument('-p', '--prefix', help='Directory to install everything into')
-  parser.add_argument('-m', '--max-jobs', default='2', help='Specify max modules to run simultaneously')
+  parser.add_argument('-m', '--max-modules', default='2', help='Specify the maximum amount of modules to run simultaneously')
   parser.add_argument('-j', '--cpu-count', default='4', help='Specify CPU count (used when make -j <number>)')
   parser.add_argument('-d', '--delete-downloads', action='store_const', const=True, default=False, help='Delete downloads when successful build completes?')
   parser.add_argument('--new-build', action='store_const', const=True, default=False, help='Start with a new build')

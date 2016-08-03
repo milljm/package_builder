@@ -55,7 +55,14 @@ build() {
     echo -e 'Building '$PACKAGE' with JOB count: '$MOOSE_JOBS
     pause
     load_average=`bc -l <<< "scale=2; $MOOSE_JOBS/$MAX_JOBS"`
-    #make -l $load_average -j $MOOSE_JOBS
+    # If $MAX is set, use all available CPUs for this one job
+    if [ ! -z $MAX ]; then
+	if [ `uname -s` == 'Darwin' ]; then
+	    MOOSE_JOBS=`/usr/sbin/sysctl -n hw.ncpu`
+	else
+	    MOOSE_JOBS=`cat /proc/cpuinfo | grep processor | wc -l`
+	fi
+    fi
     make -j $MOOSE_JOBS
     if [ $? -ne 0 ]; then echo 'Failed to make '$1; cleanup 1; fi
     pause
