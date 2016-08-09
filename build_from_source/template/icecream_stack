@@ -25,7 +25,7 @@ pre_run() {
 	cleanup 0
     else
 	cd $PACKAGES_DIR
-	PATH=/opt/icecream/bin:$PATH icecc-create-env --clang $PACKAGES_DIR/<LLVM>/bin/clang
+	PATH=/opt/icecream/bin:$PATH icecc-create-env --clang $PACKAGES_DIR/llvm-<LLVM>/bin/clang
 	mv *.tar.gz icecream_clang.tar.gz
     fi
     
