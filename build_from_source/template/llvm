@@ -15,74 +15,64 @@ ARCH=(Darwin Linux)
 # This is useful for items like 'autojump' which requires a git clone/checkout
 DOWNLOAD="false"
 EXTRACT="false"
-CONFIGURE="cmake -DCMAKE_INSTALL_RPATH:STRING=$PACKAGES_DIR/<LLVM>/lib \
--DCLANG_DEFAULT_OPENMP_RUNTIME=libomp \
--DCMAKE_BUILD_TYPE=Release \
--DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/<LLVM> \
--DCMAKE_INSTALL_NAME_DIR:STRING=$PACKAGES_DIR/<LLVM>/lib \
--DCMAKE_MACOSX_RPATH:BOOL=OFF \
--DPYTHON_EXECUTABLE=`which python2.7` \
-../llvm"
+CONFIGURE="false"
 BUILD='true'
 INSTALL='true'
 
 pre_run() {
-    if [ -d $PACKAGES_DIR/<LLVM> ]; then
-	rm -rf $PACKAGES_DIR/<LLVM>
-	rm -f $PACKAGES_DIR/Modules/<MODULES>/adv_modules/clang
+    if [ -d $PACKAGES_DIR/llvm-<LLVM> ]; then
+      rm -rf $PACKAGES_DIR/llvm-<LLVM>
+      rm -f $PACKAGES_DIR/Modules/<MODULES>/adv_modules/clang
     fi
 
-    # Checkout LLVM
     cd $1
-    git clone https://github.com/llvm-mirror/llvm.git
-    if [ $? -ne 0 ]; then echo 'Failed to download llvm'; cleanup 1; fi
-    cd $1/llvm; git checkout <LLVM_RELEASE>
 
-    # Checkout Clang
-    cd $1/llvm/tools
-    git clone https://github.com/llvm-mirror/clang.git
-    if [ $? -ne 0 ]; then echo 'Failed to download clang'; cleanup 1; fi
-    cd $1/llvm/tools/clang; git checkout <LLVM_RELEASE>
+    # Download LLVM, Clang, Clang-Extras, compiler-rt, libcxx/abi, openmp
+    # !!! NOTE: Order is important !!!
+    LLVM_PACKAGES=(llvm cfe clang-tools-extra compiler-rt libcxx libcxxabi openmp)
+    for LLVM_PACKAGE in ${LLVM_PACKAGES[*]}; do
+      curl -L -O http://mooseframework.org/source_packages/$LLVM_PACKAGE-<LLVM>.src.tar.xz
+      if [ $? -ne 0 ]; then echo 'Failed to download '$LLVM_PACKAGE; cleanup 1; fi
+      tar -xf $LLVM_PACKAGE-<LLVM>.src.tar.xz -C .
+      if [ $? -ne 0 ]; then echo 'Failed to extract '$LLVM_PACKAGE; cleanup 1; fi
+      if [ $LLVM_PACKAGE = 'cfe' ]; then
+	mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/clang
+      elif [ $LLVM_PACKAGE = 'clang-tools-extra' ]; then
+	mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/clang/tools/extra
+      elif [ $LLVM_PACKAGE = 'llvm' ]; then
+	mv $LLVM_PACKAGE-<LLVM>.src $LLVM_PACKAGE
+      else
+	mv $LLVM_PACKAGE-<LLVM>.src llvm/projects/$LLVM_PACKAGE
+      fi
+    done
 
-    # Checkout Compiler-RT
-    cd $1/llvm/projects
-    git clone https://github.com/llvm-mirror/compiler-rt.git
-    if [ $? -ne 0 ]; then echo 'Failed to download compiler-rt'; cleanup 1; fi
-    cd $1/llvm/projects/compiler-rt; git checkout <LLVM_RELEASE>
-
-    # Checkout LLVM-libcxx
-    cd $1/llvm/projects
-    git clone https://github.com/llvm-mirror/libcxx.git
-    if [ $? -ne 0 ]; then echo 'Failed to download libcxx'; cleanup 1; fi
-    cd $1/llvm/projects/libcxx; git checkout <LLVM_RELEASE>
-
-    # Checkout LLVM-libcxxabi
-    cd $1/llvm/projects
-    git clone https://github.com/llvm-mirror/libcxxabi.git
-    if [ $? -ne 0 ]; then echo 'Failed to download libcxxabi'; cleanup 1; fi
-    cd $1/llvm/projects/libcxxabi; git checkout <LLVM_RELEASE>
-
-    # Checkout LLVM-OpenMP
-    cd $1/llvm/projects
-    git clone https://github.com/llvm-mirror/openmp.git
-    if [ $? -ne 0 ]; then echo 'Failed to download openmp'; cleanup 1; fi
-    cd $1/llvm/projects/openmp; git checkout <LLVM_RELEASE>
-
-    # Checkout Clang-Extras
-    cd $1/llvm/tools/clang/tools
-    git clone https://github.com/llvm-mirror/clang-tools-extra.git extra
-    if [ $? -ne 0 ]; then echo 'Failed to download clang tools extra'; cleanup 1; fi
-    cd $1/llvm/tools/clang/tools/extra; git checkout <LLVM_RELEASE>
-
-    cd $1
-    mkdir build; cd build
-    echo -e 'Done'
+    mkdir $1/build; cd $1/build
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
     module load advanced_modules cmake miniconda
     if [ `uname` != "Darwin" ]; then
       module load gcc
       export CC=gcc; export CXX=g++
+      cmake -DCMAKE_C_COMPILER=$PACKAGES_DIR/<GCC>/bin/gcc \
+-DCMAKE_CXX_COMPILER=$PACKAGES_DIR/<GCC>/bin/g++ \
+-DGCC_INSTALL_PREFIX=$PACKAGES_DIR/<GCC> \
+-DCMAKE_CXX_LINK_FLAGS="-L$PACKAGES_DIR/<GCC>/lib64 -Wl,-rpath,$PACKAGES_DIR/<GCC>/lib64" \
+-DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/llvm-<LLVM> \
+-DCMAKE_INSTALL_RPATH:STRING=$PACKAGES_DIR/llvm-<LLVM>/lib \
+-DLLVM_ENABLE_ASSERTIONS=ON \
+-DCMAKE_BUILD_TYPE="Release" \
+-DPYTHON_EXECUTABLE=`which python2.7` \
+-DLLVM_TARGETS_TO_BUILD="X86" \
+../llvm
+    else
+      cmake -DCMAKE_INSTALL_RPATH:STRING=$PACKAGES_DIR/llvm-<LLVM>/lib \
+-DCLANG_DEFAULT_OPENMP_RUNTIME=libomp \
+-DCMAKE_BUILD_TYPE=Release \
+-DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/llvm-<LLVM> \
+-DCMAKE_INSTALL_NAME_DIR:STRING=$PACKAGES_DIR/llvm-<LLVM>/lib \
+-DCMAKE_MACOSX_RPATH:BOOL=OFF \
+-DPYTHON_EXECUTABLE=`which python2.7` \
+../llvm
     fi
     cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<CLANG>
 #%Module1.0#####################################################################
@@ -96,18 +86,27 @@ set             BASE_PATH          $PACKAGES_DIR
 module load moose/.<GCC>
 
 if { [uname sysname] != "Darwin" } {
-  prepend-path    LD_LIBRARY_PATH    \$BASE_PATH/<LLVM>/lib
+  if { ! [ info exists ::env(OMP_NUM_THREADS) ] } {
+    setenv          OMP_NUM_THREADS               1
+    # we need to be stateful somehow
+    setenv          MOOSE_OMP                     'True'
+  }
+  if { [ module-info mode remove ] } {
+    if { [ info exists ::env(MOOSE_OMP) ] } {
+      unsetenv        OMP_NUM_THREADS
+      unsetenv        MOOSE_OMP
+    }
+  }
+  prepend-path    LD_LIBRARY_PATH               \$BASE_PATH/llvm-<LLVM>/lib
 }
 
-prepend-path    PATH                          \$BASE_PATH/<LLVM>/bin
-
-# Needed for OpenMP
-prepend-path    LIBRARY_PATH                  \$BASE_PATH/<LLVM>/lib
+prepend-path    PATH                          \$BASE_PATH/llvm-<LLVM>/bin
+prepend-path    LIBRARY_PATH                  \$BASE_PATH/llvm-<LLVM>/lib
 
 # Needed for Python Clang bindings
 # >>> clang.cindex.Config.set_library_path(os.getenv('MOOSE_CLANG_LIB'))
-prepend-path    PYTHONPATH                    \$BASE_PATH/<LLVM>/bindings/python
-setenv          MOOSE_CLANG_LIB               \$BASE_PATH/<LLVM>/lib
+prepend-path    PYTHONPATH                    \$BASE_PATH/llvm-<LLVM>/bindings/python
+setenv          MOOSE_CLANG_LIB               \$BASE_PATH/llvm-<LLVM>/lib
 
 setenv          CC                            clang
 setenv          CXX                           clang++
@@ -118,6 +117,8 @@ post_run() {
     cd $PACKAGES_DIR/Modules/<MODULES>/adv_modules
     ln -s ../modulefiles/moose/.<CLANG> clang
     if [ `uname` = "Darwin" ]; then
+	# Because DYLD_LIBRARY_PATH no longer exists, we have to modify
+	# rpaths in all the llvm libraries to be absolute paths
 	cat <<'EOF' > $PACKAGES_DIR/<LLVM>/lib/change_links.sh
 #!/bin/bash
 for sfile in `ls | grep dylib`; do
