@@ -38,7 +38,7 @@ pre_run() {
 --with-cc=mpicc \
 --with-cxx=mpicxx \
 --with-fc=mpif90 \
---with-blas-lapack-dir=/usr/lib
+--with-blas-lapack-dir=/usr/lib \
 --download-metis=1 \
 --download-parmetis=1 \
 --download-superlu_dist=1 \

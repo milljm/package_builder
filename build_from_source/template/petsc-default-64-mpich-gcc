@@ -40,7 +40,7 @@ pre_run() {
 --with-fc=mpif90 \
 --download-metis=1 \
 --download-parmetis=1 \
---with-blas-lapack-dir=/usr/lib
+--with-blas-lapack-dir=/usr/lib \
 --download-superlu_dist=1 \
 -CC=mpicc -CXX=mpicxx -FC=mpif90 -F77=mpif77 -F90=mpif90 \
 -CFLAGS='-fPIC -fopenmp' \
