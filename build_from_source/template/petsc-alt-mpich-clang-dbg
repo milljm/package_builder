@@ -15,7 +15,43 @@ ARCH=(Darwin Linux)
 # This is useful for items like 'autojump' which requires a git clone/checkout
 DOWNLOAD='http://mooseframework.org/source_packages/<PETSC_ALT>.tar.gz'
 EXTRACT='<PETSC_ALT>.tar.gz'
-CONFIGURE="./configure \
+CONFIGURE="false"
+BUILD='false'
+INSTALL='false'
+
+pre_run() {
+    if [ -d $PACKAGES_DIR/petsc/mpich_<PETSC_ALT>/clang-dbg-superlu ]; then
+	rm -rf $PACKAGES_DIR/petsc/mpich_<PETSC_ALT>/clang-dbg-superlu
+    fi
+    unset MODULEPATH
+    source $PACKAGES_DIR/Modules/<MODULES>/init/bash
+    module load advanced_modules cmake mpich-clang
+    if [ `uname` = "Darwin" ]; then
+	./configure \
+--prefix=$PACKAGES_DIR/petsc/mpich_<PETSC_ALT>/clang-dbg-superlu \
+--download-hypre=1 \
+--with-ssl=0 \
+--with-debugging=1 \
+--with-pic=1 \
+--with-shared-libraries=1 \
+--with-cc=mpicc \
+--with-cxx=mpicxx \
+--with-fc=mpif90 \
+--download-metis=1 \
+--download-parmetis=1 \
+--with-blas-lapack-dir=/usr/lib \
+--download-superlu_dist=1 \
+--download-mumps=1 \
+--download-scalapack=1 \
+-CC=mpicc -CXX=mpicxx -FC=mpif90 -F77=mpif77 -F90=mpif90 \
+-CFLAGS='-fPIC -fopenmp' \
+-CXXFLAGS='-fPIC -fopenmp' \
+-FFLAGS='-fPIC -fopenmp' \
+-FCFLAGS='-fPIC -fopenmp' \
+-F90FLAGS='-fPIC -fopenmp' \
+-F77FLAGS='-fPIC -fopenmp'
+    else
+	./configure \
 --prefix=$PACKAGES_DIR/petsc/mpich_<PETSC_ALT>/clang-dbg-superlu \
 --download-hypre=1 \
 --with-ssl=0 \
@@ -37,18 +73,8 @@ CONFIGURE="./configure \
 -FFLAGS='-fPIC -fopenmp' \
 -FCFLAGS='-fPIC -fopenmp' \
 -F90FLAGS='-fPIC -fopenmp' \
--F77FLAGS='-fPIC -fopenmp'"
-
-BUILD='false'
-INSTALL='false'
-
-pre_run() {
-    if [ -d $PACKAGES_DIR/petsc/mpich_<PETSC_ALT>/clang-dbg-superlu ]; then
-	rm -rf $PACKAGES_DIR/petsc/mpich_<PETSC_ALT>/clang-dbg-superlu
+-F77FLAGS='-fPIC -fopenmp'
     fi
-    unset MODULEPATH
-    source $PACKAGES_DIR/Modules/<MODULES>/init/bash
-    module load advanced_modules cmake mpich-clang
 }
 
 post_run() {

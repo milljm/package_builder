@@ -119,7 +119,7 @@ post_run() {
     if [ `uname` = "Darwin" ]; then
 	# Because DYLD_LIBRARY_PATH no longer exists, we have to modify
 	# rpaths in all the llvm libraries to be absolute paths
-	cat <<'EOF' > $PACKAGES_DIR/<LLVM>/lib/change_links.sh
+	cat <<'EOF' > $PACKAGES_DIR/llvm-<LLVM>/lib/change_links.sh
 #!/bin/bash
 for sfile in `ls | grep dylib`; do
   if ! [ -L $sfile ]; then
@@ -140,11 +140,11 @@ for sfile in `ls | grep dylib`; do
   fi
 done
 EOF
-	  cd $PACKAGES_DIR/<LLVM>/lib/
+	  cd $PACKAGES_DIR/llvm-<LLVM>/lib/
 	  sh change_links.sh
 	  rm -f change_links.sh
     fi
-    cp -R $1/llvm/tools/clang/bindings $PACKAGES_DIR/<LLVM>/
+    cp -R $1/llvm/tools/clang/bindings $PACKAGES_DIR/llvm-<LLVM>/
 }
 ##
 ## End Specifics
