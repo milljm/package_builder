@@ -13,7 +13,7 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD="false"
+DOWNLOAD=(http://mooseframework.org/source_packages/llvm-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/cfe-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/clang-tools-extra-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/compiler-rt-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/libcxx-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/libcxxabi-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/openmp-<LLVM>.src.tar.xz)
 EXTRACT="false"
 CONFIGURE="false"
 BUILD='true'
@@ -27,13 +27,11 @@ pre_run() {
 
     cd $1
 
-    # Download LLVM, Clang, Clang-Extras, compiler-rt, libcxx/abi, openmp
+    # Extract/Move LLVM, Clang, Clang-Extras, compiler-rt, libcxx/abi, openmp
     # !!! NOTE: Order is important !!!
     LLVM_PACKAGES=(llvm cfe clang-tools-extra compiler-rt libcxx libcxxabi openmp)
     for LLVM_PACKAGE in ${LLVM_PACKAGES[*]}; do
-      curl -L -O http://mooseframework.org/source_packages/$LLVM_PACKAGE-<LLVM>.src.tar.xz
-      if [ $? -ne 0 ]; then echo 'Failed to download '$LLVM_PACKAGE; cleanup 1; fi
-      tar -xf $LLVM_PACKAGE-<LLVM>.src.tar.xz -C .
+      tar -xf $DOWNLOAD_DIR/$LLVM_PACKAGE-<LLVM>.src.tar.xz -C .
       if [ $? -ne 0 ]; then echo 'Failed to extract '$LLVM_PACKAGE; cleanup 1; fi
       if [ $LLVM_PACKAGE = 'cfe' ]; then
 	mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/clang
@@ -123,7 +121,7 @@ post_run() {
 #!/bin/bash
 for sfile in `ls | grep dylib`; do
   if ! [ -L $sfile ]; then
-    if [ `otool -L $sfile | grep -c rpath` -ge 1 ]; then 
+    if [ `otool -L $sfile | grep -c rpath` -ge 1 ]; then
       rpaths=($(otool -L $sfile | grep rpath | cut -f 1 -d\  ))
       echo "Changing id: `pwd`/$sfile"
       install_name_tool -id `pwd`/$sfile `pwd`/$sfile
