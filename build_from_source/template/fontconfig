@@ -2,34 +2,35 @@
 #############
 ## Specifics
 ##
-DEP=(modules glib pango)
-PACKAGE='graphviz'
+DEP=(modules pkg-config freetype2)
+PACKAGE='fontconfig'
 
 #####
 # Set the operating system allowed to build this module
 #
-ARCH=(Darwin Linux)
+ARCH=(Darwin)
 
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='http://mooseframework.org/source_packages/<GRAPHVIZ>.tar.gz'
-EXTRACT='<GRAPHVIZ>.tar.gz'
-CONFIGURE='false'
+DOWNLOAD='http://mooseframework.org/source_packages/<FONTCONFIG>.tar.gz'
+EXTRACT='<FONTCONFIG>.tar.gz'
+CONFIGURE="false"
 BUILD='true'
 INSTALL='true'
 
 pre_run() {
     if [ -d $PACKAGES_DIR/$PACKAGE ]; then
-	rm -rf $PACKAGES_DIR/$PACKAGE
+      rm -rf $PACKAGES_DIR/$PACKAGE
     fi
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
     module load moose-tools
-    CONFIGURE="CCPFLAGS='-I/opt/X11/include' ./configure --prefix=$PACKAGES_DIR/$PACKAGE --with-x=no --with-qt=no --with-tcl=no --with-tdl=no"
+    CONFIGURE="./configure --prefix=$PACKAGES_DIR/$PACKAGE"
 }
+
 post_run() {
-    return
+    cp $PACKAGES_DIR/$PACKAGE/lib/pkgconfig/* $PKG_CONFIG_PATH
 }
 ##
 ## End Specifics

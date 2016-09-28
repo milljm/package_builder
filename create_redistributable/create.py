@@ -12,7 +12,7 @@ Base class for building packages
     self.arch = platform.machine()
     if self.uname.upper().find('DARWIN') != -1:
       self.me = 'darwin'
-      self.version = '.'.join(platform.mac_ver()[0].split('.')[:-1])
+      self.version = '.'.join(platform.mac_ver()[0].split('.')[:2])
       self.release = _mac_version_to_name[self.version]
     else:
       # See if linux_distribution is going to provide anything useful
@@ -401,7 +401,7 @@ _base_name = 'moose-environment'
 _package_maker = '/Applications/PackageMaker.app/Contents/MacOS/PackageMaker'
 
 ### List of OS X versions that need a symbolic link to openmp
-_need_symbolic_link = ['10.11', '10.12']
+_need_symbolic_link = ['']
 
 ### A dictionary of class pointers corresponding to OS type
 _pathetic_dict = { RPM : ['FEDORA', 'SUSE', 'CENTOS', 'RHEL'],
@@ -412,7 +412,7 @@ _pathetic_dict = { RPM : ['FEDORA', 'SUSE', 'CENTOS', 'RHEL'],
 _mac_version_to_name = {'10.9'  : 'mavericks',
                         '10.10' : 'yosemite',
                         '10.11' : 'elcapitan',
-                        '10.12' : 'fuji'}
+                        '10.12' : 'sierra'}
 
 if __name__ == '__main__':
   args = parseArguments()

@@ -25,8 +25,13 @@ pre_run() {
     fi
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
-    module load advanced_modules cmake clang
-    export CC=clang; export CXX=clang++
+    module load advanced_modules cmake
+
+    if [ `uname` != "Darwin" ]; then
+	module load clang
+	export CC=clang; export CXX=clang++
+    fi
+
     cat <<EOF >> CMakeLists.txt
 if(APPLE)
   set(EXECUTABLE_FLAG MACOSX_BUNDLE)

@@ -26,8 +26,7 @@ pre_run() {
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
     module load advanced_modules cmake mpich-gcc
-    if [ `uname` = "Darwin" ]; then
-	./configure \
+    ./configure \
 --prefix=$PACKAGES_DIR/petsc/mpich_<PETSC_DEFAULT>/gcc-opt-64 \
 --download-hypre=1 \
 --with-ssl=0 \
@@ -40,30 +39,7 @@ pre_run() {
 --with-fc=mpif90 \
 --download-metis=1 \
 --download-parmetis=1 \
---with-blas-lapack-dir=/usr/lib \
---download-superlu_dist=1 \
--CC=mpicc -CXX=mpicxx -FC=mpif90 -F77=mpif77 -F90=mpif90 \
--CFLAGS='-fPIC -fopenmp' \
--CXXFLAGS='-fPIC -fopenmp' \
--FFLAGS='-fPIC -fopenmp' \
--FCFLAGS='-fPIC -fopenmp' \
--F90FLAGS='-fPIC -fopenmp' \
--F77FLAGS='-fPIC -fopenmp'
-    else
-	./configure \
---prefix=$PACKAGES_DIR/petsc/mpich_<PETSC_DEFAULT>/gcc-opt-64 \
---download-hypre=1 \
---with-ssl=0 \
---with-debugging=no \
---with-pic=1 \
---with-shared-libraries=1 \
---with-64-bit-indices=1 \
---with-cc=mpicc \
---with-cxx=mpicxx \
---with-fc=mpif90 \
 --download-fblaslapack=1 \
---download-metis=1 \
---download-parmetis=1 \
 --download-superlu_dist=1 \
 -CC=mpicc -CXX=mpicxx -FC=mpif90 -F77=mpif77 -F90=mpif90 \
 -CFLAGS='-fPIC -fopenmp' \
@@ -72,7 +48,6 @@ pre_run() {
 -FCFLAGS='-fPIC -fopenmp' \
 -F90FLAGS='-fPIC -fopenmp' \
 -F77FLAGS='-fPIC -fopenmp'
-    fi
 }
 
 post_run() {

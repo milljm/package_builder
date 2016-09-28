@@ -24,7 +24,7 @@ pre_run() {
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
     module load advanced_modules miniconda
-    pip install markdown-include python-markdown-math mkdocs-bootstrap mkdocs-bootswatch
+    pip install markdown-include python-markdown-math mkdocs-bootstrap mkdocs-bootswatch pybtex bs4 daemonlite
     if [ $? -ne 0 ]; then echo "Failed to install dependency packages for $PACKAGE"; cleanup 1; fi
     git clone https://github.com/mkdocs/mkdocs.git
     if [ $? -ne 0 ]; then echo "Failed to git clone $PACKAGE"; cleanup 1; fi
