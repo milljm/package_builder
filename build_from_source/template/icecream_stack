@@ -2,8 +2,8 @@
 #############
 ## Specifics
 ##
-DEP=(llvm)
-PACKAGE='icecream_stack'
+DEP=(modules autoconf automake llvm)
+PACKAGE='icecream'
 
 #####
 # Set the operating system allowed to build this module
@@ -13,25 +13,99 @@ ARCH=(Darwin)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='false'
+DOWNLOAD=(http://mooseframework.org/source_packages/libtool-2.4.6.tar.gz http://mooseframework.org/source_packages/lzo-2.09.tar.gz http://mooseframework.org/source_packages/icecream-master.zip)
 EXTRACT='false'
 CONFIGURE="false"
 BUILD='false'
 INSTALL='false'
 
 pre_run() {
-    if ! [ -d /opt/icecream ]; then
-	print "ICECREAM binaries not available, continue on."
-	cleanup 0
-    else
-	cd $PACKAGES_DIR
-	PATH=/opt/icecream/bin:$PATH icecc-create-env --clang $PACKAGES_DIR/llvm-<LLVM>/bin/clang
-	mv *.tar.gz icecream_clang.tar.gz
-    fi
+    # Dependency packages that need to be built (but not distributed)
+    # So we will install these into the DOWNLOAD_DIR location which gets deleted when completed
+    ICECREAM_PACKAGES=(libtool-2.4.6.tar.gz lzo-2.09.tar.gz)
+    unset MODULEPATH
+    source $PACKAGES_DIR/Modules/<MODULES>/init/bash
+    module load advanced_modules autotools
+
+    for ICECREAM_PACKAGE in ${ICECREAM_PACKAGES[*]}; do
+      cd $1
+      tar -xf $DOWNLOAD_DIR/$ICECREAM_PACKAGE -C .
+      if [ $? -ne 0 ]; then echo 'Failed to extract '$ICECREAM_PACKAGE; cleanup 1; fi
+      cd $(tar -tf $DOWNLOAD_DIR/$ICECREAM_PACKAGE | sed -e 's@/.*@@' | uniq)
+      if [ $? -ne 0 ]; then echo 'Failed to enter source directory '$(tar -tf $DOWNLOAD_DIR/$ICECREAM_PACKAGE | sed -e 's@/.*@@' | uniq); cleanup 1; fi
+      ./configure --prefix=$1/install_deps/$(tar -tf $DOWNLOAD_DIR/$ICECREAM_PACKAGE | sed -e 's@/.*@@' | uniq)
+      if [ $? -ne 0 ]; then echo 'Failed to configure '$ICECREAM_PACKAGE; cleanup 1; fi
+      make -j $MOOSE_JOBS
+      if [ $? -ne 0 ]; then echo 'Failed to build '$ICECREAM_PACKAGE; cleanup 1; fi
+      make install
+      if [ $? -ne 0 ]; then echo 'Failed to install '$ICECREAM_PACKAGE; cleanup 1; fi
+    done
     
 }
 post_run() {
-    return
+    cd $1
+    tar -xf $DOWNLOAD_DIR/icecream-master.zip -C .
+    if [ $? -ne 0 ]; then echo 'Failed to extract icecream-master.zip'; cleanup 1; fi
+    cd $(tar -tf $DOWNLOAD_DIR/icecream-master.zip | sed -e 's@/.*@@' | uniq)
+    if [ $? -ne 0 ]; then echo 'Failed to enter source directory '$(tar -tf $DOWNLOAD_DIR/icecream-master.zip | sed -e 's@/.*@@' | uniq); cleanup 1; fi
+    PATH=$1/install_deps/libtool-2.4.6/bin:$PATH ./autogen.sh
+    LDFLAGS="-L$1/install_deps/lzo-2.09/lib -llzo2" CPPFLAGS="-I$1/install_deps/lzo-2.09/include" ./configure --prefix=$PACKAGES_DIR/$PACKAGE --without-man
+    if [ $? -ne 0 ]; then echo 'Failed to configure icecream'; cleanup 1; fi
+    make -j $MOOSE_JOBS
+    if [ $? -ne 0 ]; then echo 'Failed to build icecream'; cleanup 1; fi
+    make install
+    if [ $? -ne 0 ]; then echo 'Failed to install icecream'; cleanup 1; fi
+    cd $PACKAGES_DIR/$PACKAGE
+    PATH=$PACKAGES_DIR/icecream/bin:$PATH icecc-create-env --clang $PACKAGES_DIR/llvm-<LLVM>/bin/clang
+    mv *.tar.gz clang_<LLVM>.tar.gz
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/icecream
+#%Module1.0#####################################################################
+##
+## Ice Cream Job Scheduler
+##
+##
+##
+set             BASE_PATH          $PACKAGES_DIR
+
+proc ModulesHelp { } {
+        puts stderr "\n\tThis is ICECREAM cluster module.\n"
+}
+
+if {[is-loaded ccache]} {
+  append-path  PATH           \$BASE_PATH/icecream/bin
+  setenv       CCACHE_PREFIX  "icecc"
+} else {
+  prepend-path PATH           \$BASE_PATH/icecream/libexec/icecc/bin:\$BASE_PATH/icecream/sbin:\$BASE_PATH/icecream/bin
+}
+setenv  ICECC_VERSION         \$BASE_PATH/icecream/clang_<LLVM>.tar.gz
+EOF
+    cat <<EOF > $PACKAGES_DIR/icecream/com.moose.icecream.plist
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC -//Apple Computer//DTD PLIST 1.0//EN
+http://www.apple.com/DTDs/PropertyList-1.0.dtd >
+<plist version="1.0">
+<dict>
+<key>Label</key>
+  <string>moosenet.icecream</string>
+<key>ProgramArguments</key>
+  <array>
+    <string>$PACKAGES_DIR/icecream/sbin/iceccd</string>
+    <string>-s</string>
+    <string>192.168.0.1</string>
+    <string>-N</string>
+<!--
+    <string>CHANGEME</string>
+-->
+  </array>
+<key>RunAtLoad</key>
+  <true/>
+<key>GroupName</key>
+  <string>daemon</string>
+<key>KeepAlive</key>
+  <true/>
+</dict>
+</plist>
+EOF
 }
 ##
 ## End Specifics

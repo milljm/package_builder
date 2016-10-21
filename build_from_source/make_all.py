@@ -170,6 +170,7 @@ def verifyArgs(args):
     except:
       print 'Unable to write to specified prefix location. Please chown this location manually before continuing'
       sys.exit(1)
+
   args.prefix = args.prefix.rstrip(os.path.sep)
   return args
 

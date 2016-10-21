@@ -112,6 +112,12 @@ prepend-path    PATH             \$BASE_PATH/seacas/bin:$BASE_PATH/seacas/etc
 prepend-path    MANPATH          \$BASE_PATH/seacas/share/man
 setenv          ACCESS           \$BASE_PATH/seacas
 
+# Darwin Specific
+if { [uname sysname] == "Darwin" } {
+  prepend-path        PATH            \$BASE_PATH/pkg-config/bin
+  prepend-path        PATH            \$BASE_PATH/glib/bin
+  prepend-path        PKG_CONFIG_PATH \$BASE_PATH/pkg-config/pkgconfig
+}
 
 # Binary PATH for Doxygen / Graphviz / Lcov / GNUPlot
 prepend-path    PATH             \$BASE_PATH/doxygen/bin

@@ -63,13 +63,10 @@ pre_run() {
 -DLLVM_TARGETS_TO_BUILD="X86" \
 ../llvm
     else
-      cmake -DCMAKE_INSTALL_RPATH:STRING=$PACKAGES_DIR/llvm-<LLVM>/lib \
--DCLANG_DEFAULT_OPENMP_RUNTIME=libomp \
--DCMAKE_BUILD_TYPE=Release \
--DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/llvm-<LLVM> \
--DCMAKE_INSTALL_NAME_DIR:STRING=$PACKAGES_DIR/llvm-<LLVM>/lib \
--DCMAKE_MACOSX_RPATH:BOOL=OFF \
+      cmake -DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/llvm-<LLVM> \
+-DLLVM_BUILD_EXTERNAL_COMPILER_RT=ON \
 -DPYTHON_EXECUTABLE=`which python2.7` \
+-DCMAKE_BUILD_TYPE="Release" \
 ../llvm
     fi
     cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<CLANG>
@@ -141,6 +138,8 @@ EOF
 	  cd $PACKAGES_DIR/llvm-<LLVM>/lib/
 	  sh change_links.sh
 	  rm -f change_links.sh
+	  cd /usr/local/lib
+	  ln -s $PACKAGES_DIR/llvm-<LLVM>/lib/libomp.dyld .
     fi
     cp -R $1/llvm/tools/clang/bindings $PACKAGES_DIR/llvm-<LLVM>/
 }
