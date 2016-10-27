@@ -1,6 +1,6 @@
 MPICH=mpich-3.2
 OPENMPI=openmpi-1.10.2
-PETSC_ALT=petsc-3.7.0
+PETSC_ALT=petsc-3.7.4
 PETSC_DEFAULT=petsc-3.6.4
 AUTOCONF=autoconf-2.69
 AUTOMAKE=automake-1.13
@@ -35,6 +35,4 @@ FREETYPE2=freetype-2.6.3
 FONTCONFIG=fontconfig-2.12.1
 HARFBUZZ=harfbuzz-1.3.2
 GITLFS=git-lfs-darwin-amd64-1.4.3
-VTK_PEACOCK=VTK-7.1.0.rc1
-QT5=qt-everywhere-opensource-src-5.7.0
 VALGRIND=valgrind-3.12.0
