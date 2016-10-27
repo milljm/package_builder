@@ -36,7 +36,7 @@ pre_run() {
     fi
     PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda update conda --yes
     if [ $? -ne 0 ]; then echo "Failed to update $PACKAGE"; cleanup 1; fi
-    PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda install coverage reportlab mako numpy scipy scikit-learn h5py hdf5 scikit-image requests vtk pyyaml matplotlib pyside pip lxml conda-build qt=4 --yes
+    PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda install coverage reportlab mako numpy scipy scikit-learn h5py hdf5 scikit-image requests vtk pyyaml matplotlib pip lxml conda-build qt=4 --yes
     if [ $? -ne 0 ]; then echo "Failed to install $PACKAGE packages"; cleanup 1; fi
 }
 post_run() {
@@ -50,7 +50,6 @@ post_run() {
 set             BASE_PATH        $PACKAGES_DIR
 
 # Miniconda/Peacock
-setenv          QT_API           pyside
 prepend-path    PATH             \$BASE_PATH/$PACKAGE/bin
 EOF
     PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda clean --lock --tarballs --index-cache --packages --source-cache --yes

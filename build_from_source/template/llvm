@@ -65,6 +65,7 @@ pre_run() {
     else
       cmake -DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/llvm-<LLVM> \
 -DLLVM_BUILD_EXTERNAL_COMPILER_RT=ON \
+-DCLANG_DEFAULT_OPENMP_RUNTIME=libomp \
 -DPYTHON_EXECUTABLE=`which python2.7` \
 -DCMAKE_BUILD_TYPE="Release" \
 ../llvm
@@ -110,6 +111,9 @@ EOF
 
 post_run() {
     cd $PACKAGES_DIR/Modules/<MODULES>/adv_modules
+    if [ -f $PACKAGES_DIR/Modules/<MODULES>/adv_modules/clang ]; then
+	rm -f clang
+    fi
     ln -s ../modulefiles/moose/.<CLANG> clang
     if [ `uname` = "Darwin" ]; then
 	# Because DYLD_LIBRARY_PATH no longer exists, we have to modify
