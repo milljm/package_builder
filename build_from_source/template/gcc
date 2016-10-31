@@ -15,7 +15,7 @@ ARCH=(Darwin Linux)
 # This is useful for items like 'autojump' which requires a git clone/checkout
 DOWNLOAD='http://mooseframework.org/source_packages/<GCC>.tar.gz'
 EXTRACT='<GCC>.tar.gz'
-CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --disable-multilib --enable-languages=c,c++,fortran --enable-lto"
+CONFIGURE="false"
 BUILD='true'
 INSTALL='true'
 
@@ -30,6 +30,12 @@ pre_run() {
     # I've notice by the time we make it to this module (gcc), everything else is
     # on hold because everything else is requiring gcc to be completed.
     MAX=true
+    if [ `uname` != "Darwin" ]; then
+      CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --disable-multilib --enable-languages=c,c++,fortran --enable-checking=release"
+    else
+      CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --enable-languages=c,c++,fortran --enable-checking=release"
+    fi
+    configure
 }
 
 post_run() {

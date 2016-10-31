@@ -136,7 +136,13 @@ def launchJob(version_template, module):
   return (subprocess.Popen([os.path.join(os.path.abspath(os.path.dirname(__file__)), 'packages', module)], stdout=t, stderr=t, shell=True), module, t, time.time())
 
 def getList():
-  job_list = os.listdir(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'template'))
+  job_list = []
+  for module in os.listdir(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'template')):
+    # ignore files that begin with .
+    if module.find('.') != 0:
+      job_list.append(module)
+    else:
+      print 'ignoring hidden file:', module
   return solveDEP(job_list)
 
 def getTemplate(args):
