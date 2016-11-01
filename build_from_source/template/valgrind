@@ -20,10 +20,10 @@ BUILD='true'
 INSTALL='true'
 
 pre_run() {
-    if [ -d $PACKAGES_DIR/<VALGRIND> ]; then
-	rm -rf $PACKAGES_DIR/<VALGRIND>
+    if [ -d $PACKAGES_DIR/$PACKAGE ]; then
+	rm -rf $PACKAGES_DIR/$PACKAGE
     fi
-    cat << EOF > darwin.patch
+    cat << 'EOF' > darwin.patch
 diff -ruN a/coregrind/m_syscall.c b/coregrind/m_syscall.c
 --- a/coregrind/m_syscall.c	2016-10-21 04:37:39.000000000 -0600
 +++ b/coregrind/m_syscall.c	2016-10-31 10:02:39.000000000 -0600
