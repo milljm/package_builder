@@ -38,7 +38,7 @@ post_run() {
 ##
 set BASE_PATH   $PACKAGES_DIR
 
-conflict moose/.<MPICH>_clang moose/.<MPICH>_gcc moose/.<OPENMPI>_gcc <MPICH>_clang <MPICH>_gcc <OPENMPI>_gcc
+conflict moose/.<MPICH>_clang moose/.<MPICH>_gcc moose/.<OPENMPI>_gcc mpich_clang mpich_gcc openmpi_gcc
 module load moose/.<CLANG>
 
 set             MPI_PATH                      \$BASE_PATH/openmpi/<OPENMPI>/clang-opt
@@ -69,7 +69,7 @@ EOF
 ##
 set BASE_PATH   $PACKAGES_DIR
 
-conflict moose/.<OPENMPI>_clang moose/.<MPICH>_clang moose/.<MPICH>_gcc moose/.<OPENMPI>_gcc <MPICH>_clang <MPICH>_gcc <OPENMPI>_gcc
+conflict moose/.<OPENMPI>_clang moose/.<MPICH>_clang moose/.<MPICH>_gcc moose/.<OPENMPI>_gcc mpich_clang mpich_gcc openmpi_gcc
 
 if { ! [ is-loaded clang ] } {
   module load moose/.<CLANG>
