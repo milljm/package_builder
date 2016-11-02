@@ -26,7 +26,7 @@ def startJobs(args):
           continue
         if len(active_jobs) < int(args.max_modules):
           if not any(x[1] == job for x in active_jobs):
-            print '\tLaunching', job
+            print '  Launching:', job
             active_jobs.append(launchJob(version_template, job))
         else:
           # Max jobs reached, start checking for results
@@ -47,16 +47,17 @@ def startJobs(args):
         else:
           temp_output = output.read()
           if temp_output.find('This platform does not support') != -1:
-            print module, 'not required on this platform'
+            print '    <<<', module, '>>> not required on this platform'
           else:
             if len(job_list) == 0:
-              print '\t', module, 'built. Time:', \
+              print '   ', module, 'built. Time:', \
               str(datetime.timedelta(seconds=int(time.time()) - int(delta))), \
               'set', idx + 1, 'complete'
             else:
-              print '\t', module, 'built. Time:', \
+              print '   ',module, 'built. Time:', \
               str(datetime.timedelta(seconds=int(time.time()) - int(delta))), \
-              len(job_list), 'to go...'
+              '\n     ', len(job_list), 'job/s remaing in set. Active jobs:', \
+              ' '.join([item[1] for item in active_jobs])
   return True
 
 def spinwait(jobs):

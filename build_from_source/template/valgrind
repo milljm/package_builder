@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules gcc)
+DEP=(modules gcc openmpi-gcc)
 PACKAGE='valgrind'
 
 #####
@@ -59,6 +59,8 @@ diff -ruN a/coregrind/vg_preloaded.c b/coregrind/vg_preloaded.c
  #if defined(VGO_linux) || defined(VGO_solaris)
 EOF
     patch -p1 < darwin.patch
+    source $PACKAGES_DIR/Modules/<MODULES>/init/bash
+    module load advanced_modules gcc
 }
 post_run() {
     cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/adv_modules/$PACKAGE
