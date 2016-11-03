@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules gcc openmpi-gcc)
+DEP=(modules gcc)
 PACKAGE='valgrind'
 
 #####
