@@ -88,6 +88,7 @@ cleanup() {
     fi
 	exit $1
 }
+umask 022
 ME=`basename "$0"`
 CONTINUE=false
 for OPERATING_SYSTEM in ${ARCH[*]}; do
