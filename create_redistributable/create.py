@@ -34,6 +34,7 @@ Base class for building packages
           self.version = '1.0'
     self.version_template = self._getVersionTemplate()
     self.redistributable_version = self._get_build_version()
+    print 'incrementing to version', self.redistributable_version
     self.redistributable_name = '-'.join([self.base_name, str(self.redistributable_version)]) + '_' + \
                                 '-'.join([self.release, self.version]) + '_' + \
                                 self.arch + '.' + \
