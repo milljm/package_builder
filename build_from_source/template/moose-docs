@@ -2,8 +2,8 @@
 #############
 ## Specifics
 ##
-DEP=(miniconda)
-PACKAGE='mkdocs'
+DEP=(miniconda miniconda-dev)
+PACKAGE='moose-docs'
 
 #####
 # Set the operating system allowed to build this module
@@ -23,20 +23,13 @@ pre_run() {
     cd $1
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
-    module load advanced_modules miniconda
-    pip install markdown-include python-markdown-math mkdocs-bootstrap mkdocs-bootswatch pybtex bs4 daemonlite
-    if [ $? -ne 0 ]; then echo "Failed to install dependency packages for $PACKAGE"; cleanup 1; fi
-    git clone https://github.com/mkdocs/mkdocs.git
-    if [ $? -ne 0 ]; then echo "Failed to git clone $PACKAGE"; cleanup 1; fi
-    cd mkdocs
-    python setup.py install
-    if [ $? -ne 0 ]; then echo "Failed to setup $PACKAGE"; cleanup 1; fi
-    git clone https://github.com/idaholab/mkdocs-basic-theme.git
-    if [ $? -ne 0 ]; then echo "Failed to git clone mkdocs-basic-theme"; cleanup 1; fi
-    cd mkdocs-basic-theme
-    git checkout moose_docs
-    python setup.py install
-    if [ $? -ne 0 ]; then echo "Failed to install moose_docs theme"; cleanup 1; fi
+    condas=(miniconda miniconda-dev)
+    for which_conda in ${condas[*]}; do
+	module purge
+	module load advanced_modules $which_conda
+	pip install markdown markdown-include python-markdown-math pybtex bs4 jinja2 livereload daemonlite
+	if [ $? -ne 0 ]; then echo "Failed to install dependency packages for $PACKAGE"; cleanup 1; fi
+    done
 }
 post_run() {
     return
