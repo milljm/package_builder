@@ -952,6 +952,80 @@ module load moose-tools
 
 EOF
 
+    # SLEPC CLANG
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/mpich-clang-petsc_alt-slepc
+#%Module1.0#####################################################################
+##
+## Civet support module
+## <SLEPC_ALT>
+## <CLANG>
+## <MPICH>
+##
+module load moose/.<MPICH>_clang
+module load moose/.mpich_<PETSC_ALT>-clang
+module load moose/.mpich_<SLEPC_ALT>-clang
+module load moose/.<TBB>
+module load moose/.<CPPUNIT>-clang
+module load ccache
+module load moose-tools
+
+EOF
+
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/mpich-clang-petsc_default-slepc
+#%Module1.0#####################################################################
+##
+## Civet support module
+## <SLEPC_DEFAULT>
+## <CLANG>
+## <MPICH>
+##
+module load moose/.<MPICH>_clang
+module load moose/.mpich_<PETSC_DEFAULT>-clang
+module load moose/.mpich_<SLEPC_DEFAULT>-clang
+module load moose/.<TBB>
+module load moose/.<CPPUNIT>-clang
+module load ccache
+module load moose-tools
+
+EOF
+
+    # SLEPC GCC
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/mpich-gcc-petsc_alt-slepc
+#%Module1.0#####################################################################
+##
+## Civet support module
+## <SLEPC_ALT>
+## <GCC>
+## <MPICH>
+##
+module load moose/.<MPICH>_gcc
+module load moose/.mpich_<PETSC_ALT>-gcc
+module load moose/.mpich_<SLEPC_ALT>-gcc
+module load moose/.<TBB>
+module load moose/.<CPPUNIT>-gcc
+module load ccache
+module load moose-tools
+
+EOF
+
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/mpich-gcc-petsc_default-slepc
+#%Module1.0#####################################################################
+##
+## Civet support module
+## <SLEPC_DEFAULT>
+## <GCC>
+## <MPICH>
+##
+module load moose/.<MPICH>_gcc
+module load moose/.mpich_<PETSC_DEFAULT>-gcc
+module load moose/.mpich_<SLEPC_DEFAULT>-gcc
+module load moose/.<TBB>
+module load moose/.<CPPUNIT>-gcc
+module load ccache
+module load moose-tools
+
+EOF
+
     # ARCH SPECIFIC
     if [ `uname` = "Darwin" ]; then
         cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/mpich-clang-petsc_default_64
