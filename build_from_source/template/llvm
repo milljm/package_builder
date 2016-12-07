@@ -85,7 +85,7 @@ if { [uname sysname] != "Darwin" } {
   if { ! [ info exists ::env(OMP_NUM_THREADS) ] } {
     setenv          OMP_NUM_THREADS               1
     # we need to be stateful somehow
-    setenv          MOOSE_OMP                     'True'
+    setenv          MOOSE_OMP                     True
   }
   if { [ module-info mode remove ] } {
     if { [ info exists ::env(MOOSE_OMP) ] } {
