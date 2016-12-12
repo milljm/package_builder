@@ -34,10 +34,12 @@ pre_run() {
 	bash $DOWNLOAD_DIR/<MINICONDA>-Linux-x86_64.sh -b -p $PACKAGES_DIR/$PACKAGE
 	if [ $? -ne 0 ]; then echo "Failed to install $PACKAGE"; cleanup 1; fi
     fi
+    PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda config --set ssl_verify false
     PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda update conda --yes
     if [ $? -ne 0 ]; then echo "Failed to update $PACKAGE"; cleanup 1; fi
     PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda install -c idaholab python=2.7 matplotlib pandas numpy scikit-image mock scipy coverage yaml pyyaml pyqt vtk=7.0.0 --yes
     if [ $? -ne 0 ]; then echo "Failed to install $PACKAGE packages"; cleanup 1; fi
+    PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda config --set ssl_verify true
 }
 post_run() {
     cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/$PACKAGE
