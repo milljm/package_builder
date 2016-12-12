@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules cmake llvm)
+DEP=(modules cmake mpich-clang)
 PACKAGE='vtk-clang'
 
 #####
@@ -15,7 +15,7 @@ ARCH=(Darwin Linux)
 # This is useful for items like 'autojump' which requires a git clone/checkout
 DOWNLOAD='http://mooseframework.org/source_packages/<VTK>.tar.gz'
 EXTRACT='<VTK>.tar.gz'
-CONFIGURE="cmake ../<VTK> -DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/<VTK>/clang-opt -DCMAKE_INSTALL_RPATH:STRING=$PACKAGES_DIR/<VTK>/clang-opt/lib -DCMAKE_INSTALL_RPATH_USE_LINK_PATH:BOOL=ON -DCMAKE_INSTALL_NAME_DIR:STRING=$PACKAGES_DIR/<VTK>/clang-opt/lib -DCMAKE_MACOSX_RPATH:BOOL=ON -DVTK_WRAP_PYTHON=ON -Wno-dev"
+CONFIGURE="cmake ../<VTK> -DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/<VTK>/clang-opt -DCMAKE_INSTALL_RPATH:STRING=$PACKAGES_DIR/<VTK>/clang-opt/lib -DCMAKE_INSTALL_RPATH_USE_LINK_PATH:BOOL=ON -DCMAKE_INSTALL_NAME_DIR:STRING=$PACKAGES_DIR/<VTK>/clang-opt/lib -DCMAKE_MACOSX_RPATH:BOOL=ON -DVTK_WRAP_PYTHON=ON -DVTK_Group_MPI:BOOL=ON -Wno-dev"
 BUILD='true'
 INSTALL='true'
 
@@ -25,18 +25,7 @@ pre_run() {
     fi
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
-    module load advanced_modules cmake
-
-    if [ `uname` != "Darwin" ]; then
-	module load clang
-	export CC=clang; export CXX=clang++
-    fi
-
-    cat <<EOF >> CMakeLists.txt
-if(APPLE)
-  set(EXECUTABLE_FLAG MACOSX_BUNDLE)
-endif(APPLE)
-EOF
+    module load advanced_modules cmake mpich-clang
     cd ../
     mkdir vtk-build; cd vtk-build
 }
