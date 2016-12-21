@@ -1,5 +1,5 @@
 #!/usr/bin/env python2.7
-import os, sys, re, argparse, shlex, shutil, subprocess, tempfile, platform
+import os, sys, re, argparse, shlex, shutil, subprocess, tempfile, platform, time
 
 class PackageCreator:
   """
@@ -90,11 +90,12 @@ Base class for building packages
     return True
 
   def create_tarball(self, tar_format='gztar'):
-    try:
-      print 'Creating tarball...'
-      shutil.make_archive(os.path.join(self.temp_dir, self.__class__.__name__.lower(), 'payload'), tar_format, os.path.sep, self.args.packages_dir)
-    except os.error, err:
-      print err
+    print 'Creating tarball...'
+    tarball = subprocess.Popen(['tar', '-pzcf', os.path.join(self.temp_dir, self.__class__.__name__.lower(), 'payload.tar'), os.path.sep + self.args.packages_dir])
+    while tarball.poll() is None:
+      time.sleep(1)
+    if tarball.poll() != 0:
+      print 'Error building tarball!'
       return False
     return True
 
