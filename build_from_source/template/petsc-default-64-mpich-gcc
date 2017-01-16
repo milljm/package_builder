@@ -52,12 +52,12 @@ pre_run() {
 
 post_run() {
     if [ `uname` = "Darwin" ]; then
-	make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-darwin-c-opt all
+	make MAKE_NP=1 PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-darwin-c-opt all
 	if [ $? -ne 0 ]; then echo "Error while building PETSc"; cleanup 1; fi
 	make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-darwin-c-opt install
 	if [ $? -ne 0 ]; then echo "Error while installing PETSc"; cleanup 1; fi
     else
-	make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-opt all
+	make MAKE_NP=1 PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-opt all
 	if [ $? -ne 0 ]; then echo "Error while building PETSc"; cleanup 1; fi
 	make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-opt install
 	if [ $? -ne 0 ]; then echo "Error while installing PETSc"; cleanup 1; fi

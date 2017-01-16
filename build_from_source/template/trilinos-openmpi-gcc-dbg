@@ -13,7 +13,7 @@ ARCH=(Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='https://github.com/trilinos/Trilinos/archive/<TRILINOS>.tar.gz'
+DOWNLOAD='http://mooseframework.org/source_packages/<TRILINOS>.tar.gz'
 EXTRACT='<TRILINOS>.tar.gz'
 CONFIGURE="
 cmake \
