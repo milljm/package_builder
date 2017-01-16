@@ -47,13 +47,13 @@ Base class for building packages
       lsb_release_process = subprocess.Popen(['lsb_release', '-a'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
       lsb_release_stdout = lsb_release_process.communicate()[0]
       for identifier in platform.linux_distribution():
-        if lsb_release_stdout.find(identifier) == -1:
-          return False
+        if lsb_release_stdout.find(identifier) != -1:
+          return True
     except:
       # not every Linux OS has lsb_release, so we do not want to exit due to this
       print 'Warning: lsb_release binary is not installed. This _may_ cause an error', \
         '\nlater on when attempting to name the package accordingly.'
-    return True
+    return False
 
   def _getVersionTemplate(self):
     version_template = {}
