@@ -89,9 +89,9 @@ Base class for building packages
       return False
     return True
 
-  def create_tarball(self, tar_format='gztar'):
+  def create_tarball(self):
     print 'Creating tarball...'
-    tarball = subprocess.Popen(['tar', '-pzcf', os.path.join(self.temp_dir, self.__class__.__name__.lower(), 'payload.tar'), os.path.sep + self.args.packages_dir])
+    tarball = subprocess.Popen(['tar', '-pzcf', os.path.join(self.temp_dir, self.__class__.__name__.lower(), 'payload.tar.gz'), os.path.sep + self.args.packages_dir])
     while tarball.poll() is None:
       time.sleep(1)
     if tarball.poll() != 0:
@@ -240,10 +240,10 @@ Class for building RedHat based packages
     return False
 
   def create_tarball(self):
-    tarball_results = PackageCreator.create_tarball(self, 'tar')
+    tarball_results = PackageCreator.create_tarball(self)
     if tarball_results:
       # move tarball into position inside the SOURCES directory
-      shutil.move(os.path.join(self.temp_dir, 'rpm/payload.tar'), os.path.join(self.temp_dir, 'rpm/SOURCES', self.base_name + '.tar' ))
+      shutil.move(os.path.join(self.temp_dir, 'rpm/payload.tar.gz'), os.path.join(self.temp_dir, 'rpm/SOURCES', self.base_name + '.tar.gz' ))
       return True
     return False
 
@@ -322,6 +322,19 @@ Class for building Macintosh Packages
     if len(results[1]) >= 1:
       print 'There was error building the redistributable package using PackageMaker:\n\n', results[1]
       return False
+    elif self.args.sign:
+      package_signer = subprocess.Popen(['productsign',
+                                         '--sign', "Developer ID Installer: BATTELLE ENERGY ALLIANCE, LLC (J2Y4H5G88N)",
+                                         os.path.join(self.temp_dir, 'osx.pkg'),
+                                         os.path.join(self.args.relative_path, self.redistributable_name)],
+                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      results = package_signer.communicate()
+      if len(results[1]) >= 1:
+        print 'There was an error signing the package', result[1]
+        return False
+      else:
+        os.remove(os.path.join(self.temp_dir, 'osx.pkg'))
+        print self.redistributable_name, 'signed and ready for distribution'
     else:
       shutil.move(os.path.join(self.temp_dir, 'osx.pkg'), os.path.join(self.args.relative_path, 'osx.pkg'))
       print 'Redistributable built!\n', \
@@ -333,7 +346,7 @@ Class for building Macintosh Packages
         'spctl -a -v --type install', os.path.join(self.args.relative_path, self.redistributable_name), \
         '\n\nIf you choose not to sign your package, the package is currently located at:\n\n\t', \
         os.path.join(self.args.relative_path, 'osx.pkg'), '\n'
-      return True
+    return True
 
 def verifyArgs(args):
   fail = False
@@ -390,6 +403,7 @@ def parseArguments(args=None):
   parser.add_argument('-p', '--packages-dir', help='Directory where you installed everything to (/opt/moose)')
   parser.add_argument('--package-type', help='Specify type of package to build. Valid values: deb rpm pkg')
   parser.add_argument('--force', action='store_const', const=True, default=False, help='Force building package even if script could not determine OS release version')
+  parser.add_argument('--sign', help='Sign the package (Macintosh Only) with the specified key')
   parser.add_argument('-k', '--keep-temporary-files', action='store_const', const=True, default=False, help='Keep temporary directory after package is created (default False')
   return verifyArgs(parser.parse_args(args))
 
