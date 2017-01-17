@@ -53,12 +53,12 @@ pre_run() {
 
 post_run() {
     if [ `uname` = "Darwin" ]; then
-	make PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-darwin-c-debug all
+	make MAKE_NP=1 PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-darwin-c-debug all
 	if [ $? -ne 0 ]; then echo 'Failed to build'; cleanup 1; fi
 	make PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-darwin-c-debug install
 	if [ $? -ne 0 ]; then echo 'Failed to install'; cleanup 1; fi
     else
-	make PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-linux2-c-debug all
+	make MAKE_NP=1 PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-linux2-c-debug all
 	if [ $? -ne 0 ]; then echo 'Failed to build'; cleanup 1; fi
 	make PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-linux2-c-debug install
 	if [ $? -ne 0 ]; then echo 'Failed to install'; cleanup 1; fi
