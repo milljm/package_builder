@@ -1,6 +1,6 @@
 MPICH=mpich-3.2
 OPENMPI=openmpi-1.10.2
-PETSC_DEFAULT=petsc-3.7.4
+PETSC_DEFAULT=petsc-3.7.5
 PETSC_ALT=petsc-3.6.4
 SLEPC_DEFAULT=slepc-3.7.3
 SLEPC_ALT=slepc-3.6.3
@@ -23,7 +23,7 @@ CCACHE=ccache-3.2.1
 TCL=tcl8.5.14
 MODULES=3.2.10
 TRILINOS=trilinos-release-12-6-2
-DTK=b40e1cec6f00760efb1107161df5596f6486429f
+DTK=2.0.0
 PKG_CONFIG=pkg-config-0.29.1
 CAIRO=cairo-1.14.6
 PIXMAN=pixman-0.34.0
