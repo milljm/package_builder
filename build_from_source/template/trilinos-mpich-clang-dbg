@@ -8,7 +8,7 @@ PACKAGE='trilinos-mpich-clang-dbg'
 #####
 # Set the operating system allowed to build this module
 #
-ARCH=(Darwin Linux)
+ARCH=(Darwin)
 
 #####
 # Setting any of these variables to 'false' effectively skips that step
