@@ -45,9 +45,9 @@ def startJobs(args):
         output.seek(0)
         if process.poll():
           print output.read(), '\n\nError building', module
-          if args.keep_failed is not True:
-            deleteBuild(module)
           killRemaining(active_jobs)
+          if args.keep_failed is not True:
+            deleteBuild()
           sys.exit(1)
         else:
           temp_output = output.read()
@@ -75,26 +75,36 @@ def spinwait(jobs):
   except KeyboardInterrupt:
     print '\nCTRL-C, Exiting...'
     killRemaining(jobs)
+    deleteBuild()
     sys.exit(1)
 
 def killRemaining(process_list):
   # Loop through all active jobs and send SIGKILL
   # then try and clean up the mess afterwards
+
   for job, module, output, delta in process_list:
     try:
-      print 'Attempting to kill job:', module
+      print 'Attempting to kill active job:', module
       job.kill()
-      deleteBuild(module)
     except:
       # we really don't care about failures at this point
       pass
   return
 
-def deleteBuild(module):
-  for item_list in os.listdir(tempfile.gettempdir()):
-    if item_list.find(module) != -1:
-      print 'deleting temporary build directory:', tempfile.gettempdir() + os.path.sep + item_list
-      shutil.rmtree(tempfile.gettempdir() + os.path.sep + item_list, ignore_errors=True)
+def deleteBuild():
+  # Allow 60 seconds for removing previous build directories.
+  # Break out of the loop if the allotted time has passed and
+  # we still have directories to remove.
+  delta = int(time.time())
+  print 'Removing build directories:', ' '. join(os.listdir(os.path.join(tempfile.gettempdir(),'moose_package_build_temp'))) + '...'
+  while os.listdir(os.path.join(tempfile.gettempdir(),'moose_package_build_temp')) != []:
+    if int(time.time()) - int(delta) > 60:
+      # Times up, break out of the loop
+      print 'Failed to remove all failed builds in the allotted time:', os.listdir(os.path.join(tempfile.gettempdir(),'moose_package_build_temp'))
+      break
+    for item_list in os.listdir(os.path.join(tempfile.gettempdir(),'moose_package_build_temp')):
+      shutil.rmtree(os.path.join(tempfile.gettempdir(),'moose_package_build_temp', item_list), ignore_errors=True)
+    time.sleep(1)
 
 def solveDEP(job_list):
   progress = []

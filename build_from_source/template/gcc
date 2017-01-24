@@ -23,9 +23,15 @@ pre_run() {
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
     module load advanced_modules autotools
-    sed -i -e 's/wget/curl -O/g' contrib/download_prerequisites
-    ./contrib/download_prerequisites
-    if [ $? -ne 0 ]; then echo 'Failed to download prerequisites'; cleanup 1; fi
+
+    #### NOTE: We no longer allow the build system to run ./contrib/download_prerequisites
+    # as it is prone to failure. The gcc-6.2.0.tar.gz will now contain all the
+    # neccessary pre-requisites.
+
+    # (switch to curl because Darwin machines do not have wget)
+    # sed -i -e 's/wget/curl -O/g' contrib/download_prerequisites
+    # ./contrib/download_prerequisites
+
     mkdir ../gcc_build; cd ../gcc_build
     # I've notice by the time we make it to this module (gcc), everything else is
     # on hold because everything else is requiring gcc to be completed.
@@ -66,10 +72,10 @@ EOF
     module load gcc
     cd $GCC_BIN/../
     for sfile in `find . -type f -name "*.la"`; do
-	if [ `grep -c "$src_temp" $sfile` -ge 1 ]; then
-	    echo 'editing file: '$sfile
-	    perl -pi -e "s/-L.\S*build\S*[^'\s+]//g" $sfile
-	fi
+        if [ `grep -c "$src_temp" $sfile` -ge 1 ]; then
+            echo 'editing file: '$sfile
+            perl -pi -e "s/-L.\S*build\S*[^'\s+]//g" $sfile
+        fi
     done
 }
 ##
