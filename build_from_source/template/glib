@@ -26,7 +26,7 @@ pre_run() {
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
     module load moose-tools
-    CONFIGURE="PATH=$PACKAGES_DIR/pcre/bin:/$PACKAGES_DIR/gettext/bin:$PATH LDFLAGS='-L/opt/moose/gettext/lib' CPPFLAGS='-I/opt/moose/gettext/include' ./configure --prefix=$PACKAGES_DIR/$PACKAGE"
+    CONFIGURE="PATH=$PACKAGES_DIR/pcre/bin:$PACKAGES_DIR/gettext/bin:$PATH LDFLAGS='-L/opt/moose/gettext/lib' CPPFLAGS='-I/opt/moose/gettext/include' ./configure --prefix=$PACKAGES_DIR/$PACKAGE"
 }
 
 post_run() {
