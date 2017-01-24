@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules pkg-config)
+DEP=(modules pkg-config miniconda)
 PACKAGE='pcre'
 
 #####
