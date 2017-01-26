@@ -127,7 +127,8 @@ if [ $CONTINUE = true ]; then
     if [ $DOWNLOAD_ONLY == "True" ]; then
       download
     else
-      export src_temp=`mktemp -d $TEMP_PREFIX/temp_package_builder_$PACKAGE.XXXXXX`
+      export src_temp=$TEMP_PREFIX/$PACKAGE
+      mkdir -p $src_temp
       cd $src_temp
       download
       extract

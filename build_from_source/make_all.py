@@ -244,7 +244,7 @@ if __name__ == '__main__':
   os.environ['PACKAGES_DIR'] = args.prefix
   os.environ['MOOSE_JOBS'] = args.cpu_count
   os.environ['MAX_MODULES'] = args.max_modules
-  os.environ['TEMP_PREFIX'] = tempfile.gettempdir()
+  os.environ['TEMP_PREFIX'] = tempfile.gettempdir() + os.path.sep + 'moose_package_build_temp'
   os.environ['DEBUG'] = 'false'
   if not os.path.exists(download_directory):
     os.makedirs(download_directory)
