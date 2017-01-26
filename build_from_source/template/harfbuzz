@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules pkg-config libpng fontconfig)
+DEP=(modules pkg-config libpng fontconfig glib)
 PACKAGE='harfbuzz'
 
 #####

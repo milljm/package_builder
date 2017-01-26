@@ -17,130 +17,219 @@ ccache_enable() {
     fi
 }
 
+try_command() {
+    allowed_count=$1
+    command_string="$2"
+    try_count=0
+    while [ "$try_count" -lt "$allowed_count" ]; do
+        let try_count=try_count+1
+        eval "$command_string"
+        retcode=$?
+        if [ "$retcode" != "0" ] && [ "$try_count" == "$allowed_count" ]; then
+            echo "Failed to execute: $command_string"
+        elif [ "$retcode" != "0" ]; then
+            sleep 30
+        else
+            return
+        fi
+    done
+}
+
 pause() {
     if [ "$DEBUG" = true ]; then
-	read -p "Press Enter to continue.."
+        read -p "Press Enter to continue.."
+    fi
+}
+
+md5sum_check() {
+    REMOTE_MD5FILE="$1.md5"
+    LOCAL_MD5FILE="`basename $REMOTE_MD5FILE`"
+    LOCAL_FILE="`basename $1`"
+    MD5_DIFF="false"
+
+    echo "Running md5sum check..."
+    # Download a new corresponding md5 file and overwrite a possible previous md5 file
+    # (this can happen multiple times as we try to get a good file)
+    # Fail if we know its an HTML file (like a 404 error)
+    try_command 5 "curl -L -O $REMOTE_MD5FILE"
+    if [ `file "$LOCAL_MD5FILE" | grep -c HTML` -le 0 ]; then
+        mv -f "$LOCAL_MD5FILE" "$DOWNLOAD_DIR/"
+    else
+        echo "Attempted to download $REMOTE_MD5FILE file and failed (probably an HTML error)"
+        cleanup 1
+    fi
+
+    # Apple always gotta be different :(
+    # Create a temporary md5 file based on local downloaded data file
+    if [ `uname` != "Darwin" ]; then
+        md5sum "$DOWNLOAD_DIR/$LOCAL_FILE" | cut -d\  -f 1 > "$LOCAL_FILE.local_md5"
+    else
+        md5 "$DOWNLOAD_DIR/$LOCAL_FILE" | cut -d\  -f 4 > "$LOCAL_FILE.local_md5"
+    fi
+
+    # Perform the diff and set a diff flag if found
+    diff "$LOCAL_FILE.local_md5" "$DOWNLOAD_DIR/$LOCAL_MD5FILE"
+    diff_code=$?
+    if [ "$diff_code" != "0" ]; then
+        echo "Downloaded file: $LOCAL_FILE is different than file on remote server..."
+        MD5_DIFF="true"
+    else
+        echo "Files are similar..."
     fi
 }
 
 download() {
-    if [ $DOWNLOAD = 'false' ]; then return; fi
+    if [ "$DOWNLOAD" = "false" ]; then return; fi
     for url in ${DOWNLOAD[*]}; do
-	echo 'Attempting to download file: '$url
-	if [ -f $DOWNLOAD_DIR/`basename $url` ]; then
-	    echo -e 'file already downloaded, skipping'
-	else
-	    curl -L -O $url
-	    if [ $? -ne 0 ]; then echo 'Failed to download '$url; cleanup 1; fi
-	    mv -f `basename $url` $DOWNLOAD_DIR/
-	fi
+        echo "Attempting to download file: $url"
+        BASENAME=`basename $url`
+
+        # If file is not present, download it
+        if ! [ -f "$DOWNLOAD_DIR/$BASENAME" ]; then
+            try_command 5 "curl -L -O $url"
+            if [ `file "$BASENAME" | grep -c "gzip\|archive\|compressed\|data\|executable"` -ge 1 ]; then
+                mv -f "$BASENAME" "$DOWNLOAD_DIR/"
+            else
+                echo -e "Downloaded file was not an archive: \n"
+                file "$BASENAME"
+                rm -f "$BASENAME"
+                cleanup 1
+            fi
+        fi
+
+        # Verify the downloaded file matches remote hash sum, if not download a new one
+        md5sum_check "$url"
+        if [ "$MD5_DIFF" = "true" ]; then
+            try_command 5 "curl -L -O $url"
+            if [ `file "$BASENAME" | grep -c "gzip\|archive\|compressed\|data\|executable"` -ge 1 ]; then
+                mv -f "$BASENAME" "$DOWNLOAD_DIR/"
+            else
+                echo -e "Downloaded file was not an archive: \n"
+                file "$BASENAME"
+                rm -f "$BASENAME"
+                cleanup 1
+            fi
+        else
+            echo "File previously downloaded is the latest available, moving on..."
+        fi
     done
 }
 
 extract() {
-    if [ $EXTRACT = 'false' ]; then return; fi
+    if [ "$EXTRACT" = "false" ]; then return; fi
     for DFILE in ${EXTRACT[*]}; do
-	echo "Extracting "$DOWNLOAD_DIR/$DFILE" ..."
-	tar -xf $DOWNLOAD_DIR/$DFILE -C .
-	if [ $? -ne 0 ]; then
-	    echo -e 'Failed to extract '$DFILE '\n\n########################################\n\tIMPORTANT: You will need to delete the following file manually before re-running the build script.\n\tOtherwise this script will simply try to extract the same `failed` file.\n\tFile type is reporting as: '`file $DOWNLOAD_DIR/$DFILE | cut -d: -f2`'\n\n\t'$DOWNLOAD_DIR/$DFILE'\n\n########################################\n'
-	    cleanup 1
-	fi
+        echo "Extracting $DOWNLOAD_DIR/$DFILE..."
+        if [ `file $DOWNLOAD_DIR/$DFILE | grep -c "gzip\|archive\|compressed"` -ge 1 ]; then
+            tar -xf "$DOWNLOAD_DIR/$DFILE" -C .
+            if [ $? -ne 0 ]; then
+                echo "Failed to extract $DFILE"
+                cleanup 1
+            fi
+        else
+            echo "File appears not to be an archive: $DFILE"
+            cleanup 1
+        fi
     done
     # Lets hope the tarballs were created correctly
     cd $(tar -tf $DOWNLOAD_DIR/${EXTRACT[0]} | sed -e 's@/.*@@' | uniq)
     if [ $? -ne 0 ]; then
-	echo -e 'Failed to determine which directory to `cd` into'
-	cleanup 1
+        echo -e "Failed to determine which directory to `cd` into"
+        cleanup 1
     else
-	echo -e 'Entered build directory: '`pwd`
+        echo -e "Entered build directory: `pwd`"
     fi
 }
 
 configure() {
-    if [ "$CONFIGURE" = 'false' ]; then return; fi
-    echo -e 'Configure '$PACKAGE' with the following options: '$CONFIGURE
+    if [ "$CONFIGURE" = "false" ]; then return; fi
+    echo -e "Configure $PACKAGE with the following options: $CONFIGURE"
     pause
-    eval $CONFIGURE
-    if [ $? -ne 0 ]; then echo 'Failed to configure using following options: '$CONFIGURE; cleanup 1; fi
+    eval "$CONFIGURE"
+    if [ $? -ne 0 ]; then echo "Failed to configure using following options: $CONFIGURE"; cleanup 1; fi
     pause
 }
 
 build() {
-    if [ $BUILD = 'false' ]; then return; fi
-    echo -e 'Building '$PACKAGE' with JOB count: '$MOOSE_JOBS
+    if [ "$BUILD" = "false" ]; then return; fi
+    echo -e "Building $PACKAGE with JOB count: $MOOSE_JOBS"
     pause
     # If $MAX is set, use all available CPUs for this one job
-    if [ ! -z $MAX ]; then
-	if [ `uname -s` == 'Darwin' ]; then
-	    MOOSE_JOBS=`/usr/sbin/sysctl -n hw.ncpu`
-	else
-	    MOOSE_JOBS=`cat /proc/cpuinfo | grep processor | wc -l`
-	fi
+    if [ ! -z "$MAX" ]; then
+        if [ `uname -s` == "Darwin" ]; then
+            MOOSE_JOBS=`/usr/sbin/sysctl -n hw.ncpu`
+        else
+            MOOSE_JOBS=`cat /proc/cpuinfo | grep processor | wc -l`
+        fi
     fi
     ccache_enable
     make -j $MOOSE_JOBS
-    if [ $? -ne 0 ]; then echo 'Failed to make '$1; cleanup 1; fi
+    if [ $? -ne 0 ]; then echo "Failed to make $1"; cleanup 1; fi
     pause
 }
 
 make_install() {
-    if [ $INSTALL = 'false' ]; then return; fi
-    echo -e 'Installing '$PACKAGE'...'
+    if [ "$INSTALL" = "false" ]; then return; fi
+    echo -e "Installing $PACKAGE..."
     pause
     make install
-    pause
-    if [ $? -ne 0 ]; then echo 'Failed to install '$1; cleanup 1; fi
+    if [ $? -ne 0 ]; then echo "Failed to install $1"; cleanup 1; fi
 }
 
 cleanup() {
     if [ $1 == 0 ]; then
-	echo 'Deleting temporary build location: '$src_temp
-	rm -rf $src_temp
+        echo "Deleting temporary build location: $src_temp"
+        rm -rf "$src_temp"
     elif [ -z "$KEEP_FAILED" ]; then
-	echo 'Error while working on: '$PACKAGE
-	rm -rf $src_temp
+        echo "Error while working on: $PACKAGE"
+        rm -rf "$src_temp"
     else
-	echo 'Error while working on: '$PACKAGE' located at: '$src_temp
+        echo "Error while working on: $PACKAGE located at: $src_temp"
     fi
-	exit $1
+        exit $1
 }
+
 umask 022
 ME=`basename "$0"`
-CONTINUE=false
+CONTINUE="false"
 for OPERATING_SYSTEM in ${ARCH[*]}; do
-    if [ $OPERATING_SYSTEM = `uname` ]; then CONTINUE=true; fi
+    if [ "$OPERATING_SYSTEM" = `uname` ]; then CONTINUE=true; fi
 done
-PROGRESS=$RELATIVE_DIR/progress
-if ! [ -f $PROGRESS ]; then touch $PROGRESS; fi
-if [ $CONTINUE = true ]; then
-    error=''
+PROGRESS="$RELATIVE_DIR/progress"
+if ! [ -f "$PROGRESS" ]; then touch "$PROGRESS"; fi
+if [ "$CONTINUE" = "true" ]; then
+    error=""
     for dependency in ${DEP[*]}; do
-	if [ `grep -ci ^$dependency $PROGRESS` -eq 0 ]; then
-	    error+=$dependency' '
-	fi
+        if [ `grep -ci ^$dependency $PROGRESS` -eq 0 ]; then
+            error+=$dependency' '
+        fi
     done
     if ! [ -z "$error" ]; then
-	echo -e '\nDependencies not met: '$error
-	exit 0
+        echo -e "\nDependencies not met: $error"
+        exit 0
     fi
-    if [ $DOWNLOAD_ONLY == "True" ]; then
+    if [ "$DOWNLOAD_ONLY" == "True" ]; then
       download
     else
-      export src_temp=$TEMP_PREFIX/$PACKAGE
-      mkdir -p $src_temp
-      cd $src_temp
+      export src_temp="$TEMP_PREFIX/$PACKAGE"
+
+      # Clean a possible failed previous build directory
+      if [ -d "$src_temp" ]; then
+        rm -rf "$src_temp"
+      fi
+
+      mkdir -p "$src_temp"
+      cd "$src_temp"
       download
       extract
-      pre_run $src_temp
+      pre_run "$src_temp"
       configure
       build
       make_install
-      post_run $src_temp
+      post_run "$src_temp"
     fi
     echo $ME >> $PROGRESS
     cleanup 0
 else
-    echo -e "This platform does not support "$PACKAGE
-    echo "$ME n/a" >> $PROGRESS
+    echo -e "This platform does not support $PACKAGE"
+    echo "$ME n/a" >> "$PROGRESS"
 fi
