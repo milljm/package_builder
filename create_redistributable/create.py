@@ -330,7 +330,7 @@ Class for building Macintosh Packages
                                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
       results = package_signer.communicate()
       if len(results[1]) >= 1:
-        print 'There was an error signing the package', result[1]
+        print 'There was an error signing the package', results[1]
         return False
       else:
         os.remove(os.path.join(self.temp_dir, 'osx.pkg'))
