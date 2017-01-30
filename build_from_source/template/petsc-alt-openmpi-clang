@@ -19,14 +19,17 @@ CONFIGURE="false"
 BUILD='false'
 INSTALL='false'
 
-pre_run() {
+clean_petsc() {
     if [ -d $PACKAGES_DIR/petsc/openmpi_<PETSC_ALT>/clang-opt-superlu ]; then
 	rm -rf $PACKAGES_DIR/petsc/openmpi_<PETSC_ALT>/clang-opt-superlu
     fi
+}
+
+pre_run() {
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
     module load advanced_modules cmake openmpi-clang
-    ./configure \
+    CONFIGURE="./configure \
 --prefix=$PACKAGES_DIR/petsc/openmpi_<PETSC_ALT>/clang-opt-superlu \
 --download-hypre=1 \
 --with-ssl=0 \
@@ -48,21 +51,19 @@ pre_run() {
 -FFLAGS='-fPIC -fopenmp' \
 -FCFLAGS='-fPIC -fopenmp' \
 -F90FLAGS='-fPIC -fopenmp' \
--F77FLAGS='-fPIC -fopenmp'
+-F77FLAGS='-fPIC -fopenmp'"
+
+    try_command 3 "clean_petsc; configure"
+    if [ `uname` = "Darwin" ]; then
+	try_command 3 "make MAKE_NP=1 PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-darwin-c-opt all"
+	try_command 3 "make PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-darwin-c-opt install"
+    else
+	try_command 3 "make MAKE_NP=1 PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-linux2-c-opt all"
+	try_command 3 "make PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-linux2-c-opt install"
+    fi
 }
 
 post_run() {
-    if [ `uname` = "Darwin" ]; then
-	make MAKE_NP=1 PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-darwin-c-opt all
-	if [ $? -ne 0 ]; then echo "Error while building PETSc"; cleanup 1; fi
-	make PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-darwin-c-opt install
-	if [ $? -ne 0 ]; then echo "Error while installing PETSc"; cleanup 1; fi
-    else
-	make MAKE_NP=1 PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-linux2-c-opt all
-	if [ $? -ne 0 ]; then echo "Error while building PETSc"; cleanup 1; fi
-	make PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-linux2-c-opt install
-	if [ $? -ne 0 ]; then echo "Error while installing PETSc"; cleanup 1; fi
-    fi
     cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.openmpi_<PETSC_ALT>-clang
 #%Module1.0#####################################################################
 ##
