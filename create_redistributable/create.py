@@ -75,14 +75,16 @@ Base class for building packages
           sys.exit(1)
       with open(os.path.join(args.meta_dir, self.__class__.__name__.lower(), self.release + '-' + self.version + '_build'), 'w') as version_file:
         version_file.write('1')
-        return '1'
+      new_version = 1
     else:
       with open(os.path.join(args.meta_dir, self.__class__.__name__.lower(), self.release + '-' + self.version + '_build'), 'r+') as version_file:
         new_version = int(version_file.read()) + 1
         version_file.truncate(0)
         version_file.seek(0)
         version_file.write(str(new_version))
-        return new_version
+    with open(os.path.join(args.packages_dir, 'build'), 'w') as release_file:
+      release_file.write('Package version: ' + str(new_version))
+    return new_version
 
   def clean_up(self):
     shutil.rmtree(self.temp_dir)
