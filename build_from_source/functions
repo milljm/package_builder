@@ -26,7 +26,8 @@ try_command() {
         eval "$command_string"
         retcode=$?
         if [ "$retcode" != "0" ] && [ "$try_count" == "$allowed_count" ]; then
-            echo "Failed to execute: $command_string"
+            echo "Failed $1 times, trying to execute: $command_string"
+            cleanup 1
         elif [ "$retcode" != "0" ]; then
             sleep 30
         else
