@@ -75,14 +75,16 @@ Base class for building packages
           sys.exit(1)
       with open(os.path.join(args.meta_dir, self.__class__.__name__.lower(), self.release + '-' + self.version + '_build'), 'w') as version_file:
         version_file.write('1')
-        return '1'
+      new_version = 1
     else:
       with open(os.path.join(args.meta_dir, self.__class__.__name__.lower(), self.release + '-' + self.version + '_build'), 'r+') as version_file:
         new_version = int(version_file.read()) + 1
         version_file.truncate(0)
         version_file.seek(0)
         version_file.write(str(new_version))
-        return new_version
+    with open(os.path.join(args.packages_dir, 'build'), 'w') as release_file:
+      release_file.write('Package version: ' + str(new_version))
+    return new_version
 
   def clean_up(self):
     shutil.rmtree(self.temp_dir)
@@ -176,8 +178,10 @@ Class for building Debian based packages
     package_builder = subprocess.Popen(['dpkg', '-b', 'deb'],
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE)
+    while package_builder.poll() == None:
+      time.sleep(1)
     results = package_builder.communicate()
-    if len(results[1]) >= 1:
+    if package_builder.poll() != 0:
       print 'There was error building the redistributable package using dpkg:\n\n', results[1]
       return False
     else:
@@ -262,8 +266,10 @@ Class for building RedHat based packages
                                         os.path.join(self.temp_dir, 'rpm/SPECS/moose-compilers.spec')],
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE)
+    while package_builder.poll() == None:
+      time.sleep(1)
     results = package_builder.communicate()
-    if results[1].find('error') != -1:
+    if package_builder.poll() != 0:
       print 'There was error building the redistributable package using rpmbuild:\n\n', results[1]
       return False
     else:
@@ -324,9 +330,10 @@ Class for building Macintosh Packages
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE,
                                        shell=False)
-
+    while package_builder.poll() == None:
+      time.sleep(1)
     results = package_builder.communicate()
-    if len(results[1]) >= 1:
+    if package_builder.poll() != 0:
       print 'There was error building the redistributable package using PackageMaker:\n\n', results[1]
       return False
     elif self.args.sign:
@@ -335,8 +342,10 @@ Class for building Macintosh Packages
                                          os.path.join(self.temp_dir, 'osx.pkg'),
                                          os.path.join(self.args.relative_path, self.redistributable_name)],
                                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      while package_signer.poll() == None:
+        time.sleep(1)
       results = package_signer.communicate()
-      if len(results[1]) >= 1:
+      if package_signer.poll() != 0:
         print 'There was an error signing the package', results[1]
         return False
       else:

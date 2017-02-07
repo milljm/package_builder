@@ -47,7 +47,7 @@ set         BASE_PATH        $PACKAGES_DIR
 setenv      SLEPC_DIR        \$BASE_PATH/slepc/$PACKAGE
 EOF
     cd $PACKAGES_DIR/Modules/<MODULES>/mpich_clang
-    ln -s ../modulefiles/moose/.$PACKAGE <SLEPC_DEFAULT>
+    ln -s ../modulefiles/moose/.mpich_<SLEPC_DEFAULT>-clang <SLEPC_DEFAULT>
 }
 
 ##
