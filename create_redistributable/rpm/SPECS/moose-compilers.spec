@@ -28,6 +28,8 @@ BuildRoot: %{_tmppath}/%{name}-build
 AutoReqProv: no
 
 %define debug_package %{nil}
+%define __strip /bin/true
+%define __spec_install_port /usr/lib/rpm/brp-compress
 
 %description
 This package contains the neccessary libraries/binaries to utilize the MOOSE framework and assocaited applications.

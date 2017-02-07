@@ -178,8 +178,10 @@ Class for building Debian based packages
     package_builder = subprocess.Popen(['dpkg', '-b', 'deb'],
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE)
+    while package_builder.poll() == None:
+      time.sleep(1)
     results = package_builder.communicate()
-    if len(results[1]) >= 1:
+    if package_builder.poll() != 0:
       print 'There was error building the redistributable package using dpkg:\n\n', results[1]
       return False
     else:
@@ -264,8 +266,10 @@ Class for building RedHat based packages
                                         os.path.join(self.temp_dir, 'rpm/SPECS/moose-compilers.spec')],
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE)
+    while package_builder.poll() == None:
+      time.sleep(1)
     results = package_builder.communicate()
-    if results[1].find('error') != -1:
+    if package_builder.poll() != 0:
       print 'There was error building the redistributable package using rpmbuild:\n\n', results[1]
       return False
     else:
@@ -326,9 +330,10 @@ Class for building Macintosh Packages
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE,
                                        shell=False)
-
+    while package_builder.poll() == None:
+      time.sleep(1)
     results = package_builder.communicate()
-    if len(results[1]) >= 1:
+    if package_builder.poll() != 0:
       print 'There was error building the redistributable package using PackageMaker:\n\n', results[1]
       return False
     elif self.args.sign:
@@ -337,8 +342,10 @@ Class for building Macintosh Packages
                                          os.path.join(self.temp_dir, 'osx.pkg'),
                                          os.path.join(self.args.relative_path, self.redistributable_name)],
                                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      while package_signer.poll() == None:
+        time.sleep(1)
       results = package_signer.communicate()
-      if len(results[1]) >= 1:
+      if package_signer.poll() != 0:
         print 'There was an error signing the package', results[1]
         return False
       else:
