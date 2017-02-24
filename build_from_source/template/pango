@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules glib cairo harfbuzz)
+DEP=(modules miniconda glib cairo harfbuzz)
 PACKAGE='pango'
 
 #####

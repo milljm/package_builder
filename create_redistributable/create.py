@@ -299,7 +299,7 @@ Class for building Macintosh Packages
 
       # Iterate through the all control files that redistributable package uses during installation and
       # make some path/version specific changes based on machine type
-      for html_file in ['README_Panel.html', 'Welcome_Panel.html', 'cleanup_post.sh', 'payload_post.sh', 'common_post.sh', 'environment_post.sh']:
+      for html_file in ['README_Panel.html', 'Welcome_Panel.html', 'cleanup_post.sh', 'payload_post.sh', 'common_post.sh', 'environment_post.sh', 'icecream_post.sh']:
         with open(os.path.join(self.temp_dir, 'pkg/OSX', html_file), 'r+') as tmp_file:
           html_str = tmp_file.read()
           tmp_file.truncate(0)

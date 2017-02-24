@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(tcl)
+DEP=(tcl moose_profile)
 PACKAGE='modules'
 
 #####
