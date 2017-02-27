@@ -11,6 +11,7 @@ fi
 # I do not like extracting tarballs to '/', but in this case
 # it is the correct thing to do now, since the payload.tar.gz
 # file is created via script based on --package-dir argument
+# meaning: the intended target could be anywhere
 tar -xf /private/tmp/MOOSE_installer-tmp/payload.tar.gz -C /
 echo "<REDISTRIBUTABLE_VERSION>" > <PACKAGES_DIR>/build
 chown -R root:wheel <PACKAGES_DIR>

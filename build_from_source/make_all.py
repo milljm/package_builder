@@ -7,7 +7,7 @@ prereqs = ['bison', 'flex', 'git', 'curl', 'make', 'patch', 'bzip2', 'uniq']
 def startJobs(args):
   version_template = getTemplate(args)
   process_templates = alterVersions(version_template)
-  (master_list, previous_progress) = getList()
+  (master_list, previous_progress) = getList(args)
 
   if not process_templates:
     print 'There was an error process the build templates'
@@ -109,6 +109,7 @@ def deleteBuild():
 def solveDEP(job_list):
   progress = []
   resolved_list = []
+  no_dependency_list = set([])
   dependency_dict = {}
   # If a previous build detected, figure out which dependencies are no longer required
   if os.path.exists(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'progress')):
@@ -119,18 +120,32 @@ def solveDEP(job_list):
     progress = progress.split('\n')
     progress.pop()
   for job in job_list:
-    job_file = open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'packages', job), 'r')
-    job_contents = job_file.read()
-    job_file.close()
+    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'packages', job), 'r') as job_file:
+      job_contents = job_file.read()
+
     # Do the actual dependency subtraction here:
-    dependency_dict[job] = tuple(set(re.findall(r'DEP=\((.*)\)', job_contents)[0].split(' ')) - set(progress))
+    tmp_dep = re.findall(r'DEP=\((.*)\)', job_contents)[0].split(' ')
+
+    # If project has no dependencies, add it to a special list
+    if len(tmp_dep) == 1 and tmp_dep[0] == '':
+      no_dependency_list.add(job)
+    else:
+      dependency_dict[job] = tuple(set(tmp_dep) - set(progress))
 
   dictionary_sets = dict((key, set(dependency_dict[key])) for key in dependency_dict)
+
   while dictionary_sets:
     temp_set=set(item for value in dictionary_sets.values() for item in value) - set(dictionary_sets.keys())
     temp_set.update(key for key, value in dictionary_sets.items() if not value)
     resolved_list.append(temp_set)
     dictionary_sets = dict(((key, value-temp_set) for key, value in dictionary_sets.items() if value))
+
+  # prepend any projects with no dependencies to the resolved list
+  if len(no_dependency_list) and len(resolved_list):
+    resolved_list[0].union(no_dependency_list)
+  else:
+    resolved_list.append(no_dependency_list)
+
   return (resolved_list, progress)
 
 def alterVersions(version_template):
@@ -151,14 +166,38 @@ def launchJob(module):
   t = tempfile.TemporaryFile()
   return (subprocess.Popen([os.path.join(os.path.abspath(os.path.dirname(__file__)), 'packages', module)], stdout=t, stderr=t, shell=True), module, t, time.time())
 
-def getList():
-  job_list = []
-  for module in os.listdir(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'packages')):
-    # ignore files that begin with .
-    if module.find('.') != 0:
-      job_list.append(module)
+def getDepsFromFile(dependency):
+  if os.path.exists(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'packages', dependency)):
+    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'packages', dependency), 'r') as dependency_file:
+      dependency_contents = dependency_file.read()
+    tmp_dependency = re.findall(r'DEP=\((.*)\)', dependency_contents)[0].split(' ')
+    if tmp_dependency[0] == '':
+      return [dependency]
     else:
-      print 'ignoring hidden file:', module
+      tmp_dependency.append(dependency)
+      return tmp_dependency
+  else:
+    print 'No project by the name of', dependency
+    sys.exit(1)
+
+def getBuildOnly(project):
+  tmp_deps = getDepsFromFile(project)
+  list_of_deps = []
+  for single_dep in tmp_deps:
+    list_of_deps.extend(getDepsFromFile(single_dep))
+  return list_of_deps
+
+def getList(args):
+  job_list = []
+  if args.build_only:
+    job_list = getBuildOnly(args.build_only)
+  else:
+    for module in os.listdir(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'packages')):
+      # ignore files that have . in their names (tempfiles created by editors)
+      if module.find('.') == -1:
+        job_list.append(module)
+      else:
+        print 'ignoring hidden file:', module
   return solveDEP(job_list)
 
 def getTemplate(args):
@@ -217,6 +256,7 @@ def parseArguments(args=None):
   parser.add_argument('-p', '--prefix', help='Directory to install everything into')
   parser.add_argument('-m', '--max-modules', default='2', help='Specify the maximum amount of modules to run simultaneously')
   parser.add_argument('-j', '--cpu-count', default='4', help='Specify CPU count (used when make -j <number>)')
+  parser.add_argument('--build-only', help='Build only the necessary things up to specified project')
   parser.add_argument('-d', '--delete-downloads', action='store_const', const=True, default=False, help='Delete downloads when successful build completes?')
   parser.add_argument('--new-build', action='store_const', const=True, default=False, help='Start with a new build')
   parser.add_argument('--download-only', action='store_const', const=True, default=False, help='Download files used in created the package only')
