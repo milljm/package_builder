@@ -54,6 +54,9 @@ else
   export MOOSE_JOBS=\`cat /proc/cpuinfo | grep processor | wc -l\`
   module load moose-dev-gcc moose-tools
 fi
+
+# Load custom MOOSE command bash autocomplete rules
+source $PACKAGES_DIR/environments/autocomplete_moose
 EOF
 }
 ##
