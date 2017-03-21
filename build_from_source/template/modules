@@ -176,9 +176,6 @@ if { [ info exists ::env(MOOSE_DIR) ] } {
     prepend-path PYTHONPATH \$MOOSE_DIR/python
   }
 }
-# Allow clang-formatting binary to be available even when not using clang
-prepend-path    PATH    $PACKAGES_DIR/llvm-<LLVM>/bin
-
 EOF
 }
 ##
