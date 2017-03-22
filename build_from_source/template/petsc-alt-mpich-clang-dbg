@@ -53,13 +53,10 @@ pre_run() {
 -F90FLAGS='-fPIC -fopenmp' \
 -F77FLAGS='-fPIC -fopenmp'"
 
-    try_command 3 "clean_petsc; configure"
     if [ `uname` = "Darwin" ]; then
-	try_command 3 "make MAKE_NP=1 PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-darwin-c-debug all"
-	try_command 3 "make PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-darwin-c-debug install"
+	try_command 3 "clean_petsc; configure; make MAKE_NP=1 PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-darwin-c-debug all; make PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-darwin-c-debug install"
     else
-	try_command 3 "make MAKE_NP=1 PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-linux2-c-debug all"
-	try_command 3 "make PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-linux2-c-debug install"
+	try_command 3 "clean_petsc; configure; make MAKE_NP=1 PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-linux2-c-debug all; make PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-linux2-c-debug install"
     fi
 }
 
