@@ -175,6 +175,14 @@ make_install() {
     make install
     if [ $? -ne 0 ]; then echo "Failed to install $1"; cleanup 1; fi
 }
+clean_attempt() {
+    # Clean a possible failed previous build directory
+    if [ -d "$src_temp" ]; then
+        rm -rf "$src_temp"
+    fi
+    mkdir -p "$src_temp"
+    cd "$src_temp"
+}
 
 cleanup() {
     if [ $1 == 0 ]; then
@@ -212,14 +220,7 @@ if [ "$CONTINUE" = "true" ]; then
       download
     else
       export src_temp="$TEMP_PREFIX/$PACKAGE"
-
-      # Clean a possible failed previous build directory
-      if [ -d "$src_temp" ]; then
-        rm -rf "$src_temp"
-      fi
-
-      mkdir -p "$src_temp"
-      cd "$src_temp"
+      clean_attempt
       download
       extract
       pre_run "$src_temp"

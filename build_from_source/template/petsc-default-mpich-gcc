@@ -23,6 +23,8 @@ clean_petsc() {
     if [ -d $PACKAGES_DIR/petsc/mpich_<PETSC_DEFAULT>/gcc-opt-superlu ]; then
 	rm -rf $PACKAGES_DIR/petsc/mpich_<PETSC_DEFAULT>/gcc-opt-superlu
     fi
+    clean_attempt
+    extract
 }
 
 pre_run() {
@@ -58,6 +60,8 @@ pre_run() {
     else
 	try_command 3 "clean_petsc; configure; make MAKE_NP=1 PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-opt all; make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-opt install"
     fi
+    # So we do not run configure a second time
+    CONFIGURE="false"
 }
 
 post_run() {

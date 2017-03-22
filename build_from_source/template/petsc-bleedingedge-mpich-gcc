@@ -23,14 +23,19 @@ clean_petsc() {
     if [ -d $PACKAGES_DIR/petsc/mpich_<PETSC_BLEEDINGEDGE>/gcc-opt-superlu ]; then
 	rm -rf $PACKAGES_DIR/petsc/mpich_<PETSC_BLEEDINGEDGE>/gcc-opt-superlu
     fi
+    cd "$src_temp"
+    if [ -d <PETSC_BLEEDINGEDGE> ]; then
+        rm -rf <PETSC_BLEEDINGEDGE>
+    fi
+    echo -e "Current working directory:"`pwd`
+    git clone -b maint https://bitbucket.org/petsc/petsc <PETSC_BLEEDINGEDGE>
+    cd <PETSC_BLEEDINGEDGE>
 }
 
 pre_run() {
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
     module load advanced_modules cmake mpich-gcc
-    git clone -b maint https://bitbucket.org/petsc/petsc <PETSC_BLEEDINGEDGE>
-    cd <PETSC_BLEEDINGEDGE>
     CONFIGURE="./configure \
 --prefix=$PACKAGES_DIR/petsc/mpich_<PETSC_BLEEDINGEDGE>/gcc-opt-superlu \
 --download-hypre=git://https://github.com/fdkong/hypre.git --download-hypre-commit=HEAD \
@@ -60,6 +65,8 @@ pre_run() {
     else
 	try_command 3 "clean_petsc; configure; make MAKE_NP=1 PETSC_DIR=$1/<PETSC_BLEEDINGEDGE> PETSC_ARCH=arch-linux2-c-opt all; make PETSC_DIR=$1/<PETSC_BLEEDINGEDGE> PETSC_ARCH=arch-linux2-c-opt install"
     fi
+    # So we do not run configure a second time
+    CONFIGURE="false"
 }
 
 post_run() {
