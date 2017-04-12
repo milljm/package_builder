@@ -11,9 +11,15 @@ EOF
     crontab crontab_file
 fi
 
-# Get number of Threads / 2 (Cores) - 1, so we can not
-# set up a machine that gets saturated with jobs.
-CPU_COUNT=`echo "($(/usr/sbin/sysctl -n hw.ncpu) / 2) - 1" | bc`
+
+# Determine if this is a laptop. If so, we will not distribute jobs to this machine (CPU count of 0)
+if [ `system_profiler -detailLevel mini | grep "Model Identifier" | grep -i -c "macpro"` ]; then
+    # Get number of Threads / 2 (Cores) - 1, so we can not
+    # set up a machine that gets saturated with jobs.
+    CPU_COUNT=`echo "($(/usr/sbin/sysctl -n hw.ncpu) / 2) - 1" | bc`
+else
+    CPU_COUNT=0
+fi
 
 if ! [ -f /Library/LaunchDaemons/com.moose.icecream.plist ]; then
     sed -e "s/<CHANGEME>/`hostname | cut -d. -f1`_$USER/g" <PACKAGES_DIR>/icecream/com.moose.icecream.plist | \
