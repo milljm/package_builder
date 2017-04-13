@@ -13,7 +13,7 @@ fi
 
 
 # Determine if this is a laptop. If so, we will not distribute jobs to this machine (CPU count of 0)
-if [ `system_profiler -detailLevel mini | grep "Model Identifier" | grep -i -c "macpro"` ]; then
+if [ `system_profiler -detailLevel mini | grep "Model Identifier" | grep -i -c "macpro"` -ge 1 ]; then
     # Get number of Threads / 2 (Cores) - 1, so we can not
     # set up a machine that gets saturated with jobs.
     CPU_COUNT=`echo "($(/usr/sbin/sysctl -n hw.ncpu) / 2) - 1" | bc`
