@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(petsc-default-mpich-gcc)
+DEP=(petsc-default-mpich-gcc-opt)
 PACKAGE='<SLEPC_DEFAULT>-mpich-gcc'
 
 #####

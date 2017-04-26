@@ -65,10 +65,10 @@ pre_run() {
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.mpich_<PETSC_ALT>-clang-dbg
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.mpich_<PETSC_ALT>_dbg-clang
 #%Module1.0#####################################################################
 ##
-## MPICH Clang <PETSC_ALT> superlu Debug modulefile
+## MPICH Clang <PETSC_ALT> debug superlu modulefile
 ##
 ##
 ##
@@ -76,7 +76,7 @@ set         BASE_PATH        $PACKAGES_DIR
 setenv      PETSC_DIR        \$BASE_PATH/petsc/mpich_<PETSC_ALT>/clang-dbg-superlu
 EOF
     cd $PACKAGES_DIR/Modules/<MODULES>/mpich_clang
-    ln -s ../modulefiles/moose/.mpich_<PETSC_ALT>-clang-dbg <PETSC_ALT>-dbg
+    ln -s ../modulefiles/moose/.mpich_<PETSC_ALT>_dbg-clang <PETSC_ALT>-dbg
 
 }
 

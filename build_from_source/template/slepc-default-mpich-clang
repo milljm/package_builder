@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(petsc-default-mpich-clang)
+DEP=(petsc-default-mpich-clang-opt)
 PACKAGE='<SLEPC_DEFAULT>-mpich-clang'
 
 #####
