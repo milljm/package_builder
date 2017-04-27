@@ -2,8 +2,8 @@
 #############
 ## Specifics
 ##
-DEP=(modules cmake gcc openmpi-gcc)
-PACKAGE='<PETSC_DEFAULT>-openmpi-gcc'
+DEP=(modules cmake gcc llvm mpich-clang)
+PACKAGE='<PETSC_DEFAULT>-mpich-clang-dbg'
 
 #####
 # Set the operating system allowed to build this module
@@ -20,8 +20,8 @@ BUILD='false'
 INSTALL='false'
 
 clean_petsc() {
-    if [ -d $PACKAGES_DIR/petsc/openmpi_<PETSC_DEFAULT>/gcc-opt-superlu ]; then
-	rm -rf $PACKAGES_DIR/petsc/openmpi_<PETSC_DEFAULT>/gcc-opt-superlu
+    if [ -d $PACKAGES_DIR/petsc/mpich_<PETSC_DEFAULT>/clang-dbg-superlu ]; then
+	rm -rf $PACKAGES_DIR/petsc/mpich_<PETSC_DEFAULT>/clang-dbg-superlu
     fi
     clean_attempt
     extract
@@ -30,12 +30,12 @@ clean_petsc() {
 pre_run() {
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
-    module load advanced_modules cmake openmpi-gcc
+    module load advanced_modules cmake mpich-clang
     CONFIGURE="./configure \
---prefix=$PACKAGES_DIR/petsc/openmpi_<PETSC_DEFAULT>/gcc-opt-superlu \
+--prefix=$PACKAGES_DIR/petsc/mpich_<PETSC_DEFAULT>/clang-dbg-superlu \
 --download-hypre=1 \
 --with-ssl=0 \
---with-debugging=no \
+--with-debugging=1 \
 --with-pic=1 \
 --with-shared-libraries=1 \
 --with-cc=mpicc \
@@ -56,27 +56,27 @@ pre_run() {
 -F77FLAGS='-fPIC -fopenmp'"
 
     if [ `uname` = "Darwin" ]; then
-	try_command 3 "clean_petsc; configure; make MAKE_NP=1 PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-darwin-c-opt all; make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-darwin-c-opt install"
+	try_command 3 "clean_petsc; configure; make MAKE_NP=1 PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-darwin-c-debug all; make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-darwin-c-debug install"
     else
-	try_command 3 "clean_petsc; configure; make MAKE_NP=1 PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-opt all; make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-opt install"
+	try_command 3 "clean_petsc; configure; make MAKE_NP=1 PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-debug all; make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-debug install"
     fi
     # So we do not run configure a second time
     CONFIGURE="false"
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.openmpi_<PETSC_DEFAULT>-gcc
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.mpich_<PETSC_DEFAULT>_dbg-clang
 #%Module1.0#####################################################################
 ##
-## OpenMPI GCC <PETSC_DEFAULT> superlu modulefile
+## MPICH Clang <PETSC_DEFAULT> debug superlu modulefile
 ##
 ##
 ##
 set         BASE_PATH        $PACKAGES_DIR
-setenv      PETSC_DIR        \$BASE_PATH/petsc/mpich_<PETSC_DEFAULT>/gcc-opt-superlu
+setenv      PETSC_DIR        \$BASE_PATH/petsc/mpich_<PETSC_DEFAULT>/clang-dbg-superlu
 EOF
-    cd $PACKAGES_DIR/Modules/<MODULES>/openmpi_gcc
-    ln -s ../modulefiles/moose/.openmpi_<PETSC_DEFAULT>-gcc <PETSC_DEFAULT>
+    cd $PACKAGES_DIR/Modules/<MODULES>/mpich_clang
+    ln -s ../modulefiles/moose/.mpich_<PETSC_DEFAULT>_dbg-clang <PETSC_DEFAULT>-dbg
 }
 
 ##

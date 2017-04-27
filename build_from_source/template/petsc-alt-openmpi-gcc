@@ -3,7 +3,7 @@
 ## Specifics
 ##
 DEP=(modules cmake gcc openmpi-gcc)
-PACKAGE='<PETSC_ALT>-openmpi-gcc'
+PACKAGE='<PETSC_ALT>-openmpi-gcc-opt'
 
 #####
 # Set the operating system allowed to build this module
@@ -65,10 +65,10 @@ pre_run() {
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.openmpi_<PETSC_ALT>-gcc
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.openmpi_<PETSC_ALT>_opt-gcc
 #%Module1.0#####################################################################
 ##
-## OpenMPI GCC <PETSC_ALT> superlu modulefile
+## OpenMPI GCC <PETSC_ALT> optimized superlu modulefile
 ##
 ##
 ##
@@ -76,7 +76,7 @@ set         BASE_PATH        $PACKAGES_DIR
 setenv      PETSC_DIR        \$BASE_PATH/petsc/openmpi_<PETSC_ALT>/gcc-opt-superlu
 EOF
     cd $PACKAGES_DIR/Modules/<MODULES>/openmpi_gcc
-    ln -s ../modulefiles/moose/.openmpi_<PETSC_ALT>-gcc <PETSC_ALT>
+    ln -s ../modulefiles/moose/.openmpi_<PETSC_ALT>_opt-gcc <PETSC_ALT>
 
 }
 

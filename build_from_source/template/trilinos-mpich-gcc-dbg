@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules cmake petsc-default-mpich-gcc)
+DEP=(modules cmake petsc-default-mpich-gcc-opt)
 PACKAGE='trilinos-mpich-gcc-dbg'
 
 #####
@@ -25,7 +25,7 @@ pre_run() {
     fi
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
-    module load advanced_modules cmake mpich-gcc <PETSC_DEFAULT>
+    module load advanced_modules cmake mpich-gcc <PETSC_DEFAULT>_opt
     git clone https://github.com/ORNL-CEES/DataTransferKit.git
     cd DataTransferKit
     git checkout <DTK>

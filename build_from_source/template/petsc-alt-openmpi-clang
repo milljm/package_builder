@@ -3,7 +3,7 @@
 ## Specifics
 ##
 DEP=(modules cmake gcc llvm openmpi-clang)
-PACKAGE='<PETSC_ALT>-openmpi-clang'
+PACKAGE='<PETSC_ALT>-openmpi-clang-opt'
 
 #####
 # Set the operating system allowed to build this module
@@ -65,10 +65,10 @@ pre_run() {
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.openmpi_<PETSC_ALT>-clang
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.openmpi_<PETSC_ALT>_opt-clang
 #%Module1.0#####################################################################
 ##
-## OpenMPI Clang <PETSC_ALT> superlu modulefile
+## OpenMPI Clang <PETSC_ALT> optimized superlu modulefile
 ##
 ##
 ##
@@ -76,7 +76,7 @@ set         BASE_PATH        $PACKAGES_DIR
 setenv      PETSC_DIR        \$BASE_PATH/petsc/openmpi_<PETSC_ALT>/clang-opt-superlu
 EOF
     cd $PACKAGES_DIR/Modules/<MODULES>/openmpi_clang
-    ln -s ../modulefiles/moose/.openmpi_<PETSC_ALT>-clang <PETSC_ALT>
+    ln -s ../modulefiles/moose/.openmpi_<PETSC_ALT>_opt-clang <PETSC_ALT>
 
 }
 

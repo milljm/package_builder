@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(petsc-alt-mpich-clang)
+DEP=(petsc-alt-mpich-clang-opt)
 PACKAGE='<SLEPC_ALT>-mpich-clang'
 
 #####

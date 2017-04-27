@@ -3,7 +3,7 @@
 ## Specifics
 ##
 DEP=(miniconda miniconda-dev)
-PACKAGE='moose-docs'
+PACKAGE='pip-installs'
 
 #####
 # Set the operating system allowed to build this module
@@ -27,7 +27,7 @@ pre_run() {
     for which_conda in ${condas[*]}; do
 	module purge
 	module load advanced_modules $which_conda
-	pip install markdown markdown-include python-markdown-math pybtex bs4 jinja2 livereload daemonlite pylint lxml
+	pip install markdown markdown-include python-markdown-math pybtex bs4 jinja2 livereload daemonlite pylint lxml pylatexenc
 	if [ $? -ne 0 ]; then echo "Failed to install dependency packages for $PACKAGE"; cleanup 1; fi
     done
 }
