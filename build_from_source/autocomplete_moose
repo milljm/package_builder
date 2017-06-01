@@ -1,0 +1,126 @@
+_moosedocs()
+{
+  # find command
+  local docscmd=''
+  for n in `seq 1 $COMP_CWORD`; do
+    if [[ ${COMP_WORDS[$n]} != -* ]]; then
+      docscmd=${COMP_WORDS[$n]}
+      break
+    fi
+  done
+
+  local cur=${COMP_WORDS[COMP_CWORD]}
+  local prev=${COMP_WORDS[COMP_CWORD-1]}
+
+  case "$prev" in
+    # Return a small number >0
+    --num-threads)
+      COMPREPLY=( $( compgen -W "$(seq 1 32)" -- $cur ) )
+      return 0
+      ;;
+
+    # Return file
+    --config-file | --template | --output | -o | --css | --scripts)
+      COMPREPLY=( $( compgen -f -- $cur ) )
+      return 0
+      ;;
+
+    # Return directory
+    --site-dir)
+      COMPREPLY=( $( compgen -d -- $cur ) )
+      return 0
+      ;;
+
+    # Return no suggestion
+    --port | --host | --headings | --documentclass | title | --subtitle | \
+    --author | --today | --institution | --paper | --fontsize | --margin | --linkcolor)
+      return 0
+      ;;
+  esac
+
+  case "$docscmd" in
+    build)
+      COMPREPLY=( $(compgen -W "-h --help --config-file --num-threads --template --host --port \
+                                --site-dir --serve --no-livereload" -- $cur) )
+      return 0
+      ;;
+
+    check)
+      COMPREPLY=( $(compgen -W "-h --help --config-file --locations --generate" -- $cur) )
+      return 0
+      ;;
+
+    latex)
+      COMPREPLY=( $(compgen -W "-h --help --config-file --template --output -o --site --hrule \
+                                --headings --documentclass --paper --fontsize --margin --linkcolor \
+                                --tableofcontents --title --subtitle --author --today --institution" -- $cur) )
+      return 0
+      ;;
+
+    presentation)
+      COMPREPLY=( $(compgen -W "-h --help --config-file --template --output -o --site --hrule \
+                                --headings --documentclass --paper --fontsize --margin --linkcolor \
+                                --tableofcontents --title --subtitle --author --today --institution" -- $cur) )
+      return 0
+      ;;
+  esac
+
+  if [[ "$cur" == -* ]]; then
+    # completing an option
+    COMPREPLY=( $(compgen -W "-h --help --verbose -v" -- $cur) )
+  else
+    # completing an action
+    COMPREPLY=( $(compgen -W "build check latex presentation" -- $cur) )
+  fi
+}
+complete -F _moosedocs ./moosedocs.py
+
+_run_tests()
+{
+  local cur=${COMP_WORDS[COMP_CWORD]}
+  local prev=${COMP_WORDS[COMP_CWORD-1]}
+
+  case "$prev" in
+   # Return a small number >0
+   --jobs | -j | --load-average | -l | --n-threads | --parallel | -p)
+     COMPREPLY=( $( compgen -W "$(seq 1 32)" -- $cur ) )
+     return 0
+     ;;
+
+   # Return a larger number number >=0
+   --max-fails | --valgrind-max-fails)
+     COMPREPLY=( $( compgen -W "$(seq 0 100)" -- $cur ) )
+     return 0
+     ;;
+
+   # Return file
+   --dbfile | --file | -f | --pbs | --pbs-cleanup)
+     COMPREPLY=( $( compgen -f -- $cur ) )
+     return 0
+     ;;
+
+   # Return directory
+   --libmesh_dir | --output-dir | -o)
+     COMPREPLY=( $( compgen -d -- $cur ) )
+     return 0
+     ;;
+
+   # Return no suggestion
+   --cli-args | --group | -g | -i | --re | --revision)
+     return 0
+     ;;
+  esac
+
+  # completing an option
+  if [[ "$cur" == -* ]]; then
+    COMPREPLY=( $(compgen -W "-h --opt --dbg --devel --oprof --pro -j int -e -c --color-first-directory \
+                              --heavy --all-tests -g --not_group --dbfile -l -t -s -i --libmesh_dir \
+                              --skip-config-checks --parallel --n-threads -d --recover --valgrind \
+                              --valgrind-heavy --valgrind-max-fails --max-fails --pbs --pbs-cleanup \
+                              --pbs-project --re --failed-tests --parallel-mesh --distributed-mesh --error \
+                              --error-unused --cli-args --dry-run -v -q --no-report --show-directory -o -f -x \
+                              --sep-files-ok -a --store-timing --testharness-unittest --revision --yaml --dump \
+                              --file --group --jobs --output-dir --load-average" -- $cur) )
+  fi
+}
+complete -F _run_tests ./run_tests
