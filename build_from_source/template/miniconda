@@ -37,7 +37,7 @@ pre_run() {
     PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda config --set ssl_verify false
     PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda update conda --yes
     if [ $? -ne 0 ]; then echo "Failed to update $PACKAGE"; cleanup 1; fi
-    PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda install coverage reportlab mako numpy scipy scikit-learn h5py hdf5 scikit-image requests vtk pyyaml matplotlib pip lxml pyflakes conda-build qt=4 --yes
+    PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda install coverage reportlab mako numpy scipy scikit-learn h5py hdf5 scikit-image requests vtk pyyaml matplotlib pip lxml pyflakes pandas conda-build qt=4 --yes
     if [ $? -ne 0 ]; then echo "Failed to install $PACKAGE packages"; cleanup 1; fi
     sed -i -e 's/^@deprecated/#@deprecated/' "$PACKAGES_DIR/$PACKAGE/lib/python2.7/site-packages/skimage/measure/_structural_similarity.py"
     PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda config --set ssl_verify true
