@@ -201,7 +201,7 @@ umask 022
 ME=`basename "$0"`
 CONTINUE="false"
 for OPERATING_SYSTEM in ${ARCH[*]}; do
-    if [ "$OPERATING_SYSTEM" = `uname` ]; then CONTINUE=true; fi
+    if [ "$OPERATING_SYSTEM" = `uname` ]; then CONTINUE="true"; fi
 done
 PROGRESS="$RELATIVE_DIR/progress"
 if ! [ -f "$PROGRESS" ]; then touch "$PROGRESS"; fi

@@ -75,6 +75,24 @@ post_run() {
 set         BASE_PATH        $PACKAGES_DIR
 setenv      PETSC_DIR        \$BASE_PATH/petsc/mpich_<PETSC_DEFAULT>/gcc-dbg-superlu
 EOF
+
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/mpich-gcc-petsc_default_dbg
+#%Module1.0#####################################################################
+##
+## Civet support module
+## <PETSC_DEFAULT>
+## <GCC>
+## <MPICH>
+##
+module load moose/.<MPICH>_gcc
+module load moose/.mpich_<PETSC_DEFAULT>_dbg-gcc
+module load moose/.<TBB>
+module load moose/.<CPPUNIT>-gcc
+module load ccache
+module load moose-tools
+
+EOF
+
     cd $PACKAGES_DIR/Modules/<MODULES>/mpich_gcc
     ln -s ../modulefiles/moose/.mpich_<PETSC_DEFAULT>_dbg-gcc <PETSC_DEFAULT>-dbg
 }

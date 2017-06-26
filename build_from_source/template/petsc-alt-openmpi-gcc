@@ -75,6 +75,123 @@ post_run() {
 set         BASE_PATH        $PACKAGES_DIR
 setenv      PETSC_DIR        \$BASE_PATH/petsc/openmpi_<PETSC_ALT>/gcc-opt-superlu
 EOF
+
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/openmpi-gcc-petsc_alt-vtk-trilinos-opt
+#%Module1.0#####################################################################
+##
+## Civet support module
+## <PETSC_ALT>
+## <GCC>
+## <OPENMPI>
+## <VTK>
+## <TRILINOS>
+##
+module load moose/.<OPENMPI>_gcc
+module load moose/.openmpi_<PETSC_ALT>_opt-gcc
+module load moose/.<VTK>-gcc
+module load moose/.<TBB>
+module load moose/.<CPPUNIT>-gcc
+module load moose/.openmpi_<TRILINOS>-gcc-opt
+module load ccache
+module load moose-tools
+
+EOF
+
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/openmpi-gcc-petsc_alt-vtk-trilinos-dbg
+#%Module1.0#####################################################################
+##
+## Civet support module
+## <PETSC_ALT>
+## <GCC>
+## <OPENMPI>
+## <VTK>
+## <TRILINOS>
+##
+module load moose/.<OPENMPI>_gcc
+module load moose/.openmpi_<PETSC_ALT>_opt-gcc
+module load moose/.<VTK>-gcc
+module load moose/.<TBB>
+module load moose/.<CPPUNIT>-gcc
+module load moose/.openmpi_<TRILINOS>-gcc-dbg
+module load ccache
+module load moose-tools
+
+EOF
+
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/openmpi-gcc-petsc_alt-trilinos-opt
+#%Module1.0#####################################################################
+##
+## Civet support module
+## <PETSC_ALT>
+## <GCC>
+## <OPENMPI>
+## <TRILINOS>
+##
+module load moose/.<OPENMPI>_gcc
+module load moose/.openmpi_<PETSC_ALT>_opt-gcc
+module load moose/.<TBB>
+module load moose/.<CPPUNIT>-gcc
+module load moose/.openmpi_<TRILINOS>-gcc-opt
+module load ccache
+module load moose-tools
+
+EOF
+
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/openmpi-gcc-petsc_alt-trilinos-dbg
+#%Module1.0#####################################################################
+##
+## Civet support module
+## <PETSC_ALT>
+## <GCC>
+## <OPENMPI>
+## <TRILINOS>
+##
+module load moose/.<OPENMPI>_gcc
+module load moose/.openmpi_<PETSC_ALT>_opt-gcc
+module load moose/.<TBB>
+module load moose/.<CPPUNIT>-gcc
+module load moose/.openmpi_<TRILINOS>-gcc-dbg
+module load ccache
+module load moose-tools
+
+EOF
+
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/openmpi-gcc-petsc_alt-vtk
+#%Module1.0#####################################################################
+##
+## Civet support module
+## <PETSC_ALT>
+## <GCC>
+## <OPENMPI>
+## <VTK>
+##
+module load moose/.<OPENMPI>_gcc
+module load moose/.openmpi_<PETSC_ALT>_opt-gcc
+module load moose/.<VTK>-gcc
+module load moose/.<TBB>
+module load moose/.<CPPUNIT>-gcc
+module load ccache
+module load moose-tools
+
+EOF
+
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/openmpi-gcc-petsc_alt
+#%Module1.0#####################################################################
+##
+## Civet support module
+## <PETSC_ALT>
+## <GCC>
+## <OPENMPI>
+##
+module load moose/.<OPENMPI>_gcc
+module load moose/.openmpi_<PETSC_ALT>_opt-gcc
+module load moose/.<TBB>
+module load moose/.<CPPUNIT>-gcc
+module load ccache
+module load moose-tools
+
+EOF
+
     cd $PACKAGES_DIR/Modules/<MODULES>/openmpi_gcc
     ln -s ../modulefiles/moose/.openmpi_<PETSC_ALT>_opt-gcc <PETSC_ALT>
 

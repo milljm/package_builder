@@ -75,6 +75,123 @@ post_run() {
 set         BASE_PATH        $PACKAGES_DIR
 setenv      PETSC_DIR        \$BASE_PATH/petsc/mpich_<PETSC_ALT>/clang-opt-superlu
 EOF
+
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/mpich-clang-petsc_alt-vtk-trilinos-opt
+#%Module1.0#####################################################################
+##
+## Civet support module
+## <PETSC_ALT>
+## <CLANG>
+## <MPICH>
+## <VTK>
+## <TRILINOS>
+##
+module load moose/.<MPICH>_clang
+module load moose/.mpich_<PETSC_ALT>_opt-clang
+module load moose/.<VTK>-clang
+module load moose/.<TBB>
+module load moose/.<CPPUNIT>-clang
+module load moose/.mpich_<TRILINOS>-clang-opt
+module load ccache
+module load moose-tools
+
+EOF
+
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/mpich-clang-petsc_alt-vtk-trilinos-dbg
+#%Module1.0#####################################################################
+##
+## Civet support module
+## <PETSC_ALT>
+## <CLANG>
+## <MPICH>
+## <VTK>
+## <TRILINOS>
+##
+module load moose/.<MPICH>_clang
+module load moose/.mpich_<PETSC_ALT>_opt-clang
+module load moose/.<VTK>-clang
+module load moose/.<TBB>
+module load moose/.<CPPUNIT>-clang
+module load moose/.mpich_<TRILINOS>-clang-dbg
+module load ccache
+module load moose-tools
+
+EOF
+
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/mpich-clang-petsc_alt-trilinos-opt
+#%Module1.0#####################################################################
+##
+## Civet support module
+## <PETSC_ALT>
+## <CLANG>
+## <MPICH>
+## <TRILINOS>
+##
+module load moose/.<MPICH>_clang
+module load moose/.mpich_<PETSC_ALT>_opt-clang
+module load moose/.<TBB>
+module load moose/.<CPPUNIT>-clang
+module load moose/.mpich_<TRILINOS>-clang-opt
+module load ccache
+module load moose-tools
+
+EOF
+
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/mpich-clang-petsc_alt-trilinos-dbg
+#%Module1.0#####################################################################
+##
+## Civet support module
+## <PETSC_ALT>
+## <CLANG>
+## <MPICH>
+## <TRILINOS>
+##
+module load moose/.<MPICH>_clang
+module load moose/.mpich_<PETSC_ALT>_opt-clang
+module load moose/.<TBB>
+module load moose/.<CPPUNIT>-clang
+module load moose/.mpich_<TRILINOS>-clang-dbg
+module load ccache
+module load moose-tools
+
+EOF
+
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/mpich-clang-petsc_alt-vtk
+#%Module1.0#####################################################################
+##
+## Civet support module
+## <PETSC_ALT>
+## <CLANG>
+## <MPICH>
+## <VTK>
+##
+module load moose/.<MPICH>_clang
+module load moose/.mpich_<PETSC_ALT>_opt-clang
+module load moose/.<VTK>-clang
+module load moose/.<TBB>
+module load moose/.<CPPUNIT>-clang
+module load ccache
+module load moose-tools
+
+EOF
+
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/mpich-clang-petsc_alt_opt
+#%Module1.0#####################################################################
+##
+## Civet support module
+## <PETSC_ALT>
+## <CLANG>
+## <MPICH>
+##
+module load moose/.<MPICH>_clang
+module load moose/.mpich_<PETSC_ALT>_opt-clang
+module load moose/.<TBB>
+module load moose/.<CPPUNIT>-clang
+module load ccache
+module load moose-tools
+
+EOF
+
     cd $PACKAGES_DIR/Modules/<MODULES>/mpich_clang
     ln -s ../modulefiles/moose/.mpich_<PETSC_ALT>_opt-clang <PETSC_ALT>
 

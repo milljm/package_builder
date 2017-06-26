@@ -75,6 +75,24 @@ post_run() {
 set         BASE_PATH        $PACKAGES_DIR
 setenv      PETSC_DIR        \$BASE_PATH/petsc/mpich_<PETSC_ALT>/clang-dbg-superlu
 EOF
+
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/mpich-clang-petsc_alt_dbg
+#%Module1.0#####################################################################
+##
+## Civet support module
+## <PETSC_ALT>
+## <CLANG>
+## <MPICH>
+##
+module load moose/.<MPICH>_clang
+module load moose/.mpich_<PETSC_ALT>_dbg-clang
+module load moose/.<TBB>
+module load moose/.<CPPUNIT>-clang
+module load ccache
+module load moose-tools
+
+EOF
+
     cd $PACKAGES_DIR/Modules/<MODULES>/mpich_clang
     ln -s ../modulefiles/moose/.mpich_<PETSC_ALT>_dbg-clang <PETSC_ALT>-dbg
 
