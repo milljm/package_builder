@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(miniconda miniconda-dev)
+DEP=(miniconda miniconda-old)
 PACKAGE='pip-installs'
 
 #####
@@ -23,7 +23,7 @@ pre_run() {
     cd $1
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
-    condas=(miniconda miniconda-dev)
+    condas=(miniconda miniconda-old)
     for which_conda in ${condas[*]}; do
 	module purge
 	module load advanced_modules $which_conda
