@@ -3,7 +3,7 @@
 ## Specifics
 ##
 DEP=(modules)
-PACKAGE='miniconda-dev'
+PACKAGE='miniconda-old'
 
 #####
 # Set the operating system allowed to build this module
@@ -37,7 +37,7 @@ pre_run() {
     PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda config --set ssl_verify false
     PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda update conda --yes
     if [ $? -ne 0 ]; then echo "Failed to update $PACKAGE"; cleanup 1; fi
-    PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda install -c idaholab python=2.7 matplotlib pandas numpy scikit-image mock scipy coverage yaml pyyaml pyqt pyflakes vtk=7.1.0 --yes
+    PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda install coverage reportlab mako numpy scipy scikit-learn h5py hdf5 scikit-image requests vtk pyyaml matplotlib pip lxml pyflakes pandas conda-build qt=4 --yes
     if [ $? -ne 0 ]; then echo "Failed to install $PACKAGE packages"; cleanup 1; fi
     sed -i -e 's/^@deprecated/#@deprecated/' "$PACKAGES_DIR/$PACKAGE/lib/python2.7/site-packages/skimage/measure/_structural_similarity.py"
     PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda config --set ssl_verify true
@@ -51,14 +51,13 @@ post_run() {
 ##
 ##
 set             BASE_PATH        $PACKAGES_DIR
-conflict miniconda
 
 # Miniconda/Peacock
 prepend-path    PATH             \$BASE_PATH/$PACKAGE/bin
-setenv          MPLBACKEND       qt5Agg
 EOF
     PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda clean --lock --tarballs --index-cache --packages --source-cache --yes
     rm -rf $PACKAGES_DIR/$PACKAGE/pkgs/*
+    
 }
 ##
 ## End Specifics
