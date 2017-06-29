@@ -74,6 +74,24 @@ post_run() {
 set         BASE_PATH        $PACKAGES_DIR
 setenv      PETSC_DIR        \$BASE_PATH/petsc/mpich_<PETSC_DEFAULT>/gcc-opt-64
 EOF
+
+        cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/mpich-gcc-petsc_default_64
+#%Module1.0#####################################################################
+##
+## Civet support module
+## <PETSC_DEFAULT>-64
+## <GCC>
+## <MPICH>
+##
+module load moose/.<MPICH>_gcc
+module load moose/.mpich_<PETSC_DEFAULT>-64-gcc
+module load moose/.<TBB>
+module load moose/.<CPPUNIT>-gcc
+module load ccache
+module load moose-tools
+
+EOF
+
     cd $PACKAGES_DIR/Modules/<MODULES>/mpich_gcc
     ln -s ../modulefiles/moose/.mpich_<PETSC_DEFAULT>-64-gcc <PETSC_DEFAULT>-64
 }

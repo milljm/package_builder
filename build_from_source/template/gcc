@@ -72,8 +72,8 @@ prepend-path    PATH    $PACKAGES_DIR/llvm-<LLVM>/bin
 
 EOF
     cd $PACKAGES_DIR/Modules/<MODULES>/adv_modules
-    ln -s ../modulefiles/moose/.<GCC> gcc
-    module load gcc
+    ln -s ../modulefiles/moose/.<GCC> $PACKAGE
+    module load $PACKAGE
     cd $GCC_BIN/../
     for sfile in `find . -type f -name "*.la"`; do
         if [ `grep -c "$src_temp" $sfile` -ge 1 ]; then

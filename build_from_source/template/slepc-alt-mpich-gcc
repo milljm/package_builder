@@ -25,7 +25,7 @@ pre_run() {
     fi
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
-    module load civet/.civet mpich-gcc-petsc_alt-slepc
+    module load civet/.civet mpich-gcc-petsc_alt_opt
 }
 
 post_run() {
@@ -46,6 +46,25 @@ post_run() {
 set         BASE_PATH        $PACKAGES_DIR
 setenv      SLEPC_DIR        \$BASE_PATH/slepc/$PACKAGE
 EOF
+
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/mpich-gcc-petsc_alt-slepc
+#%Module1.0#####################################################################
+##
+## Civet support module
+## <SLEPC_ALT>
+## <GCC>
+## <MPICH>
+##
+module load moose/.<MPICH>_gcc
+module load moose/.mpich_<PETSC_ALT>_opt-gcc
+module load moose/.mpich_<SLEPC_ALT>-gcc
+module load moose/.<TBB>
+module load moose/.<CPPUNIT>-gcc
+module load ccache
+module load moose-tools
+
+EOF
+
     cd $PACKAGES_DIR/Modules/<MODULES>/mpich_gcc
     ln -s ../modulefiles/moose/.mpich_<SLEPC_ALT>-gcc <SLEPC_ALT>
 }
