@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules pixman fontconfig freetype2)
+DEP=(modules pixman fontconfig freetype2 miniconda)
 PACKAGE='cairo'
 
 #####

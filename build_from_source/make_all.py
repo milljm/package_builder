@@ -1,204 +1,125 @@
 #!/usr/bin/env python2.7
-import os, sys, subprocess, argparse, time, datetime, re, shutil, tempfile, platform
+import os, sys, argparse, platform, re, hashlib, urllib2, tarfile, tempfile, subprocess, time, datetime
+from timeit import default_timer as clock
+from signal import SIGTERM
+from contrib import dag
+from contrib import scheduler
 
-# Pre-requirements that we are aware of that on some linux machines is not sometimes available by default:
-prereqs = ['bison', 'flex', 'git', 'curl', 'make', 'patch', 'bzip2', 'uniq']
+class Job(object):
+    def __init__(self, args, package_file=None, name=None, term_width=40):
+        self.args = args
+        self.package_file = package_file
+        self.name = name
+        self.results = ''
+        self._processor_count = int(args.cpu_count)
+        self.__process = None
+        self.__output = ''
+        self.term_width = term_width
 
-def startJobs(args):
-  version_template = getTemplate(args)
-  process_templates = alterVersions(version_template)
-  (master_list, previous_progress) = getList(args)
+    def run(self):
+        self.start_time = clock()
+        t = tempfile.TemporaryFile()
 
-  if not process_templates:
-    print 'There was an error process the build templates'
-    sys.exit(1)
-  active_jobs = []
-  # Do these sets in order (for)
-  for idx, set_of_jobs in enumerate(master_list):
-    # Do any job within these sets in any order (while)
-    print 'On set', idx + 1, 'of', len(master_list), 'containing', len(list(set_of_jobs)), 'jobs'
-    job_list = list(set_of_jobs)
-    while job_list:
-      for job in job_list:
-        if job in previous_progress:
-          print job, 'previously built. Moving on...'
-          job_list.remove(job)
-          continue
-        if job == '':
-          # Handle the dumb case of an empty set :/
-          # TODO, fix this in the solverDEP define
-          job_list.remove(job)
-          continue
-        if len(active_jobs) < int(args.max_modules):
-          if not any(x[1] == job for x in active_jobs):
-            print '  Launching:', job
-            active_jobs.append(launchJob(job))
+        # Set the CPU (-j) availability
+        os.environ['MOOSE_JOBS'] = str(self.getAllocation())
+
+        self.__process = subprocess.Popen([self.package_file], stdout=t, stderr=t, shell=True)
+        self.__process.wait()
+        self.end_time = clock()
+        t.seek(0)
+        self.__output = t.read()
+
+    def getAllocation(self):
+        return self._processor_count
+
+    def setAllocation(self, count):
+        self._processor_count = int(count)
+
+    def getConcurrentModules(self):
+        return self.args.max_modules
+
+    def killJob(self):
+        # Attempt to kill a running Popen process
+        if self.__process is not None:
+            try:
+                if platform.system() == "Windows":
+                    self.__process.terminate()
+                else:
+                    pgid = os.getpgid(self.__process.pid)
+                    os.killpg(pgid, SIGTERM)
+            except OSError: # Process already terminated
+                pass
+
+    def getResult(self):
+        if self.__process.poll():
+            print '\n', '-'*30, 'JOB FAILURE', '-'*30, '\n', self.name, '\n', self.__output
+            return False
         else:
-          # Max jobs reached, start checking for results
-          break
+            result = '  finished    | ' + self.name
+            cnt = self.term_width - len(result)
+            print result, ' '*cnt, 'time: [' + '%0.2f' % float(self.end_time - self.start_time) + 's]'
 
-      results = spinwait(active_jobs)
-      if type(results) == type(()):
-        process, module, output, delta = results
-        active_jobs.remove(results)
-        job_list.remove(module)
-        output.seek(0)
-        if process.poll():
-          print output.read(), '\n\nError building', module
-          killRemaining(active_jobs)
-          if args.keep_failed is not True:
-            deleteBuild()
-          sys.exit(1)
-        else:
-          temp_output = output.read()
-          if temp_output.find('This platform does not support') != -1:
-            print '    <<<', module, '>>> not required on this platform'
-          else:
-            if len(job_list) == 0:
-              print '   ', module, 'built. Time:', \
-              str(datetime.timedelta(seconds=int(time.time()) - int(delta))), \
-              'set', idx + 1, 'complete'
-            else:
-              print '   ',module, 'built. Time:', \
-              str(datetime.timedelta(seconds=int(time.time()) - int(delta))), \
-              '\n     ', len(job_list), 'job/s remaing in set. Active jobs:', \
-              ' '.join([item[1] for item in active_jobs])
-  return True
+# Create the Job class instances and store them as nodes in a DAG
+def buildDAG(template_dir, args):
+    package_dag = dag.DAG()
+    for template_file in os.listdir(template_dir):
+        tmp_job = Job(args, package_file=os.path.join(template_dir, template_file), name=template_file, term_width=int(args.name_length))
+        package_dag.add_node(tmp_job)
+    return buildEdges(package_dag, args)
 
-def spinwait(jobs):
-  try:
-    for job, module, output, delta in jobs:
-      if job.poll() != None:
-        return (job, module, output, delta)
-    time.sleep(0.07)
-    return
-  except KeyboardInterrupt:
-    print '\nCTRL-C, Exiting...'
-    killRemaining(jobs)
-    deleteBuild()
-    sys.exit(1)
+# Figure out what package depends on what other package
+def buildEdges(dag_object, args):
+    search_dep = re.compile('DEP=\((.*)\)')
+    name_to_object = {}
+    for node in dag_object.topological_sort():
+        name_to_object[node.name] = node
 
-def killRemaining(process_list):
-  # Loop through all active jobs and send SIGKILL
-  # then try and clean up the mess afterwards
+    for node in dag_object.topological_sort():
+        with open(node.package_file, 'r') as f:
+            content = f.read()
+        deps = search_dep.findall(content)[0].split()
+        for dep in deps:
+            dag_object.add_edge(name_to_object[dep], name_to_object[node.name])
+    return buildOnly(dag_object, args)
 
-  for job, module, output, delta in process_list:
-    try:
-      print 'Attempting to kill active job:', module
-      job.kill()
-    except:
-      # we really don't care about failures at this point
-      pass
-  return
+# Remove packages the user is not interested in building
+def buildOnly(dag_object, args):
+    if args.build_only:
+        preds = set([])
+        for package in dag_object.topological_sort():
+            if package.name == args.build_only:
+                preds = dag_object.all_predecessors(dag_object.predecessors(package))
+                preds.add(package)
+                break
+        if preds:
+            for node in dag_object.topological_sort():
+                if node not in preds:
+                    dag_object.delete_node(node)
+    return dag_object
 
-def deleteBuild():
-  # Allow 60 seconds for removing previous build directories.
-  # Break out of the loop if the allotted time has passed and
-  # we still have directories to remove.
-  delta = int(time.time())
-  print 'Removing build directories:', ' '. join(os.listdir(os.path.join(tempfile.gettempdir(),'moose_package_build_temp'))) + '...'
-  while os.listdir(os.path.join(tempfile.gettempdir(),'moose_package_build_temp')) != []:
-    if int(time.time()) - int(delta) > 60:
-      # Times up, break out of the loop
-      print 'Failed to remove all failed builds in the allotted time:', os.listdir(os.path.join(tempfile.gettempdir(),'moose_package_build_temp'))
-      break
-    for item_list in os.listdir(os.path.join(tempfile.gettempdir(),'moose_package_build_temp')):
-      shutil.rmtree(os.path.join(tempfile.gettempdir(),'moose_package_build_temp', item_list), ignore_errors=True)
-    time.sleep(1)
+def alterVersions(version_template, args):
+    packages_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'packages')
+    name_length = 0
+    if os.path.exists(packages_path) is not True:
+        os.makedirs(packages_path)
 
-def solveDEP(job_list):
-  progress = []
-  resolved_list = []
-  no_dependency_list = set([])
-  dependency_dict = {}
-  # If a previous build detected, figure out which dependencies are no longer required
-  if os.path.exists(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'progress')):
-    progress_file = open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'progress'), 'r')
-    progress = progress_file.read()
-    progress_file.close()
-    progress = progress.replace(' n/a', '')
-    progress = progress.split('\n')
-    progress.pop()
-  for job in job_list:
-    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'packages', job), 'r') as job_file:
-      job_contents = job_file.read()
+    for module in os.listdir(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'template')):
+        if len(module) > name_length:
+            name_length = len(module)
 
-    # Do the actual dependency subtraction here:
-    tmp_dep = re.findall(r'DEP=\((.*)\)', job_contents)[0].split(' ')
+        with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'template', module), 'r') as template_module:
+            tmp_str = template_module.read()
 
-    # If project has no dependencies, add it to a special list
-    if len(tmp_dep) == 1 and tmp_dep[0] == '':
-      no_dependency_list.add(job)
-    else:
-      dependency_dict[job] = tuple(set(tmp_dep) - set(progress))
+        with open(os.path.join(packages_path, module), 'w') as batchfile:
+            for item in version_template.iteritems():
+                tmp_str = tmp_str.replace('<' + item[0] + '>', item[1])
+            batchfile.write(tmp_str)
 
-  dictionary_sets = dict((key, set(dependency_dict[key])) for key in dependency_dict)
+        os.chmod(os.path.join(packages_path, module), 0755)
 
-  while dictionary_sets:
-    temp_set=set(item for value in dictionary_sets.values() for item in value) - set(dictionary_sets.keys())
-    temp_set.update(key for key, value in dictionary_sets.items() if not value)
-    resolved_list.append(temp_set)
-    dictionary_sets = dict(((key, value-temp_set) for key, value in dictionary_sets.items() if value))
-
-  # prepend any projects with no dependencies to the resolved list
-  if len(no_dependency_list) and len(resolved_list):
-    resolved_list[0].union(no_dependency_list)
-  else:
-    resolved_list.append(no_dependency_list)
-
-  return (resolved_list, progress)
-
-def alterVersions(version_template):
-  packages_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'packages')
-  if os.path.exists(packages_path) is not True:
-    os.makedirs(packages_path)
-  for module in os.listdir(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'template')):
-    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'template', module), 'r') as template_module:
-      tmp_str = template_module.read()
-    with open(os.path.join(packages_path, module), 'w') as batchfile:
-      for item in version_template.iteritems():
-        tmp_str = tmp_str.replace('<' + item[0] + '>', item[1])
-      batchfile.write(tmp_str)
-    os.chmod(os.path.join(packages_path, module), 0755)
-  return True
-
-def launchJob(module):
-  t = tempfile.TemporaryFile()
-  return (subprocess.Popen([os.path.join(os.path.abspath(os.path.dirname(__file__)), 'packages', module)], stdout=t, stderr=t, shell=True), module, t, time.time())
-
-def getDepsFromFile(dependency):
-  if os.path.exists(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'packages', dependency)):
-    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'packages', dependency), 'r') as dependency_file:
-      dependency_contents = dependency_file.read()
-    tmp_dependency = re.findall(r'DEP=\((.*)\)', dependency_contents)[0].split(' ')
-    if tmp_dependency[0] == '':
-      return [dependency]
-    else:
-      tmp_dependency.append(dependency)
-      return tmp_dependency
-  else:
-    print 'No project by the name of', dependency
-    sys.exit(1)
-
-def getBuildOnly(project):
-  tmp_deps = getDepsFromFile(project)
-  list_of_deps = []
-  for single_dep in tmp_deps:
-    list_of_deps.extend(getDepsFromFile(single_dep))
-  return list_of_deps
-
-def getList(args):
-  job_list = []
-  if args.build_only:
-    job_list = getBuildOnly(args.build_only)
-  else:
-    for module in os.listdir(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'packages')):
-      # ignore files that have . in their names (tempfiles created by editors)
-      if module.find('.') == -1:
-        job_list.append(module)
-      else:
-        print 'ignoring hidden file:', module
-  return solveDEP(job_list)
+    # Set term_width and some buffer room based on longest length name
+    args.name_length = (name_length + 20)
+    return packages_path
 
 def getTemplate(args):
   version_template = {}
@@ -210,96 +131,108 @@ def getTemplate(args):
   return version_template
 
 def verifyArgs(args):
-  if platform.platform().upper().find('DARWIN') != -1:
-    args.me = 'darwin'
-  else:
-    args.me = 'linux'
-  if args.prefix is None:
-    print 'You must specify a directory to install everything into'
-    sys.exit(1)
-  elif os.path.exists(args.prefix) is not True:
-    try:
-      os.makedirs(args.prefix)
-    except:
-      print 'The path specified does not exist. Please create this path, and chown it appropriately before continuing'
-      sys.exit(1)
-  else:
-    try:
-      test_writeable = open(os.path.join(args.prefix, 'test_write'), 'a')
-      test_writeable.close()
-      os.remove(os.path.join(args.prefix, 'test_write'))
-    except:
-      print 'Unable to write to specified prefix location. Please chown this location manually before continuing'
-      sys.exit(1)
+    if args.show_available:
+        for package in os.listdir(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'template')):
+            print package
+        sys.exit(0)
 
-  args.prefix = args.prefix.rstrip(os.path.sep)
-  return args
+    if platform.platform().upper().find('DARWIN') != -1:
+        args.me = 'darwin'
+    else:
+        args.me = 'linux'
+    if args.prefix is None:
+        print 'You must specify a directory to install everything into'
+        sys.exit(1)
+    elif os.path.exists(args.prefix) is not True:
+        try:
+            os.makedirs(args.prefix)
+        except:
+            print 'The path specified does not exist. Please create this path, and chown it appropriately before continuing'
+            sys.exit(1)
+    else:
+        try:
+            test_writeable = open(os.path.join(args.prefix, 'test_write'), 'a')
+            test_writeable.close()
+            os.remove(os.path.join(args.prefix, 'test_write'))
+        except:
+            print 'Unable to write to specified prefix location. Please chown this location manually before continuing'
+            sys.exit(1)
 
-def which(program):
-  def is_exe(fpath):
-    return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
-
-  fpath, fname = os.path.split(program)
-  if fpath:
-    if is_exe(program):
-      return program
-  else:
-    for path in os.environ["PATH"].split(os.pathsep):
-      path = path.strip('"')
-      exe_file = os.path.join(path, program)
-      if is_exe(exe_file):
-        return exe_file
-  return None
+    args.prefix = args.prefix.rstrip(os.path.sep)
+    return args
 
 def parseArguments(args=None):
-  parser = argparse.ArgumentParser(description='Create MOOSE Environment')
-  parser.add_argument('-p', '--prefix', help='Directory to install everything into')
-  parser.add_argument('-m', '--max-modules', default='2', help='Specify the maximum amount of modules to run simultaneously')
-  parser.add_argument('-j', '--cpu-count', default='4', help='Specify CPU count (used when make -j <number>)')
-  parser.add_argument('--build-only', help='Build only the necessary things up to specified project')
-  parser.add_argument('-d', '--delete-downloads', action='store_const', const=True, default=False, help='Delete downloads when successful build completes?')
-  parser.add_argument('--new-build', action='store_const', const=True, default=False, help='Start with a new build')
-  parser.add_argument('--download-only', action='store_const', const=True, default=False, help='Download files used in created the package only')
-  parser.add_argument('--keep-failed', action='store_const', const=True, default=False, help='Keep failed builds temporary directory')
-  return verifyArgs(parser.parse_args(args))
+    parser = argparse.ArgumentParser(description='Create MOOSE Environment')
+    parser.add_argument('-p', '--prefix', help='Directory to install everything into')
+    parser.add_argument('-j', '--cpu-count', default='4', help='Specify MAX CPU count available')
+    parser.add_argument('-m', '--max-modules', default='2', help='Specify the maximum amount of modules to run simultaneously')
+    parser.add_argument('--build-only', help='Build only the necessary things up to specified package')
+    parser.add_argument('--show-available', action='store_const', const=True, default=False, help='Print out the list of available packages to build')
+    parser.add_argument('--download-only', action='store_const', const=True, default=False, help='Download files used in created the package only')
+    parser.add_argument('--keep-failed', action='store_const', const=True, default=False, help='Keep failed builds temporary directory')
+    return verifyArgs(parser.parse_args(args))
+
+def which(program):
+    def is_exe(fpath):
+        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+    fpath, fname = os.path.split(program)
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            path = path.strip('"')
+            exe_file = os.path.join(path, program)
+            if is_exe(exe_file):
+                return exe_file
+    return None
 
 if __name__ == '__main__':
-  missing = []
-  for prereq in prereqs:
-    if which(prereq) is None:
-      missing.append(prereq)
-  if missing:
-    print 'The following missing binaries would prevent some of the modules from building:', '\n\t', " ".join(missing)
-    sys.exit(1)
-  args = parseArguments()
-  download_directory = tempfile.gettempdir() + os.path.sep + 'moose_package_download_temp'
-  os.environ['RELATIVE_DIR'] = os.path.join(os.path.abspath(os.path.dirname(__file__)))
-  os.environ['DOWNLOAD_DIR'] = download_directory
+    # Pre-requirements that we are aware of that on some linux machines is not sometimes available by default:
+    prereqs = ['bison', 'flex', 'git', 'curl', 'make', 'patch', 'bzip2', 'uniq']
+    missing = []
+    for prereq in prereqs:
+        if which(prereq) is None:
+            missing.append(prereq)
+    if missing:
+        print 'The following missing binaries would prevent some of the modules from building:', '\n\t', " ".join(missing)
+        sys.exit(1)
 
-  if args.download_only:
-    print 'Downloads will be saved to:', download_directory
-    os.environ['DOWNLOAD_ONLY'] = 'True'
-  else:
-    os.environ['DOWNLOAD_ONLY'] = 'False'
+    args = parseArguments()
+    templates = getTemplate(args)
+    packages_path = alterVersions(templates, args)
 
-  if args.keep_failed:
-    os.environ['KEEP_FAILED'] = 'True'
+    download_directory = tempfile.gettempdir() + os.path.sep + 'moose_package_download_temp'
+    os.environ['RELATIVE_DIR'] = os.path.join(os.path.abspath(os.path.dirname(__file__)))
+    os.environ['DOWNLOAD_DIR'] = download_directory
 
-  if args.new_build:
-    if os.path.exists(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'progress')):
-      print 'removing progress file, and started from scratch'
-      os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'progress'))
+    if not os.path.exists(download_directory):
+        os.makedirs(download_directory)
 
+    if args.download_only:
+        print 'Downloads will be saved to:', download_directory
+        os.environ['DOWNLOAD_ONLY'] = 'True'
+    else:
+        os.environ['DOWNLOAD_ONLY'] = 'False'
 
-  os.environ['PACKAGES_DIR'] = args.prefix
-  os.environ['MOOSE_JOBS'] = args.cpu_count
-  os.environ['MAX_MODULES'] = args.max_modules
-  os.environ['TEMP_PREFIX'] = tempfile.gettempdir() + os.path.sep + 'moose_package_build_temp'
-  os.environ['DEBUG'] = 'false'
-  if not os.path.exists(download_directory):
-    os.makedirs(download_directory)
-  start_time = time.time()
-  if startJobs(args):
-    print 'All packages built.\nTotal execution time:', str(datetime.timedelta(seconds=int(time.time()) - int(start_time)))
-    if args.delete_downloads:
-      shutil.rmtree(os.getenv('DOWNLOAD_DIR'), ignore_errors=True)
+    if args.keep_failed:
+        os.environ['KEEP_FAILED'] = 'True'
+
+    os.environ['PACKAGES_DIR'] = args.prefix
+    os.environ['MOOSE_JOBS'] = args.cpu_count
+    os.environ['TEMP_PREFIX'] = tempfile.gettempdir() + os.path.sep + 'moose_package_build_temp'
+
+    packages_dag = buildDAG(packages_path, args)
+
+    if args.build_only:
+        print 'Attempting to build the following specific packages:\n', ', '.join([x.name for x in packages_dag.topological_sort()])
+
+    scheduler = scheduler.Scheduler(max_processes=int(args.cpu_count), max_slots=int(args.max_modules), term_width=int(args.name_length))
+    start_time = time.time()
+    scheduler.schedule(packages_dag)
+    try:
+        scheduler.waitFinish()
+    except KeyboardInterrupt:
+        pass
+    print 'Total Time:', str(datetime.timedelta(seconds=int(time.time()) - int(start_time)))
