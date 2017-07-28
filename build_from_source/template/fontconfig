@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules pkg-config freetype2)
+DEP=(modules pkg-config freetype2 miniconda)
 PACKAGE='fontconfig'
 
 #####
