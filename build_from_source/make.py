@@ -1,10 +1,9 @@
 #!/usr/bin/env python2.7
-import os, sys, argparse, platform, re, hashlib, urllib2, tarfile, tempfile, subprocess
+import os, sys, argparse, platform, re, hashlib, urllib2, tarfile, tempfile, subprocess, time, datetime
 from timeit import default_timer as clock
 from signal import SIGTERM
 from contrib import dag
 from contrib import scheduler
-from time import sleep
 
 class Job(object):
     def __init__(self, args, package_file=None, name=None, term_width=40):
@@ -45,6 +44,7 @@ class Job(object):
                 else:
                     pgid = os.getpgid(self.__process.pid)
                     os.killpg(pgid, SIGTERM)
+                    #os.kill(self.__process.pid, SIGTERM)
             except OSError: # Process already terminated
                 pass
 
@@ -229,8 +229,10 @@ if __name__ == '__main__':
         print 'Attempting to build the following specific packages:\n', ', '.join([x.name for x in packages_dag.topological_sort()])
 
     scheduler = scheduler.Scheduler(max_processes=int(args.cpu_count), max_slots=int(args.max_modules), term_width=int(args.name_length))
+    start_time = time.time()
     scheduler.schedule(packages_dag)
     try:
         scheduler.waitFinish()
     except KeyboardInterrupt:
-        sys.exit(1)
+        pass
+    print 'Total Time:', str(datetime.timedelta(seconds=int(time.time()) - int(start_time)))

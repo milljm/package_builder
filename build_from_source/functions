@@ -194,7 +194,7 @@ cleanup() {
     else
         echo "Error while working on: $PACKAGE located at: $src_temp"
     fi
-        exit $1
+    exit $1
 }
 
 umask 022

@@ -1,4 +1,4 @@
-import os, sys, subprocess
+import subprocess
 from time import sleep
 from timeit import default_timer as clock
 from multiprocessing.pool import ThreadPool
@@ -78,6 +78,10 @@ class Scheduler(object):
                 job.killJob()
             except AttributeError:
                 raise SchedulerError('killJob method is not defined')
+            except: # Job already terminated
+                pass
+        print 'killing all jobs'
+        self.job_queue_count = 0
 
     def waitFinish(self):
         """ block until all submitted jobs in all DAGs are finished """
@@ -180,8 +184,8 @@ class Scheduler(object):
 
                 # Shortfall of jobs in this group vers available slots
                 elif len(concurrent_jobs) + len(self.active) < self.max_slots:
-                    caveat = ' (job optimized)'
                     new_j = (self.processes_per_slot * self.max_slots) / len(concurrent_jobs)
+                    caveat = ' (job optimized %d)' % (new_j)
                     job.setAllocation(new_j)
 
                 self.active.add(job)
@@ -197,7 +201,7 @@ class Scheduler(object):
             while job_dag.size():
                 concurrent_jobs = job_dag.ind_nodes()
                 for job in concurrent_jobs:
-                    if self.reserveAllocation(job, concurrent_jobs):
+                    if self.reserveAllocation(job, concurrent_jobs) and self.worker_pool._state == 0:
                         r = self.worker_pool.apply_async(self.launchJob, (job,))
                 sleep(.1)
 
