@@ -31,7 +31,7 @@ class Scheduler(object):
     As jobs are finished they will be assigned to a new single process pool to perform getResult().
 
     """
-    def __init__(self, max_processes=1, max_slots=1, load_average=64, term_width=40):
+    def __init__(self, max_processes=1, max_slots=1, load_average=64, term_width=70):
 
         # Max processes allowed per slot
         self.processes_per_slot = int(max_processes)
@@ -69,6 +69,9 @@ class Scheduler(object):
         # Terminal width
         self.term_width = term_width
 
+        # Maximum expected size of caveats
+        self.max_caveat_length = 25
+
     def killJobs(self):
         """ loop through all active jobs and call their killJob method """
         self.status_pool.close()
@@ -95,16 +98,35 @@ class Scheduler(object):
 
     def statusJob(self, job):
         """ call the job's getResults method """
-        try:
-            if job.getAllocation() > self.processes_per_slot * self.max_slots:
-                print 'INFO: %s over subscribed with %d processes' % (job, job.getAllocation())
+        name = job.name
+
+        if job.status_done:
+            job.addCaveat('time: ' + job.getTime())
             if job.getResult() == False:
                 self.killJobs()
+            else:
+                self.job_queue_count -= 1
+                self.shared_dags[job].delete_node(job)
+                self.active.remove(job)
+                result = '-Finished  | '
 
-            self.postLaunch(job)
+        else:
+            result = 'Launching  | '
 
-        except AttributeError:
-            raise SchedulerError('getResult method is not defined')
+        # Format job name length field
+        name_cnt = self.term_width - len(job.name)
+        result = result + job.name + ' '*name_cnt
+
+        # Format caveat length
+        caveats = job.getCaveats()
+        caveat_cnt = self.max_caveat_length - len(caveats)
+
+        if caveats:
+            result = result + caveats + ' '*caveat_cnt
+        else:
+            result = result + ' '*caveat_cnt
+
+        print result, 'active:', [x.name for x in self.active]
 
     def threadTimers(self, start_timers=None, stop_timers=None):
         """ Method containing several thread pool timers """
@@ -123,15 +145,16 @@ class Scheduler(object):
 
     def handleLongRunningJobs(self, job):
         """ inform the user of what jobs are currently active """
-        with self.thread_lock:
-            result = '  running...  | ' + job.name
-            cnt = self.term_width - len(result)
-            print result, ' '*cnt, 'active:', [x.name for x in self.active]
+        return
 
     def launchJob(self, job):
         """ call the job's run method """
         try:
             job_timer = self.threadTimers(start_timers=job)
+
+            # Allow a status to be printed information we are launching a job
+            self.queueStatus(job)
+
             job.run()
             self.threadTimers(stop_timers=job_timer)
 
@@ -139,16 +162,6 @@ class Scheduler(object):
 
         except AttributeError:
             raise SchedulerError('run method is not defined')
-
-    def postLaunch(self, job):
-        """
-        Perform post run functions such as recovering allocated slots used
-        and decrementing job queue counts etc.
-        """
-        with self.thread_lock:
-            self.job_queue_count -= 1
-            self.shared_dags[job].delete_node(job)
-            self.active.remove(job)
 
     def schedule(self, dag_object):
         """
@@ -176,20 +189,18 @@ class Scheduler(object):
         """
         with self.thread_lock:
             if job not in self.active and len(self.active) < self.max_slots:
-                caveat = ''
                 # Just this one job
                 if len(concurrent_jobs) == 1 and len(self.active) == 0:
-                    caveat = ' (job maximized)'
+                    job.addCaveat('maximized')
                     job.setAllocation(self.processes_per_slot * self.max_slots)
 
                 # Shortfall of jobs in this group vers available slots
                 elif len(concurrent_jobs) + len(self.active) < self.max_slots:
                     new_j = (self.processes_per_slot * self.max_slots) / len(concurrent_jobs)
-                    caveat = ' (job optimized %d)' % (new_j)
+                    job.addCaveat('optimized: %d' % (new_j))
                     job.setAllocation(new_j)
 
                 self.active.add(job)
-                print 'Launching     | ' + job.name + caveat
                 return True
 
     def queueDAG(self, job_dag):

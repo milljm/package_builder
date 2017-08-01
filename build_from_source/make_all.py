@@ -6,7 +6,7 @@ from contrib import dag
 from contrib import scheduler
 
 class Job(object):
-    def __init__(self, args, package_file=None, name=None, term_width=40):
+    def __init__(self, args, package_file=None, name=None):
         self.args = args
         self.package_file = package_file
         self.name = name
@@ -14,7 +14,10 @@ class Job(object):
         self._processor_count = int(args.cpu_count)
         self.__process = None
         self.__output = ''
-        self.term_width = term_width
+        self.__caveats = set([])
+        self.status_done = False
+        self.start_time = None
+        self.end_time = None
 
     def run(self):
         self.start_time = clock()
@@ -28,6 +31,7 @@ class Job(object):
         self.end_time = clock()
         t.seek(0)
         self.__output = t.read()
+        self.status_done = True
 
     def getAllocation(self):
         return self._processor_count
@@ -50,20 +54,28 @@ class Job(object):
             except OSError: # Process already terminated
                 pass
 
+    def addCaveat(self, caveat):
+        self.__caveats.add(str(caveat))
+
+    def getCaveats(self):
+        if self.__caveats:
+            return ', '.join(self.__caveats)
+        return ''
+
+    def getTime(self):
+        if self.start_time and self.end_time:
+            return '%0.0fs' % float(self.end_time - self.start_time)
+
     def getResult(self):
         if self.__process.poll():
             print '\n', '-'*30, 'JOB FAILURE', '-'*30, '\n', self.name, '\n', self.__output
             return False
-        else:
-            result = '  finished    | ' + self.name
-            cnt = self.term_width - len(result)
-            print result, ' '*cnt, 'time: [' + '%0.2f' % float(self.end_time - self.start_time) + 's]'
 
 # Create the Job class instances and store them as nodes in a DAG
 def buildDAG(template_dir, args):
     package_dag = dag.DAG()
     for template_file in os.listdir(template_dir):
-        tmp_job = Job(args, package_file=os.path.join(template_dir, template_file), name=template_file, term_width=int(args.name_length))
+        tmp_job = Job(args, package_file=os.path.join(template_dir, template_file), name=template_file)
         package_dag.add_node(tmp_job)
     return buildEdges(package_dag, args)
 
@@ -118,7 +130,7 @@ def alterVersions(version_template, args):
         os.chmod(os.path.join(packages_path, module), 0755)
 
     # Set term_width and some buffer room based on longest length name
-    args.name_length = (name_length + 20)
+    args.name_length = name_length
     return packages_path
 
 def getTemplate(args):
