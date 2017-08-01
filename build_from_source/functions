@@ -163,7 +163,7 @@ build() {
         fi
     fi
     ccache_enable
-    make -j $MOOSE_JOBS
+    make -j $MOOSE_JOBS -l $MOOSE_JOBS
     if [ $? -ne 0 ]; then echo "Failed to make $1"; cleanup 1; fi
     pause
 }

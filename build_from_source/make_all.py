@@ -4,58 +4,56 @@ from timeit import default_timer as clock
 from signal import SIGTERM
 from contrib import dag
 from contrib import scheduler
+import threading
+
+# Strange behavior, see Job class's run method
+global_lock = threading.Lock()
 
 class Job(object):
     def __init__(self, args, package_file=None, name=None):
         self.args = args
         self.package_file = package_file
         self.name = name
-        self.results = ''
-        self._processor_count = int(args.cpu_count)
-        self.__process = None
+        self.process = None
         self.__output = ''
         self.__caveats = set([])
         self.status_done = False
         self.start_time = None
         self.end_time = None
+        self.serial = False
 
     def run(self):
         self.start_time = clock()
         t = tempfile.TemporaryFile()
 
-        # Set the CPU (-j) availability
-        os.environ['MOOSE_JOBS'] = str(self.getAllocation())
+        # Very strange behavior with threading and subprocess not returning the process
+        # object immediately
+        with global_lock:
+            self.process = subprocess.Popen([self.package_file], stdout=t, stderr=t)
 
-        self.__process = subprocess.Popen([self.package_file], stdout=t, stderr=t, shell=True)
-        self.__process.wait()
+        self.process.wait()
         self.end_time = clock()
         t.seek(0)
         self.__output = t.read()
         self.status_done = True
-
-    def getAllocation(self):
-        return self._processor_count
-
-    def setAllocation(self, count):
-        self._processor_count = int(count)
 
     def getConcurrentModules(self):
         return self.args.max_modules
 
     def killJob(self):
         # Attempt to kill a running Popen process
-        if self.__process is not None:
+        if self.process is not None:
             try:
                 if platform.system() == "Windows":
-                    self.__process.terminate()
+                    self.process.terminate()
                 else:
-                    pgid = os.getpgid(self.__process.pid)
+                    pgid = os.getpgid(self.process.pid)
                     os.killpg(pgid, SIGTERM)
             except OSError: # Process already terminated
                 pass
 
     def addCaveat(self, caveat):
-        self.__caveats.add(str(caveat))
+        self.__caveats.add(caveat)
 
     def getCaveats(self):
         if self.__caveats:
@@ -67,7 +65,7 @@ class Job(object):
             return '%0.0fs' % float(self.end_time - self.start_time)
 
     def getResult(self):
-        if self.__process.poll():
+        if self.process.poll():
             print '\n', '-'*30, 'JOB FAILURE', '-'*30, '\n', self.name, '\n', self.__output
             return False
 
@@ -82,6 +80,7 @@ def buildDAG(template_dir, args):
 # Figure out what package depends on what other package
 def buildEdges(dag_object, args):
     search_dep = re.compile('DEP=\((.*)\)')
+    serial_job = re.compile('SERIAL=True')
     name_to_object = {}
     for node in dag_object.topological_sort():
         name_to_object[node.name] = node
@@ -90,6 +89,11 @@ def buildEdges(dag_object, args):
         with open(node.package_file, 'r') as f:
             content = f.read()
         deps = search_dep.findall(content)[0].split()
+
+        # If this job takes no resources, set the serial flag
+        if serial_job.search(content):
+            node.serial = True
+
         for dep in deps:
             dag_object.add_edge(name_to_object[dep], name_to_object[node.name])
     return buildOnly(dag_object, args)
@@ -232,7 +236,7 @@ if __name__ == '__main__':
         os.environ['KEEP_FAILED'] = 'True'
 
     os.environ['PACKAGES_DIR'] = args.prefix
-    os.environ['MOOSE_JOBS'] = args.cpu_count
+    os.environ['MOOSE_JOBS'] = str((int(args.cpu_count) * int(args.max_modules)))
     os.environ['TEMP_PREFIX'] = tempfile.gettempdir() + os.path.sep + 'moose_package_build_temp'
 
     packages_dag = buildDAG(packages_path, args)

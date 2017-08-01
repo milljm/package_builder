@@ -4,6 +4,7 @@
 ##
 DEP=(petsc-alt-mpich-gcc-opt)
 PACKAGE='<SLEPC_ALT>-mpich-gcc'
+SERIAL=True
 
 #####
 # Set the operating system allowed to build this module

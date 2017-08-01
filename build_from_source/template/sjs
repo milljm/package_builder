@@ -4,6 +4,7 @@
 ##
 DEP=(modules)
 PACKAGE='sjs'
+SERIAL=True
 
 #####
 # Set the operating system allowed to build this module

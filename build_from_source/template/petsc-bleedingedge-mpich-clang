@@ -4,6 +4,7 @@
 ##
 DEP=(modules cmake gcc llvm mpich-clang)
 PACKAGE='<PETSC_BLEEDINGEDGE>-mpich-clang'
+SERIAL=True
 
 #####
 # Set the operating system allowed to build this module

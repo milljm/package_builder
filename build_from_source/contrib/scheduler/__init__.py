@@ -19,12 +19,9 @@ class Scheduler(object):
        my_scheduler.schedule(dag_object)
        my_scheduler.waitFinish()
 
-    The object stored in the DAG should contain a run(), getAllocation(), setAllocation(int),
-    getResult() and killJob() method.
+    The object stored in the DAG should contain a run(), getResult() and killJob() method.
 
     run() method contains the work you want performed.
-    getAllocation() should return an integer of how many processors (slots) this job will consume.
-    setAllocation(int) should allow the scheduler to set available processors to use.
     getResult() can return anything, or what ever it is you want to print when the job is done.
     killJob() should kill what ever it is 'job' is doing.
 
@@ -38,9 +35,6 @@ class Scheduler(object):
 
         # Maximum simultaneous slots (jobs)
         self.max_slots = int(max_slots)
-
-        # Current slot usage
-        self.used_slots = 0
 
         # Requested average load level to stay below
         self.load_average = load_average
@@ -98,66 +92,46 @@ class Scheduler(object):
 
     def statusJob(self, job):
         """ call the job's getResults method """
-        name = job.name
+        with self.thread_lock:
+            name = job.name
+            if job.status_done:
+                job.addCaveat('time: ' + job.getTime())
+                if job.getResult() == False:
+                    self.killJobs()
 
-        if job.status_done:
-            job.addCaveat('time: ' + job.getTime())
-            if job.getResult() == False:
-                self.killJobs()
+                else:
+                    self.job_queue_count -= 1
+                    self.shared_dags[job].delete_node(job)
+                    self.active.remove(job)
+                    result = '-Finished  | '
+
             else:
-                self.job_queue_count -= 1
-                self.shared_dags[job].delete_node(job)
-                self.active.remove(job)
-                result = '-Finished  | '
+                result = 'Launching  | '
 
-        else:
-            result = 'Launching  | '
+            # Format job name length field
+            name_cnt = self.term_width - len(job.name)
+            result = result + job.name + ' '*name_cnt
+            # Format caveat length
+            caveats = job.getCaveats()
+            caveat_cnt = self.max_caveat_length - len(caveats)
 
-        # Format job name length field
-        name_cnt = self.term_width - len(job.name)
-        result = result + job.name + ' '*name_cnt
+            if caveats:
+                result = result + caveats + ' '*caveat_cnt
+            else:
+                result = result + ' '*caveat_cnt
 
-        # Format caveat length
-        caveats = job.getCaveats()
-        caveat_cnt = self.max_caveat_length - len(caveats)
-
-        if caveats:
-            result = result + caveats + ' '*caveat_cnt
-        else:
-            result = result + ' '*caveat_cnt
-
-        print result, 'active:', [x.name for x in self.active]
-
-    def threadTimers(self, start_timers=None, stop_timers=None):
-        """ Method containing several thread pool timers """
-        if start_timers:
-            long_running_timer = threading.Timer(float(20),
-                                                 self.handleLongRunningJobs,
-                                                 (start_timers,))
-            long_running_timer.start()
-
-            return (long_running_timer,)
-
-        # Stop any timers we started
-        elif stop_timers:
-            for timer in stop_timers:
-                timer.cancel()
-
-    def handleLongRunningJobs(self, job):
-        """ inform the user of what jobs are currently active """
-        return
+            print result, 'active:', [x.name for x in self.active]
 
     def launchJob(self, job):
         """ call the job's run method """
         try:
-            job_timer = self.threadTimers(start_timers=job)
-
-            # Allow a status to be printed information we are launching a job
+            # Print initial status
             self.queueStatus(job)
 
+            # Run the job
             job.run()
-            self.threadTimers(stop_timers=job_timer)
 
+            # Print final status
             self.queueStatus(job)
 
         except AttributeError:
@@ -188,17 +162,9 @@ class Scheduler(object):
         optimize allocated processors to this job, if we can.
         """
         with self.thread_lock:
-            if job not in self.active and len(self.active) < self.max_slots:
-                # Just this one job
-                if len(concurrent_jobs) == 1 and len(self.active) == 0:
-                    job.addCaveat('maximized')
-                    job.setAllocation(self.processes_per_slot * self.max_slots)
-
-                # Shortfall of jobs in this group vers available slots
-                elif len(concurrent_jobs) + len(self.active) < self.max_slots:
-                    new_j = (self.processes_per_slot * self.max_slots) / len(concurrent_jobs)
-                    job.addCaveat('optimized: %d' % (new_j))
-                    job.setAllocation(new_j)
+            if job not in self.active and (job.serial or len(self.active) < self.max_slots):
+                if job.serial:
+                    job.addCaveat('serial')
 
                 self.active.add(job)
                 return True
@@ -210,7 +176,8 @@ class Scheduler(object):
         """
         try:
             while job_dag.size():
-                concurrent_jobs = job_dag.ind_nodes()
+                with self.thread_lock:
+                    concurrent_jobs = job_dag.ind_nodes()
                 for job in concurrent_jobs:
                     if self.reserveAllocation(job, concurrent_jobs) and self.worker_pool._state == 0:
                         self.worker_pool.apply_async(self.launchJob, (job,))
