@@ -68,8 +68,8 @@ class Scheduler(object):
 
     def killJobs(self):
         """ loop through all active jobs and call their killJob method """
-        self.status_pool.close()
         self.worker_pool.close()
+        self.status_pool.close()
         for job in self.active:
             try:
                 job.killJob()
@@ -77,7 +77,6 @@ class Scheduler(object):
                 raise SchedulerError('killJob method is not defined')
             except: # Job already terminated
                 pass
-        print 'killing all jobs'
         self.job_queue_count = 0
 
     def waitFinish(self):
@@ -97,8 +96,9 @@ class Scheduler(object):
             if job.status_done:
                 job.addCaveat('time: ' + job.getTime())
                 if job.getResult() == False:
+                    self.active.remove(job)
                     self.killJobs()
-
+                    return
                 else:
                     self.job_queue_count -= 1
                     self.shared_dags[job].delete_node(job)
@@ -109,7 +109,7 @@ class Scheduler(object):
                 result = 'Launching  | '
 
             # Format job name length field
-            name_cnt = self.term_width - len(job.name)
+            name_cnt = (self.term_width - len(job.name)) + 2 # 2 character buffer
             result = result + job.name + ' '*name_cnt
             # Format caveat length
             caveats = job.getCaveats()
@@ -120,7 +120,7 @@ class Scheduler(object):
             else:
                 result = result + ' '*caveat_cnt
 
-            print result, 'active:', [x.name for x in self.active]
+            print result, 'active: %d' % (len(self.active)), [x.name for x in self.active]
 
     def launchJob(self, job):
         """ call the job's run method """
@@ -175,7 +175,7 @@ class Scheduler(object):
         there are no more jobs.
         """
         try:
-            while job_dag.size():
+            while job_dag.size() and self.worker_pool._state == 0:
                 with self.thread_lock:
                     concurrent_jobs = job_dag.ind_nodes()
                 for job in concurrent_jobs:
