@@ -4,6 +4,7 @@
 ##
 DEP=(modules cmake gcc mpich-gcc)
 PACKAGE='<PETSC_ALT>-mpich-gcc-dbg'
+SERIAL=True
 
 #####
 # Set the operating system allowed to build this module
