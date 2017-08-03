@@ -163,7 +163,7 @@ build() {
         fi
     fi
     ccache_enable
-    make -j $MOOSE_JOBS
+    make -j $MOOSE_JOBS -l $MOOSE_JOBS
     if [ $? -ne 0 ]; then echo "Failed to make $1"; cleanup 1; fi
     pause
 }
@@ -194,7 +194,7 @@ cleanup() {
     else
         echo "Error while working on: $PACKAGE located at: $src_temp"
     fi
-        exit $1
+    exit $1
 }
 
 umask 022
@@ -204,34 +204,38 @@ for OPERATING_SYSTEM in ${ARCH[*]}; do
     if [ "$OPERATING_SYSTEM" = `uname` ]; then CONTINUE="true"; fi
 done
 PROGRESS="$RELATIVE_DIR/progress"
-if ! [ -f "$PROGRESS" ]; then touch "$PROGRESS"; fi
-if [ "$CONTINUE" = "true" ]; then
-    error=""
-    for dependency in ${DEP[*]}; do
-        if [ `grep -ci ^$dependency $PROGRESS` -eq 0 ]; then
-            error+=$dependency' '
+touch $PROGRESS
+if [ `grep -c $ME $PROGRESS` -eq 0 ]; then
+    if ! [ -f "$PROGRESS" ]; then touch "$PROGRESS"; fi
+    if [ "$CONTINUE" = "true" ]; then
+        error=""
+        for dependency in ${DEP[*]}; do
+            if [ `grep -ci ^$dependency $PROGRESS` -eq 0 ]; then
+                error+=$dependency' '
+            fi
+        done
+        if ! [ -z "$error" ]; then
+            echo -e "\nDependencies not met: $error"
+            exit 0
         fi
-    done
-    if ! [ -z "$error" ]; then
-        echo -e "\nDependencies not met: $error"
-        exit 0
-    fi
-    if [ "$DOWNLOAD_ONLY" == "True" ]; then
-      download
+        if [ "$DOWNLOAD_ONLY" == "True" ]; then
+            download
+        else
+            export src_temp="$TEMP_PREFIX/$PACKAGE"
+            clean_attempt
+            download
+            extract
+            pre_run "$src_temp"
+            configure
+            build
+            make_install
+            post_run "$src_temp"
+        fi
+        echo $ME >> $PROGRESS
+        cleanup 0
     else
-      export src_temp="$TEMP_PREFIX/$PACKAGE"
-      clean_attempt
-      download
-      extract
-      pre_run "$src_temp"
-      configure
-      build
-      make_install
-      post_run "$src_temp"
+        echo -e "This platform does not support $PACKAGE"
+        echo "$ME n/a" >> "$PROGRESS"
     fi
-    echo $ME >> $PROGRESS
-    cleanup 0
-else
-    echo -e "This platform does not support $PACKAGE"
-    echo "$ME n/a" >> "$PROGRESS"
+    echo -e "$ME previously built"
 fi

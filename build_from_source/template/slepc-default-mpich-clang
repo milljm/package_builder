@@ -4,6 +4,7 @@
 ##
 DEP=(petsc-default-mpich-clang-opt)
 PACKAGE='<SLEPC_DEFAULT>-mpich-clang'
+SERIAL=True
 
 #####
 # Set the operating system allowed to build this module

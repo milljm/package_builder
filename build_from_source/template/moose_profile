@@ -4,6 +4,7 @@
 ##
 DEP=()
 PACKAGE='moose_profile'
+SERIAL=True
 
 #####
 # Set the operating system allowed to build this module
