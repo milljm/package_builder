@@ -17,6 +17,23 @@ ccache_enable() {
     fi
 }
 
+with_lock() {
+    lock_count=0
+    while [ $lock_count -lt 350 ]; do
+        let lock_count=$lock_count+1
+        # mkdir is atomic
+        mkdir "$1"
+        mkdir_code=$?
+        if [ "$mkdir_code" != "0" ]; then
+            sleep 1
+        else
+            return
+        fi
+    done
+    echo "Failed to lock $1 within 5 minutes"
+    cleanup 1
+}
+
 try_command() {
     allowed_count=$1
     command_string="$2"
@@ -44,35 +61,24 @@ pause() {
 
 md5sum_check() {
     REMOTE_MD5FILE="$1.md5"
-    LOCAL_MD5FILE="`basename $REMOTE_MD5FILE`"
-    LOCAL_FILE="`basename $1`"
+    LOCAL_MD5FILE="$1.local_md5"
     MD5_DIFF="false"
 
     echo "Running md5sum check..."
-    # Download a new corresponding md5 file and overwrite a possible previous md5 file
-    # (this can happen multiple times as we try to get a good file)
-    # Fail if we know its an HTML file (like a 404 error)
-    try_command 5 "curl -L -O $REMOTE_MD5FILE"
-    if [ `file "$LOCAL_MD5FILE" | grep -c HTML` -le 0 ]; then
-        mv -f "$LOCAL_MD5FILE" "$DOWNLOAD_DIR/"
-    else
-        echo "Attempted to download $REMOTE_MD5FILE file and failed (probably an HTML error)"
-        cleanup 1
-    fi
-
     # Apple always gotta be different :(
     # Create a temporary md5 file based on local downloaded data file
     if [ `uname` != "Darwin" ]; then
-        md5sum "$DOWNLOAD_DIR/$LOCAL_FILE" | cut -d\  -f 1 > "$LOCAL_FILE.local_md5"
+        md5sum "$DOWNLOAD_DIR/$1" | cut -d\  -f 1 > "$DOWNLOAD_DIR/$LOCAL_MD5FILE"
     else
-        md5 "$DOWNLOAD_DIR/$LOCAL_FILE" | cut -d\  -f 4 > "$LOCAL_FILE.local_md5"
+        md5 "$DOWNLOAD_DIR/$1" | cut -d\  -f 4 > "$DOWNLOAD_DIR/$LOCAL_MD5FILE"
     fi
 
     # Perform the diff and set a diff flag if found
-    diff "$LOCAL_FILE.local_md5" "$DOWNLOAD_DIR/$LOCAL_MD5FILE"
+    diff "$DOWNLOAD_DIR/$REMOTE_MD5FILE" "$DOWNLOAD_DIR/$LOCAL_MD5FILE"
     diff_code=$?
+    rm -f "$DOWNLOAD_DIR/$LOCAL_MD5FILE"
     if [ "$diff_code" != "0" ]; then
-        echo "Downloaded file: $LOCAL_FILE is different than file on remote server..."
+        echo "Downloaded file: $1 is different than file on remote server..."
         MD5_DIFF="true"
     else
         echo "Files are similar..."
@@ -85,34 +91,30 @@ download() {
         echo "Attempting to download file: $url"
         BASENAME=`basename $url`
 
-        # If file is not present, download it
+        # Wait for lock
+        with_lock "$DOWNLOAD_LOCKS/$BASENAME.lock"
+
+        # If file is not present, download it and the corresponding md5
         if ! [ -f "$DOWNLOAD_DIR/$BASENAME" ]; then
-            try_command 5 "curl -L -O $url"
-            if [ `file "$BASENAME" | grep -c "gzip\|archive\|compressed\|data\|executable"` -ge 1 ]; then
-                mv -f "$BASENAME" "$DOWNLOAD_DIR/"
-            else
+            try_command 5 "curl -o $DOWNLOAD_DIR/$BASENAME $url"
+            try_command 5 "curl -o $DOWNLOAD_DIR/$BASENAME.md5 $url.md5"
+            if [ `file "$DOWNLOAD_DIR/$BASENAME" | grep -c "gzip\|archive\|compressed\|data\|executable"` -le 0 ] || [ `file "$DOWNLOAD_DIR/$BASENAME.md5" | grep -c "ASCII text"` -le 0 ]; then
                 echo -e "Downloaded file was not an archive: \n"
-                file "$BASENAME"
-                rm -f "$BASENAME"
+                file "$DOWNLOAD_DIR/$BASENAME"
+                rm -f "$DOWNLOAD_DIR/$BASENAME" "$DOWNLOAD_DIR/$BASENAME.md5"
                 cleanup 1
             fi
-        fi
-
-        # Verify the downloaded file matches remote hash sum, if not download a new one
-        md5sum_check "$url"
-        if [ "$MD5_DIFF" = "true" ]; then
-            try_command 5 "curl -L -O $url"
-            if [ `file "$BASENAME" | grep -c "gzip\|archive\|compressed\|data\|executable"` -ge 1 ]; then
-                mv -f "$BASENAME" "$DOWNLOAD_DIR/"
-            else
-                echo -e "Downloaded file was not an archive: \n"
-                file "$BASENAME"
-                rm -f "$BASENAME"
+            md5sum_check "$BASENAME"
+            if [ "$MD5_DIFF" = "true" ]; then
+                rm -f "$DOWNLOAD_DIR/$BASENAME" "$DOWNLOAD_DIR/$BASENAME.md5"
                 cleanup 1
             fi
         else
             echo "File previously downloaded is the latest available, moving on..."
         fi
+
+        # Remove the lock
+        rm -rf "$DOWNLOAD_LOCKS/$BASENAME.lock"
     done
 }
 
@@ -199,15 +201,20 @@ cleanup() {
 
 umask 022
 ME=`basename "$0"`
+PROGRESS="$RELATIVE_DIR/progress"
+export src_temp="$TEMP_PREFIX/$PACKAGE"
+
 CONTINUE="false"
 for OPERATING_SYSTEM in ${ARCH[*]}; do
-    if [ "$OPERATING_SYSTEM" = `uname` ]; then CONTINUE="true"; fi
+    if [ "$OPERATING_SYSTEM" == `uname` ]; then CONTINUE="true"; fi
 done
-PROGRESS="$RELATIVE_DIR/progress"
-touch $PROGRESS
-if [ `grep -c $ME $PROGRESS` -eq 0 ]; then
-    if ! [ -f "$PROGRESS" ]; then touch "$PROGRESS"; fi
-    if [ "$CONTINUE" = "true" ]; then
+
+if [ "$DOWNLOAD_ONLY" == "True" ] && [ "$CONTINUE" == "true" ]; then
+    download
+    exit 0
+elif [ "$CONTINUE" == "true" ]; then
+    touch $PROGRESS
+    if [ `grep -c $ME $PROGRESS` -eq 0 ]; then
         error=""
         for dependency in ${DEP[*]}; do
             if [ `grep -ci ^$dependency $PROGRESS` -eq 0 ]; then
@@ -218,24 +225,17 @@ if [ `grep -c $ME $PROGRESS` -eq 0 ]; then
             echo -e "\nDependencies not met: $error"
             exit 0
         fi
-        if [ "$DOWNLOAD_ONLY" == "True" ]; then
-            download
-        else
-            export src_temp="$TEMP_PREFIX/$PACKAGE"
-            clean_attempt
-            download
-            extract
-            pre_run "$src_temp"
-            configure
-            build
-            make_install
-            post_run "$src_temp"
-        fi
+        clean_attempt
+        download
+        extract
+        pre_run "$src_temp"
+        configure
+        build
+        make_install
+        post_run "$src_temp"
         echo $ME >> $PROGRESS
         cleanup 0
     else
-        echo -e "This platform does not support $PACKAGE"
-        echo "$ME n/a" >> "$PROGRESS"
+        echo -e "$ME previously built"
     fi
-    echo -e "$ME previously built"
 fi

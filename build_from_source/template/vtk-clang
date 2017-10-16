@@ -26,6 +26,16 @@ pre_run() {
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
     module load advanced_modules cmake mpich-clang
+
+    ## OS X High Sierra fix ##
+    # We only want MPI available. But not the compiler (for darwin only). The following
+    # will force the use of the system compiler, but will use our MPI wrapper to
+    # satisfy the -DVTK_Group_MPI:BOOL:=ON flag.
+    if [ `uname` = "Darwin" ] && [ `uname -r | grep ^17.` -ge 1 ]; then
+        module unload moose/.<GCC> moose/.<CLANG>
+        export CC=mpicc CXX=mpicxx
+    fi
+
     cd ../
     mkdir vtk-build; cd vtk-build
 }

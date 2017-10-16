@@ -1,5 +1,5 @@
 #!/usr/bin/env python2.7
-import os, sys, argparse, platform, re, hashlib, urllib2, tarfile, tempfile, subprocess, time, datetime
+import os, sys, argparse, platform, re, hashlib, urllib2, tarfile, tempfile, subprocess, time, datetime, shutil
 from signal import SIGTERM
 from contrib import dag
 from contrib import scheduler
@@ -19,6 +19,9 @@ class Job(object):
 
     def run(self):
         t = tempfile.TemporaryFile()
+
+        if self.args.dryrun:
+            self.package_file = 'true'
 
         # Very strange behavior with threading and subprocess not returning the process
         # object immediately
@@ -136,6 +139,10 @@ def verifyArgs(args):
         args.me = 'darwin'
     else:
         args.me = 'linux'
+
+    if args.dryrun or args.download_only:
+        return args
+
     if args.prefix is None:
         print 'You must specify a directory to install everything into'
         sys.exit(1)
@@ -166,6 +173,7 @@ def parseArguments(args=None):
     parser.add_argument('--show-available', action='store_const', const=True, default=False, help='Print out the list of available packages to build')
     parser.add_argument('--download-only', action='store_const', const=True, default=False, help='Download files used in created the package only')
     parser.add_argument('--keep-failed', action='store_const', const=True, default=False, help='Keep failed builds temporary directory')
+    parser.add_argument('--dryrun', action='store_const', const=True, default=False, help='Print what would have been built, with out actually performing any downloading/building')
     return verifyArgs(parser.parse_args(args))
 
 def which(program):
@@ -184,6 +192,15 @@ def which(program):
                 return exe_file
     return None
 
+def prepareDownloads(download_directory, download_locks):
+    if not os.path.exists(download_directory):
+        os.makedirs(download_directory)
+
+    # Clean previous locks if any
+    if os.path.exists(download_locks):
+        shutil.rmtree(download_locks)
+    os.makedirs(download_locks)
+
 if __name__ == '__main__':
     # Pre-requirements that we are aware of that on some linux machines is not sometimes available by default:
     prereqs = ['bison', 'flex', 'git', 'curl', 'make', 'patch', 'bzip2', 'uniq']
@@ -191,44 +208,51 @@ if __name__ == '__main__':
     for prereq in prereqs:
         if which(prereq) is None:
             missing.append(prereq)
-    if missing:
+
+    if missing and not args.dryrun:
         print 'The following missing binaries would prevent some of the modules from building:', '\n\t', " ".join(missing)
         sys.exit(1)
 
     args = parseArguments()
     templates = getTemplate(args)
     packages_path = alterVersions(templates, args)
-
     download_directory = tempfile.gettempdir() + os.path.sep + 'moose_package_download_temp'
+    download_locks = os.path.join(download_directory, 'download_locks')
+
+    if not args.dryrun:
+        prepareDownloads(download_directory, download_locks)
+
+    os.environ['TEMP_PREFIX'] = tempfile.gettempdir() + os.path.sep + 'moose_package_build_temp'
     os.environ['RELATIVE_DIR'] = os.path.join(os.path.abspath(os.path.dirname(__file__)))
     os.environ['DOWNLOAD_DIR'] = download_directory
+    os.environ['DOWNLOAD_LOCKS'] = download_locks
+    os.environ['MOOSE_JOBS'] = str((int(args.cpu_count) * int(args.max_modules)))
 
-    if not os.path.exists(download_directory):
-        os.makedirs(download_directory)
-
+    os.environ['DOWNLOAD_ONLY'] = 'False'
     if args.download_only:
         print 'Downloads will be saved to:', download_directory
         os.environ['DOWNLOAD_ONLY'] = 'True'
-    else:
-        os.environ['DOWNLOAD_ONLY'] = 'False'
+
+    elif not args.dryrun:
+        os.environ['PACKAGES_DIR'] = args.prefix
 
     if args.keep_failed:
         os.environ['KEEP_FAILED'] = 'True'
-
-    os.environ['PACKAGES_DIR'] = args.prefix
-    os.environ['MOOSE_JOBS'] = str((int(args.cpu_count) * int(args.max_modules)))
-    os.environ['TEMP_PREFIX'] = tempfile.gettempdir() + os.path.sep + 'moose_package_build_temp'
 
     packages_dag = buildDAG(packages_path, args)
 
     if args.build_only:
         print 'Attempting to build the following specific packages:\n', ', '.join([x.name for x in packages_dag.topological_sort()])
 
-    scheduler = scheduler.Scheduler(max_processes=int(args.cpu_count), max_slots=int(args.max_modules), term_width=int(args.name_length))
+    scheduler = scheduler.Scheduler(args, max_processes=int(args.cpu_count), max_slots=int(args.max_modules), term_width=int(args.name_length))
     start_time = time.time()
     scheduler.schedule(packages_dag)
     try:
         scheduler.waitFinish()
     except KeyboardInterrupt:
         pass
+
+    if args.download_only:
+        print '\nDownloads saved to: %s' %(download_directory)
+
     print 'Total Time:', str(datetime.timedelta(seconds=int(time.time()) - int(start_time)))
