@@ -177,6 +177,9 @@ if { [ info exists ::env(MOOSE_DIR) ] } {
   }
 }
 EOF
+    # Create .intel module so ccache works
+    cd $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose
+    ln -s ../null .intel
 }
 ##
 ## End Specifics

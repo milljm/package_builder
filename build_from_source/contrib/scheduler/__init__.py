@@ -56,7 +56,9 @@ class Scheduler(object):
     As jobs are finished they will be assigned to a new single process pool to perform getResult().
 
     """
-    def __init__(self, max_processes=1, max_slots=1, load_average=64, term_width=70):
+    def __init__(self, args, max_processes=1, max_slots=1, load_average=64, term_width=70):
+        self.args = args
+
         # Max processes allowed per slot
         self.processes_per_slot = int(max_processes)
 
@@ -134,10 +136,13 @@ class Scheduler(object):
                     self.job_queue_count -= 1
                     job_dag.delete_node(job)
                     self.active.remove(job)
-                    result = '-Finished  | '
+                    if self.args.download_only:
+                        result = '-Downloaded | '
+                    else:
+                        result = '-Finished   | '
 
             else:
-                result = 'Launching  | '
+                result = 'Launching   | '
 
             # Format job name length field
             name_cnt = (self.term_width - len(job.name)) + 2 # 2 character buffer

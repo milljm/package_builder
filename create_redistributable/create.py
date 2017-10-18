@@ -445,7 +445,8 @@ _pathetic_dict = { RPM : ['FEDORA', 'SUSE', 'CENTOS', 'RHEL'],
 _mac_version_to_name = {'10.9'  : 'mavericks',
                         '10.10' : 'yosemite',
                         '10.11' : 'elcapitan',
-                        '10.12' : 'sierra'}
+                        '10.12' : 'sierra',
+                        '10.13' : 'highsierra'}
 
 if __name__ == '__main__':
   args = parseArguments()
