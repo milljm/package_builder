@@ -1,4 +1,4 @@
-import subprocess
+import subprocess, sys
 from time import sleep
 from timeit import default_timer as clock
 from multiprocessing.pool import ThreadPool
@@ -95,10 +95,14 @@ class Scheduler(object):
         # Maximum expected size of caveats
         self.max_caveat_length = 25
 
+        # Global failure flag (we are operating with threads)
+        self.failure = False
+
     def killJobs(self):
         """ loop through all active jobs and call their killJob method """
         self.worker_pool.close()
         self.status_pool.close()
+        self.failure = True
         for job in self.active:
             try:
                 job.killJob()
@@ -112,6 +116,11 @@ class Scheduler(object):
         """ block until all submitted jobs in all DAGs are finished """
         while self.job_queue_count > 0:
             sleep(0.5)
+
+        # If there was a failure, we don't want to wait for possibly halted threads
+        # while performing a 'join'. So just exit now with a failure.
+        if self.failure:
+            sys.exit(1)
 
         self.worker_pool.close()
         self.worker_pool.join()
