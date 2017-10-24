@@ -20,6 +20,11 @@ BUILD='true'
 INSTALL='true'
 
 pre_run() {
+    if [ `uname` = "Darwin" ] && [ `uname -r | grep -c ^17.` -ge 1 ]; then
+        echo "$PACKAGE not supported on High Sierra"
+        cleanup 0
+    fi
+
     if [ -d $PACKAGES_DIR/$PACKAGE ]; then
 	rm -rf $PACKAGES_DIR/$PACKAGE
     fi
