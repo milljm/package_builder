@@ -87,8 +87,16 @@ md5sum_check() {
 
 download() {
     if [ "$DOWNLOAD" = "false" ]; then return; fi
+
+    if [ $DOWNLOAD_CURRENT_ATTEMPTS -ge $DOWNLOAD_MAX_ATTEMPTS ]; then
+        echo "MAX DOWNLOAD ATTEMPTS REACHED: $DOWNLOAD_CURRENT_ATTEMPTS"
+        cleanup 1
+    fi
+
+    let DOWNLOAD_CURRENT_ATTEMPTS=$DOWNLOAD_CURRENT_ATTEMPTS+1
+
     for url in ${DOWNLOAD[*]}; do
-        echo "Attempting to download file: $url"
+        echo "Attempt $DOWNLOAD_CURRENT_ATTEMPTS downloading file: $url"
         BASENAME=`basename $url`
 
         # Wait for lock
@@ -97,20 +105,30 @@ download() {
         # If file is not present, download it and the corresponding md5
         if ! [ -f "$DOWNLOAD_DIR/$BASENAME" ]; then
             try_command 5 "curl -o $DOWNLOAD_DIR/$BASENAME $url"
-            try_command 5 "curl -o $DOWNLOAD_DIR/$BASENAME.md5 $url.md5"
-            if [ `file "$DOWNLOAD_DIR/$BASENAME" | grep -c "gzip\|archive\|compressed\|data\|executable"` -le 0 ] || [ `file "$DOWNLOAD_DIR/$BASENAME.md5" | grep -c "ASCII text"` -le 0 ]; then
+            if [ `file "$DOWNLOAD_DIR/$BASENAME" | grep -c "gzip\|archive\|compressed\|data\|executable"` -le 0 ]; then
                 echo -e "Downloaded file was not an archive: \n"
                 file "$DOWNLOAD_DIR/$BASENAME"
                 rm -f "$DOWNLOAD_DIR/$BASENAME" "$DOWNLOAD_DIR/$BASENAME.md5"
                 cleanup 1
             fi
-            md5sum_check "$BASENAME"
-            if [ "$MD5_DIFF" = "true" ]; then
-                rm -f "$DOWNLOAD_DIR/$BASENAME" "$DOWNLOAD_DIR/$BASENAME.md5"
-                cleanup 1
-            fi
+        fi
+
+        # Verify downloaded file is correct
+        try_command 5 "curl -o $DOWNLOAD_DIR/$BASENAME.md5 $url.md5"
+        if [ `file "$DOWNLOAD_DIR/$BASENAME.md5" | grep -c "ASCII text"` -le 0 ]; then
+            echo -e "Downloaded file was not an MD5 file: \n"
+            file "$DOWNLOAD_DIR/$BASENAME.md5"
+            rm -f "$DOWNLOAD_DIR/$BASENAME.md5"
+            cleanup 1
+        fi
+
+        md5sum_check "$BASENAME"
+        if [ "$MD5_DIFF" = "true" ]; then
+            rm -rf "$DOWNLOAD_DIR/$BASENAME" "$DOWNLOAD_DIR/$BASENAME.md5" "$DOWNLOAD_LOCKS/$BASENAME.lock"
+            download
         else
             echo "File previously downloaded is the latest available, moving on..."
+            rm -f "$DOWNLOAD_DIR/$BASENAME.md5"
         fi
 
         # Remove the lock
@@ -200,6 +218,9 @@ cleanup() {
 }
 
 umask 022
+DOWNLOAD_MAX_ATTEMPTS=10
+DOWNLOAD_CURRENT_ATTEMPTS=0
+
 ME=`basename "$0"`
 PROGRESS="$RELATIVE_DIR/progress"
 export src_temp="$TEMP_PREFIX/$PACKAGE"
