@@ -37,9 +37,9 @@ pre_run() {
     # on hold because everything else is requiring gcc to be completed.
     MAX=true
     if [ `uname` != "Darwin" ]; then
-      CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --disable-multilib --enable-languages=c,c++,fortran,jit --enable-checking=release --enable-host-shared"
+      CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --disable-multilib --enable-languages=c,c++,fortran,jit --enable-checking=release --enable-host-shared --with-pic"
     else
-      CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --enable-languages=c,c++,fortran,jit --enable-checking=release --enable-host-shared"
+      CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --enable-languages=c,c++,fortran,jit --enable-checking=release --enable-host-shared --with-pic"
     fi
     configure
 }
