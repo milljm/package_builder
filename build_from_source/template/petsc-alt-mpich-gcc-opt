@@ -29,6 +29,25 @@ clean_petsc() {
 }
 
 pre_run() {
+    # Fix for darwin Fortran linking issue:
+    if [ `uname` = "Darwin" ]; then
+        cat <<EOF > petsc_darwin.patch
+--- config/BuildSystem/config/libraries.py	2015-06-09 15:24:49.000000000 -0600
++++ config/BuildSystem/config/libraries.py	2017-10-25 16:40:07.000000000 -0600
+@@ -50,7 +50,7 @@
+         flagName  = self.language[-1]+'SharedLinkerFlag'
+         flagSubst = self.language[-1].upper()+'_LINKER_SLFLAG'
+         dirname   = os.path.dirname(library).replace('\\ ',' ').replace(' ', '\\ ').replace('\\(','(').replace('(', '\\(').replace('\\)',')').replace(')', '\\)')
+-        if hasattr(self.setCompilers, flagName) and not getattr(self.setCompilers, flagName) is None:
++        if False:
+           return [getattr(self.setCompilers, flagName)+dirname,'-L'+dirname,'-l'+name]
+         if flagSubst in self.argDB:
+           return [self.argDB[flagSubst]+dirname,'-L'+dirname,'-l'+name]
+
+EOF
+        patch -p0 < petsc_darwin.patch
+    fi
+
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
     module load advanced_modules cmake mpich-gcc
