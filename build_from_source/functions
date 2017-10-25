@@ -6,9 +6,9 @@ ccache_enable() {
     if [ -d /opt/ccache ]; then
         echo -e "Enabling CCACHE..."
         export PATH=/opt/ccache/bin:$PATH
-        if [ `uname` == "Darwin" ] && [ "$CC" == "" ]; then
+        if [ `uname` = "Darwin" ] && [ "$CC" = "" ]; then
             CC="clang"; CXX="clang++"
-        elif [ `uname` == "Linux" ] && [  "$CC" == "" ]; then
+        elif [ `uname` = "Linux" ] && [  "$CC" = "" ]; then
             CC="gcc"; CXX="g++"
         fi
         export CC="ccache $CC" CXX="ccache $CXX"
@@ -42,7 +42,7 @@ try_command() {
         let try_count=try_count+1
         eval "$command_string"
         retcode=$?
-        if [ "$retcode" != "0" ] && [ "$try_count" == "$allowed_count" ]; then
+        if [ "$retcode" != "0" ] && [ $try_count = $allowed_count ]; then
             echo "Failed $1 times, trying to execute: $command_string"
             cleanup 1
         elif [ "$retcode" != "0" ]; then
@@ -176,7 +176,7 @@ build() {
     pause
     # If $MAX is set, use all available CPUs for this one job
     if [ ! -z "$MAX" ]; then
-        if [ `uname -s` == "Darwin" ]; then
+        if [ `uname -s` = "Darwin" ]; then
             MOOSE_JOBS=`/usr/sbin/sysctl -n hw.ncpu`
         else
             MOOSE_JOBS=`cat /proc/cpuinfo | grep processor | wc -l`
@@ -205,7 +205,7 @@ clean_attempt() {
 }
 
 cleanup() {
-    if [ $1 == 0 ]; then
+    if [ $1 = 0 ]; then
         echo "Deleting temporary build location: $src_temp"
         rm -rf "$src_temp"
     elif [ -z "$KEEP_FAILED" ]; then
@@ -227,13 +227,13 @@ export src_temp="$TEMP_PREFIX/$PACKAGE"
 
 CONTINUE="false"
 for OPERATING_SYSTEM in ${ARCH[*]}; do
-    if [ "$OPERATING_SYSTEM" == `uname` ]; then CONTINUE="true"; fi
+    if [ "$OPERATING_SYSTEM" = `uname` ]; then CONTINUE="true"; fi
 done
 
-if [ "$DOWNLOAD_ONLY" == "True" ] && [ "$CONTINUE" == "true" ]; then
+if [ "$DOWNLOAD_ONLY" = "True" ] && [ "$CONTINUE" = "true" ]; then
     download
     exit 0
-elif [ "$CONTINUE" == "true" ]; then
+elif [ "$CONTINUE" = "true" ]; then
     touch $PROGRESS
     if [ `grep -c $ME $PROGRESS` -eq 0 ]; then
         error=""
