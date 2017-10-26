@@ -25,7 +25,7 @@ pre_run() {
 	rm -rf $PACKAGES_DIR/$PACKAGE
     fi
     cd $PACKAGES_DIR
-    git clone https://github.com/milljm/sjs.git
+    try_command 3 "git clone https://github.com/milljm/sjs.git"
     cd sjs
     git checkout pbs
     rm -rf .git

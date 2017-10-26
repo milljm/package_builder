@@ -34,13 +34,13 @@ pre_run() {
       tar -xf $DOWNLOAD_DIR/$LLVM_PACKAGE-<LLVM>.src.tar.xz -C .
       if [ $? -ne 0 ]; then echo 'Failed to extract '$LLVM_PACKAGE; cleanup 1; fi
       if [ $LLVM_PACKAGE = 'cfe' ]; then
-	mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/clang
+          mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/clang
       elif [ $LLVM_PACKAGE = 'clang-tools-extra' ]; then
-	mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/clang/tools/extra
+          mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/clang/tools/extra
       elif [ $LLVM_PACKAGE = 'llvm' ]; then
-	mv $LLVM_PACKAGE-<LLVM>.src $LLVM_PACKAGE
+          mv $LLVM_PACKAGE-<LLVM>.src $LLVM_PACKAGE
       else
-	mv $LLVM_PACKAGE-<LLVM>.src llvm/projects/$LLVM_PACKAGE
+          mv $LLVM_PACKAGE-<LLVM>.src llvm/projects/$LLVM_PACKAGE
       fi
     done
 
@@ -48,6 +48,11 @@ pre_run() {
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
     module load advanced_modules cmake miniconda
+
+    # Enable RTTI. Apparently this needs to be exporting while running make
+    # https://llvm.org/docs/Packaging.html
+    export REQUIRES_RTTI=1
+
     if [ `uname` != "Darwin" ]; then
       module load gcc
       export CC=gcc; export CXX=g++
@@ -57,7 +62,9 @@ pre_run() {
 -DCMAKE_CXX_LINK_FLAGS="-L$PACKAGES_DIR/<GCC>/lib64 -Wl,-rpath,$PACKAGES_DIR/<GCC>/lib64" \
 -DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/llvm-<LLVM> \
 -DCMAKE_INSTALL_RPATH:STRING=$PACKAGES_DIR/llvm-<LLVM>/lib \
+-DCMAKE_BUILD_WITH_INSTALL_RPATH=1 \
 -DLLVM_ENABLE_ASSERTIONS=ON \
+-DLLVM_ENABLE_RTTI=ON \
 -DCMAKE_BUILD_TYPE="Release" \
 -DPYTHON_EXECUTABLE=`which python2.7` \
 -DLLVM_TARGETS_TO_BUILD="X86" \
@@ -65,6 +72,7 @@ pre_run() {
     else
       cmake -DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/llvm-<LLVM> \
 -DLLVM_BUILD_EXTERNAL_COMPILER_RT=ON \
+-DLLVM_ENABLE_RTTI=ON \
 -DCLANG_DEFAULT_OPENMP_RUNTIME=libomp \
 -DPYTHON_EXECUTABLE=`which python2.7` \
 -DCMAKE_BUILD_TYPE="Release" \
@@ -112,13 +120,13 @@ EOF
 post_run() {
     cd $PACKAGES_DIR/Modules/<MODULES>/adv_modules
     if [ -f $PACKAGES_DIR/Modules/<MODULES>/adv_modules/clang ]; then
-	rm -f clang
+        rm -f clang
     fi
     ln -s ../modulefiles/moose/.<CLANG> clang
     if [ `uname` = "Darwin" ]; then
-	# Because DYLD_LIBRARY_PATH no longer exists, we have to modify
-	# rpaths in all the llvm libraries to be absolute paths
-	cat <<'EOF' > $PACKAGES_DIR/llvm-<LLVM>/lib/change_links.sh
+        # Because DYLD_LIBRARY_PATH no longer exists, we have to modify
+        # rpaths in all the llvm libraries to be absolute paths
+        cat <<'EOF' > $PACKAGES_DIR/llvm-<LLVM>/lib/change_links.sh
 #!/bin/bash
 for sfile in `ls | grep dylib`; do
   if ! [ -L $sfile ]; then
@@ -139,11 +147,11 @@ for sfile in `ls | grep dylib`; do
   fi
 done
 EOF
-	  cd $PACKAGES_DIR/llvm-<LLVM>/lib/
-	  sh change_links.sh
-	  rm -f change_links.sh
-	  cd /usr/local/lib
-	  ln -s $PACKAGES_DIR/llvm-<LLVM>/lib/libomp.dyld .
+          cd $PACKAGES_DIR/llvm-<LLVM>/lib/
+          sh change_links.sh
+          rm -f change_links.sh
+          cd /usr/local/lib
+          ln -s $PACKAGES_DIR/llvm-<LLVM>/lib/libomp.dyld .
     fi
     cp -R $1/llvm/tools/clang/bindings $PACKAGES_DIR/llvm-<LLVM>/
 }

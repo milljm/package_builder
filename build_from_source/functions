@@ -35,11 +35,13 @@ with_lock() {
 }
 
 try_command() {
+    TRYING="TRUE"
     allowed_count=$1
     command_string="$2"
     try_count=0
     while [ "$try_count" -lt "$allowed_count" ]; do
         let try_count=try_count+1
+        echo "$try_count TRY"
         eval "$command_string"
         retcode=$?
         if [ "$retcode" != "0" ] && [ $try_count = $allowed_count ]; then
@@ -48,9 +50,10 @@ try_command() {
         elif [ "$retcode" != "0" ]; then
             sleep 30
         else
-            return
+            break
         fi
     done
+    TRYING="FALSE"
 }
 
 pause() {
@@ -166,7 +169,7 @@ configure() {
     echo -e "Configure $PACKAGE with the following options: $CONFIGURE"
     pause
     eval "$CONFIGURE"
-    if [ $? -ne 0 ]; then echo "Failed to configure using following options: $CONFIGURE"; cleanup 1; fi
+    if [ $? -ne 0 ] && [ "$TYRING" = "FALSE" ]; then echo "Failed to configure using following options: $CONFIGURE"; cleanup 1; fi
     pause
 }
 
@@ -184,7 +187,7 @@ build() {
     fi
     ccache_enable
     make -j $MOOSE_JOBS -l $MOOSE_JOBS
-    if [ $? -ne 0 ]; then echo "Failed to make $1"; cleanup 1; fi
+    if [ $? -ne 0 ] && [ "$TYRING" = "FALSE" ]; then echo "Failed to make $1"; cleanup 1; fi
     pause
 }
 
@@ -193,11 +196,12 @@ make_install() {
     echo -e "Installing $PACKAGE..."
     pause
     make install
-    if [ $? -ne 0 ]; then echo "Failed to install $1"; cleanup 1; fi
+    if [ $? -ne 0 ] && [ "$TYRING" = "FALSE" ]; then echo "Failed to install $1"; cleanup 1; fi
 }
 clean_attempt() {
     # Clean a possible failed previous build directory
     if [ -d "$src_temp" ]; then
+        cd "$RELATIVE_DIR"
         rm -rf "$src_temp"
     fi
     mkdir -p "$src_temp"
@@ -220,7 +224,7 @@ cleanup() {
 umask 022
 DOWNLOAD_MAX_ATTEMPTS=10
 DOWNLOAD_CURRENT_ATTEMPTS=0
-
+TRYING="FALSE"
 ME=`basename "$0"`
 PROGRESS="$RELATIVE_DIR/progress"
 export src_temp="$TEMP_PREFIX/$PACKAGE"

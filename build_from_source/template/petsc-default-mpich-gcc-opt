@@ -4,7 +4,7 @@
 ##
 DEP=(modules cmake gcc mpich-gcc)
 PACKAGE='<PETSC_DEFAULT>-mpich-gcc-opt'
-SERIAL=True
+
 
 #####
 # Set the operating system allowed to build this module
@@ -26,12 +26,9 @@ clean_petsc() {
     fi
     clean_attempt
     extract
-}
-
-pre_run() {
     # Fix for darwin Fortran linking issue:
     if [ `uname` = "Darwin" ]; then
-        cat <<EOF > petsc_darwin.patch
+        cat << "EOF" > petsc_darwin.patch
 --- config/BuildSystem/config/libraries.py	2017-04-24 07:46:27.000000000 -0600
 +++ config/BuildSystem/config/libraries.py	2017-10-25 15:59:23.000000000 -0600
 @@ -51,7 +51,7 @@
@@ -46,7 +43,9 @@ pre_run() {
 EOF
         patch -p0 < petsc_darwin.patch
     fi
+}
 
+pre_run() {
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
     module load advanced_modules cmake mpich-gcc
@@ -75,9 +74,9 @@ EOF
 -F77FLAGS='-fPIC -fopenmp'"
 
     if [ `uname` = "Darwin" ]; then
-	try_command 3 "clean_petsc; configure; make MAKE_NP=1 PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-darwin-c-opt all; make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-darwin-c-opt install"
+	try_command 3 "clean_petsc; configure; make MAKE_NP=$MOOSE_JOBS PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-darwin-c-opt all; make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-darwin-c-opt install"
     else
-	try_command 3 "clean_petsc; configure; make MAKE_NP=1 PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-opt all; make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-opt install"
+	try_command 3 "clean_petsc; configure; make MAKE_NP=$MOOSE_JOBS PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-opt all; make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-opt install"
     fi
     # So we do not run configure a second time
     CONFIGURE="false"

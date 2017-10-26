@@ -22,10 +22,10 @@ INSTALL='false'
 pre_run() {
     cd $PACKAGES_DIR
     if [ -d seacas ]; then rm -rf seacas; fi
-    git clone https://github.com/milljm/seacas.git
-    if [ $? -ne 0 ]; then echo "Failed to clone SEACAS github repo"; cleanup 1; fi
+    try_command 3 "git clone https://github.com/milljm/seacas.git"
     cd seacas
     git checkout jasons_installer
+    if [ $? -ne 0 ]; then echo "Failed to checkout branch"; cleanup 1; fi
     cd contrib
     export ACCESS=$PACKAGES_DIR/seacas
     ./download_and_configure_prereqs.sh

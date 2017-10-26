@@ -170,6 +170,7 @@ def parseArguments(args=None):
     parser.add_argument('-j', '--cpu-count', default='4', help='Specify MAX CPU count available')
     parser.add_argument('-m', '--max-modules', default='2', help='Specify the maximum amount of modules to run simultaneously')
     parser.add_argument('--build-only', help='Build only the necessary things up to specified package')
+    parser.add_argument('--temp-dir', default=tempfile.gettempdir(), help='Use this location as my scratch area when building')
     parser.add_argument('--show-available', action='store_const', const=True, default=False, help='Print out the list of available packages to build')
     parser.add_argument('--download-only', action='store_const', const=True, default=False, help='Download files used in created the package only')
     parser.add_argument('--keep-failed', action='store_const', const=True, default=False, help='Keep failed builds temporary directory')
@@ -216,13 +217,13 @@ if __name__ == '__main__':
     args = parseArguments()
     templates = getTemplate(args)
     packages_path = alterVersions(templates, args)
-    download_directory = tempfile.gettempdir() + os.path.sep + 'moose_package_download_temp'
+    download_directory = os.path.join(args.temp_dir, 'moose_package_download_temp')
     download_locks = os.path.join(download_directory, 'download_locks')
 
     if not args.dryrun:
         prepareDownloads(download_directory, download_locks)
 
-    os.environ['TEMP_PREFIX'] = tempfile.gettempdir() + os.path.sep + 'moose_package_build_temp'
+    os.environ['TEMP_PREFIX'] = os.path.join(args.temp_dir, 'moose_package_build_temp')
     os.environ['RELATIVE_DIR'] = os.path.join(os.path.abspath(os.path.dirname(__file__)))
     os.environ['DOWNLOAD_DIR'] = download_directory
     os.environ['DOWNLOAD_LOCKS'] = download_locks
