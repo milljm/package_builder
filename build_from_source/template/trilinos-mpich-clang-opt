@@ -25,7 +25,7 @@ pre_run() {
     fi
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
-    module load advanced_modules cmake mpich-clang <PETSC_DEFAULT>_opt
+    module load advanced_modules cmake mpich-clang <PETSC_DEFAULT>
     try_command 3 "git clone https://github.com/ORNL-CEES/DataTransferKit.git"
     cd DataTransferKit
     git checkout <DTK>
@@ -99,6 +99,10 @@ cmake \
 -D TPL_ENABLE_HWLOC=OFF \
 -D TPL_ENABLE_BoostLib=OFF \
 -D TPL_ENABLE_Boost=OFF \
+-D LAPACK_LIBRARY_DIRS=$PETSC_DIR/lib \
+-D BLAS_LIBRARY_DIRS=$PETSC_DIR/lib \
+-D TPL_BLAS_LIBRARIES=$PETSC_DIR/lib/libfblas.a \
+-D TPL_LAPACK_LIBRARIES=$PETSC_DIR/lib/libflapack.a \
 ..
 "
 }
