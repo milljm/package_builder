@@ -26,10 +26,6 @@ pre_run() {
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
     module load advanced_modules cmake mpich-clang <PETSC_DEFAULT>-dbg
-    try_command 3 "git clone https://github.com/ORNL-CEES/DataTransferKit.git"
-    cd DataTransferKit
-    git checkout <DTK>
-    cd ../
     mkdir clang-dbg; cd clang-dbg
     CONFIGURE="
 cmake \
