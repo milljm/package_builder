@@ -44,6 +44,12 @@ pre_run() {
       if [ $? -ne 0 ]; then echo 'Failed to build Icecream pacakge: '$ICECREAM_PACKAGE; cleanup 1; fi
       make install
       if [ $? -ne 0 ]; then echo 'Failed to install Icecream pacakge: '$ICECREAM_PACKAGE; cleanup 1; fi
+
+      # Find any lib64 directories and symlink them to lib (openSUSE creates lib64 directoires). post_run assumes <package>/lib exists
+      base_target="$1/install_deps/$(tar -tf $DOWNLOAD_DIR/$ICECREAM_PACKAGE | sed -e 's@/.*@@' | uniq)"
+      if [ -d "$base_target/lib64" ]; then
+          ln -s "$base_target/lib64" "$base_target/lib"
+      fi
     done
 }
 post_run() {
