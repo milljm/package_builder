@@ -1,0 +1,83 @@
+#!/bin/bash
+#############
+## Specifics
+##
+DEP=(modules pkg-config miniconda cmake gcc)
+PACKAGE="<BLASLAPACK>"
+
+#####
+# Set the operating system allowed to build this module
+#
+ARCH=(Darwin Linux)
+
+#####
+# Setting any of these variables to 'false' effectively skips that step
+# This is useful for items like 'autojump' which requires a git clone/checkout
+DOWNLOAD='http://mooseframework.org/source_packages/<BLASLAPACK>.tgz'
+EXTRACT='<BLASLAPACK>.tgz'
+CONFIGURE="false"
+BUILD='true'
+INSTALL='true'
+
+pre_run() {
+    unset MODULEPATH
+    source $PACKAGES_DIR/Modules/<MODULES>/init/bash
+    module load advanced_modules cmake moose/.<GCC> moose-tools
+    mkdir build-opt; cd build-opt
+    CONFIGURE="cmake -DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/<BLASLAPACK> -DBUILD_SHARED_LIBS=ON -DCMAKE_Fortran_COMPILER=$GCC_BIN/gfortran -DCBLAS=ON -DPYTHON_EXECUTABLE=$PACKAGES_DIR/miniconda/bin/python ../"
+}
+
+post_run() {
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<BLASLAPACK>
+#%Module1.0#####################################################################
+##
+## <BLASLAPACK> Module
+##
+##
+##
+set             BASE_PATH        $PACKAGES_DIR
+
+if { ! [ is-loaded moose-tools ] } {
+  module load moose-tools
+}
+
+if { [uname sysname] != "Darwin" } {
+  prepend-path LD_LIBRARY_PATH  \$BASE_PATH/<BLASLAPACK>/lib
+}
+prepend-path  LIBRARY_PATH    \$BASE_PATH/<BLASLAPACK>/lib
+prepend-path  C_INCLUDE_PATH  \$BASE_PATH/<BLASLAPACK>/include
+setenv        BLASLAPACK_DIR  \$BASE_PATH/<BLASLAPACK>
+
+EOF
+    cd "$PACKAGES_DIR/Modules/<MODULES>/adv_modules"
+    if [ -f blaslapack ]; then rm -f blaslapack; fi
+    ln -s ../modulefiles/moose/.<BLASLAPACK> blaslapack
+
+    if [ `uname` = "Darwin" ]; then
+        cp "$PACKAGES_DIR/<BLASLAPACK>/lib/pkgconfig/"* $PKG_CONFIG_PATH/
+    fi
+}
+##
+## End Specifics
+##############
+## The following script contains all the common functions.
+## Those functions are executed in the following order:
+
+# download
+# extract
+# pre-run
+# configure
+# make
+# make install
+# post_run
+# cleanup
+
+## pre_run and post_run are the only true specifics that are different
+## with every package
+PACKAGES_DIR=<PACKAGES_DIR>
+RELATIVE_DIR=<RELATIVE_DIR>
+DOWNLOAD_DIR=<DOWNLOAD_DIR>
+TEMP_PREFIX=<TEMP_PREFIX>
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source $RELATIVE_DIR/functions $@

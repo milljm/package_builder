@@ -3,7 +3,7 @@
 ## Specifics
 ##
 DEP=(modules pkg-config libpng fontconfig glib)
-PACKAGE='harfbuzz'
+PACKAGE="<HARFBUZZ>"
 
 #####
 # Set the operating system allowed to build this module
@@ -15,22 +15,18 @@ ARCH=(Darwin)
 # This is useful for items like 'autojump' which requires a git clone/checkout
 DOWNLOAD='http://mooseframework.org/source_packages/<HARFBUZZ>.tar.gz'
 EXTRACT='<HARFBUZZ>.tar.gz'
-CONFIGURE="false"
+CONFIGURE="true"
 BUILD='true'
 INSTALL='true'
 
 pre_run() {
-    if [ -d $PACKAGES_DIR/$PACKAGE ]; then
-      rm -rf $PACKAGES_DIR/$PACKAGE
-    fi
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
     module load moose-tools
-    CONFIGURE="./configure --prefix=$PACKAGES_DIR/$PACKAGE"
 }
 
 post_run() {
-    cp $PACKAGES_DIR/$PACKAGE/lib/pkgconfig/* $PKG_CONFIG_PATH
+    cp $PACKAGES_DIR/<HARFBUZZ>/lib/pkgconfig/* $PKG_CONFIG_PATH
 }
 ##
 ## End Specifics
@@ -49,4 +45,10 @@ post_run() {
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR=<PACKAGES_DIR>
+RELATIVE_DIR=<RELATIVE_DIR>
+DOWNLOAD_DIR=<DOWNLOAD_DIR>
+TEMP_PREFIX=<TEMP_PREFIX>
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source $RELATIVE_DIR/functions $@

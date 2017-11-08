@@ -25,9 +25,6 @@ BUILD='false'
 INSTALL='false'
 
 pre_run() {
-    if [ -d $PACKAGES_DIR/$PACKAGE ]; then
-	try_command 5 "rm -rf $PACKAGES_DIR/$PACKAGE"
-    fi
     if [ `uname` = "Darwin" ]; then
 	bash $DOWNLOAD_DIR/<MINICONDA>-MacOSX-x86_64.sh -b -p $PACKAGES_DIR/$PACKAGE
 	if [ $? -ne 0 ]; then echo "Failed to install $PACKAGE"; cleanup 1; fi
@@ -75,4 +72,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR=<PACKAGES_DIR>
+RELATIVE_DIR=<RELATIVE_DIR>
+DOWNLOAD_DIR=<DOWNLOAD_DIR>
+TEMP_PREFIX=<TEMP_PREFIX>
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source $RELATIVE_DIR/functions $@

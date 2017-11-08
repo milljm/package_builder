@@ -3,7 +3,7 @@
 ## Specifics
 ##
 DEP=(modules)
-PACKAGE='boost'
+PACKAGE="<BOOST>"
 
 #####
 # Set the operating system allowed to build this module
@@ -21,16 +21,16 @@ INSTALL='false'
 
 pre_run() {
     ./bootstrap.sh --prefix=$PACKAGES_DIR/<BOOST>
-    if [ $? -ne 0 ]; then echo 'Failed to run bootstrap.sh'; cleanup 1; fi
+    if [ $? -ne 0 ]; then echo 'Failed to run bootstrap.sh for $ME'; cleanup 1; fi
     ./b2 install -j $MOOSE_JOBS
-    if [ $? -ne 0 ]; then echo 'Failed to build boost'; cleanup 1; fi
+    if [ $? -ne 0 ]; then echo 'Failed to build $ME'; cleanup 1; fi
 }
 
 post_run() {
     cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/adv_modules/$PACKAGE
 #%Module1.0#####################################################################
 ##
-## $PACKAGE Module file
+## <BOOST> Module file
 ##
 ##
 ##
@@ -56,4 +56,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR=<PACKAGES_DIR>
+RELATIVE_DIR=<RELATIVE_DIR>
+DOWNLOAD_DIR=<DOWNLOAD_DIR>
+TEMP_PREFIX=<TEMP_PREFIX>
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source $RELATIVE_DIR/functions $@

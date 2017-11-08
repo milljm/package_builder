@@ -2,8 +2,9 @@
 #############
 ## Specifics
 ##
-DEP=(modules cmake petsc-default-mpich-clang-opt)
-PACKAGE='trilinos-mpich-clang-dbg'
+DEP=(modules cmake mpich-clang blaslapack)
+PACKAGE="<MPICH>_<CLANG>-dbg"
+BASE_DIR="<TRILINOS>"
 
 #####
 # Set the operating system allowed to build this module
@@ -20,12 +21,9 @@ BUILD='true'
 INSTALL='true'
 
 pre_run() {
-    if [ -d $PACKAGES_DIR/<TRILINOS>/mpich-clang-dbg ]; then
-        rm -rf $PACKAGES_DIR/<TRILINOS>/mpich-clang-dbg
-    fi
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
-    module load advanced_modules cmake mpich-clang <PETSC_DEFAULT>-dbg
+    module load advanced_modules cmake moose/.<MPICH>_<CLANG> moose/.<BLASLAPACK>
 
     # Clone Trilinos
     try_command 5 "git clone https://github.com/trilinos/Trilinos.git"
@@ -41,8 +39,8 @@ pre_run() {
     mkdir clang-dbg; cd clang-dbg
     CONFIGURE="
 cmake \
--D CMAKE_INSTALL_PREFIX:PATH=$PACKAGES_DIR/<TRILINOS>/mpich-clang-dbg \
--D CMAKE_INSTALL_NAME_DIR:STRING=$PACKAGES_DIR/<TRILINOS>/mpich-clang-dbg/lib \
+-D CMAKE_INSTALL_PREFIX:PATH=$PACKAGES_DIR/<TRILINOS>/<MPICH>_<CLANG>-dbg \
+-D CMAKE_INSTALL_NAME_DIR:STRING=$PACKAGES_DIR/<TRILINOS>/<MPICH>_<CLANG>-dbg/lib \
 -D CMAKE_BUILD_TYPE:STRING=DEBUG \
 -D CMAKE_CXX_COMPILER:FILEPATH='mpicxx' \
 -D CMAKE_C_COMPILER:FILEPATH='mpicc' \
@@ -107,32 +105,34 @@ cmake \
 -D TPL_ENABLE_HWLOC=OFF \
 -D TPL_ENABLE_BoostLib=OFF \
 -D TPL_ENABLE_Boost=OFF \
--D LAPACK_LIBRARY_DIRS=$PETSC_DIR/lib \
--D BLAS_LIBRARY_DIRS=$PETSC_DIR/lib \
--D TPL_BLAS_LIBRARIES=$PETSC_DIR/lib/libfblas.a \
--D TPL_LAPACK_LIBRARIES=$PETSC_DIR/lib/libflapack.a \
+-D LAPACK_LIBRARY_DIRS=$BLASLAPACK_DIR/lib \
+-D BLAS_LIBRARY_DIRS=$BLASLAPACK_DIR/lib \
+-D TPL_BLAS_LIBRARIES=$BLASLAPACK_DIR/lib/libblas.so \
+-D TPL_LAPACK_LIBRARIES=$BLASLAPACK_DIR/lib/liblapack.so \
 ..
 "
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.mpich_<TRILINOS>-clang-dbg
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<MPICH>_<CLANG>_<TRILINOS>-dbg
 #%Module1.0#####################################################################
 ##
-##  Trilinos MPICH Clang Debug Module
+##  <TRILINOS> <MPICH> <CLANG> Debug Module
 ##
 ##
 ##
 set          BASE_PATH          $PACKAGES_DIR
 
 if { [uname sysname] != "Darwin" } {
-  prepend-path         LD_LIBRARY_PATH     \$BASE_PATH/<TRILINOS>/mpich-clang-dbg/lib
+  prepend-path         LD_LIBRARY_PATH     \$BASE_PATH/<TRILINOS>/<MPICH>_<CLANG>-dbg/lib
 }
-
-setenv       TRILINOS_DIR                \$BASE_PATH/<TRILINOS>/mpich-clang-dbg
+if { ! [ is-loaded moose/.<BLASLAPACK> ] || ! [ is-loaded blaslapack ] } {
+  module load moose/.<BLASLAPACK>
+}
+setenv       TRILINOS_DIR                \$BASE_PATH/<TRILINOS>/<MPICH>_<CLANG>-dbg
 EOF
-    cd $PACKAGES_DIR/Modules/3.2.10/mpich_clang; rm trilinos-dbg
-    ln -s ../modulefiles/moose/.mpich_<TRILINOS>-clang-dbg trilinos-dbg
+    cd $PACKAGES_DIR/Modules/3.2.10/mpich_clang; rm <TRILINOS>-dbg
+    ln -s ../modulefiles/moose/.<MPICH>_<CLANG>_<TRILINOS>-dbg <TRILINOS>-dbg
 }
 ##
 ## End Specifics
@@ -151,4 +151,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR=<PACKAGES_DIR>
+RELATIVE_DIR=<RELATIVE_DIR>
+DOWNLOAD_DIR=<DOWNLOAD_DIR>
+TEMP_PREFIX=<TEMP_PREFIX>
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source $RELATIVE_DIR/functions $@

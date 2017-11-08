@@ -21,9 +21,6 @@ BUILD='false'
 INSTALL='false'
 
 pre_run() {
-    if [ -d $PACKAGES_DIR/$PACKAGE ]; then
-	rm -rf $PACKAGES_DIR/$PACKAGE
-    fi
     cd $PACKAGES_DIR
     try_command 3 "git clone https://github.com/milljm/sjs.git"
     cd sjs
@@ -80,4 +77,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR=<PACKAGES_DIR>
+RELATIVE_DIR=<RELATIVE_DIR>
+DOWNLOAD_DIR=<DOWNLOAD_DIR>
+TEMP_PREFIX=<TEMP_PREFIX>
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source $RELATIVE_DIR/functions $@

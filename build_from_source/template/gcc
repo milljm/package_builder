@@ -3,7 +3,7 @@
 ## Specifics
 ##
 DEP=(modules automake autoconf)
-PACKAGE='gcc'
+PACKAGE="<GCC>"
 
 #####
 # Set the operating system allowed to build this module
@@ -60,7 +60,6 @@ EOF
     # I've notice by the time we make it to this module (gcc), everything else is
     # on hold because everything else is requiring gcc to be completed.
     MAX=true
-    configure
 }
 
 post_run() {
@@ -90,10 +89,11 @@ setenv       GCC_MAN                     \$GCC_PATH/share/man
 prepend-path    PATH    $PACKAGES_DIR/llvm-<LLVM>/bin
 
 EOF
-    cd $PACKAGES_DIR/Modules/<MODULES>/adv_modules
-    ln -s ../modulefiles/moose/.<GCC> $PACKAGE
-    module load $PACKAGE
-    cd $GCC_BIN/../
+    cd "$PACKAGES_DIR/Modules/<MODULES>/adv_modules"
+    if [ -f gcc ]; then rm -f gcc; fi
+    ln -s ../modulefiles/moose/.<GCC> gcc
+    module load moose/.<GCC>
+    cd "$GCC_BIN/../"
     for sfile in `find . -type f -name "*.la"`; do
         if [ `grep -c "$src_temp" $sfile` -ge 1 ]; then
             echo 'editing file: '$sfile
@@ -104,7 +104,7 @@ EOF
     # We need to change an rpath for the jit compiler (only for Darwin because
     # Apple has removed the use of DYLD_LIBRARY_PATH)
     if [ `uname` = "Darwin" ]; then
-        install_name_tool -id $PACKAGES_DIR/<GCC>/lib/libgccjit.so $PACKAGES_DIR/<GCC>/lib/libgccjit.so
+        install_name_tool -id "$PACKAGES_DIR/<GCC>/lib/libgccjit.so" "$PACKAGES_DIR/<GCC>/lib/libgccjit.so"
     fi
 }
 ##
@@ -124,4 +124,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR=<PACKAGES_DIR>
+RELATIVE_DIR=<RELATIVE_DIR>
+DOWNLOAD_DIR=<DOWNLOAD_DIR>
+TEMP_PREFIX=<TEMP_PREFIX>
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source $RELATIVE_DIR/functions $@

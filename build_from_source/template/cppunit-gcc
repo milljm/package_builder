@@ -3,7 +3,8 @@
 ## Specifics
 ##
 DEP=(modules gcc)
-PACKAGE='cppunit-gcc'
+PACKAGE="<GCC>"
+BASE_DIR="<CPPUNIT>"
 
 #####
 # Set the operating system allowed to build this module
@@ -20,42 +21,39 @@ BUILD='true'
 INSTALL='true'
 
 pre_run() {
-    if [ -d $PACKAGES_DIR/<CPPUNIT>/gcc-opt ]; then
-	$PACKAGES_DIR/<CPPUNIT>/gcc-opt
-    fi
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
-    module load advanced_modules gcc
+    module load moose/.<GCC>
     # we have to run this our selves with out error checking. Mac machines appear to exhibit a bug:
     #
     # rm: conftest.dSYS: is a directory
     #
     # autoconf tries to `rm -f` a directory (which requires an additional -r switch) that appears to only be created on Mac machines.
     if [ `uname` = "Darwin" ]; then
-	./configure --prefix=$PACKAGES_DIR/<CPPUNIT>/gcc-opt
+	./configure --prefix=$PACKAGES_DIR/<CPPUNIT>/<GCC>
     else
-	./configure --prefix=$PACKAGES_DIR/<CPPUNIT>/gcc-opt
-	if [ $? -ne 0 ]; then echo "Error while configuring cppunit"; cleanup 1; fi
+        CONFIGURE='true'
     fi
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<CPPUNIT>-gcc
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<CPPUNIT>_<GCC>
 #%Module1.0#####################################################################
 ##
-## CPPUnit GCC
+## <CPPUNIT> <GCC>
 ##
 set          BASE_PATH         $PACKAGES_DIR
-conflict moose/.cppunit-clang cppunit-clang
+conflict moose/.<CPPUNIT>_<CLANG> cppunit-clang
 
-set          CPPUNIT_PATH      \$BASE_PATH/<CPPUNIT>/gcc-opt
+set          CPPUNIT_PATH      \$BASE_PATH/<CPPUNIT>/<GCC>
 setenv       CPPUNIT_DIR       \$CPPUNIT_PATH
 
 prepend-path INCLUDE           \$CPPUNIT_PATH/include
 prepend-path PATH              \$CPPUNIT_PATH/bin
 EOF
     cd $PACKAGES_DIR/Modules/<MODULES>/adv_modules
-    ln -s ../modulefiles/moose/.<CPPUNIT>-gcc cppunit-gcc
+    if [ -f cppunit-gcc ]; then rm -f cppunit-gcc; fi
+    ln -s ../modulefiles/moose/.<CPPUNIT>_<GCC> cppunit-gcc
 }
 ##
 ## End Specifics
@@ -74,4 +72,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR=<PACKAGES_DIR>
+RELATIVE_DIR=<RELATIVE_DIR>
+DOWNLOAD_DIR=<DOWNLOAD_DIR>
+TEMP_PREFIX=<TEMP_PREFIX>
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source $RELATIVE_DIR/functions $@

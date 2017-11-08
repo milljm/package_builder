@@ -3,7 +3,7 @@
 ## Specifics
 ##
 DEP=(modules)
-PACKAGE='ccache'
+PACKAGE="<CCACHE>"
 
 #####
 # Set the operating system allowed to build this module
@@ -15,34 +15,31 @@ ARCH=(Darwin Linux)
 # This is useful for items like 'autojump' which requires a git clone/checkout
 DOWNLOAD='http://mooseframework.org/source_packages/<CCACHE>.tar.gz'
 EXTRACT='<CCACHE>.tar.gz'
-CONFIGURE="./configure --prefix=$PACKAGES_DIR/$PACKAGE"
+CONFIGURE="true"
 BUILD='true'
 INSTALL='true'
 
 pre_run() {
-    if [ -d $PACKAGES_DIR/$PACKAGE ]; then
-      rm -rf $PACKAGES_DIR/$PACKAGE
-    fi
     return
 }
 post_run() {
     cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/ccache
 #%Module1.0#####################################################################
 ##
-## ccache modulefile
+## <CCACHE> modulefile
 ##
 ##
 ##
 set              BASE_PATH        $PACKAGES_DIR
 
-prepend-path     PATH               \$BASE_PATH/ccache/bin
-prepend-path     MANPATH            \$BASE_PATH/ccache/share/man
+prepend-path     PATH               \$BASE_PATH/<CCACHE>/bin
+prepend-path     MANPATH            \$BASE_PATH/<CCACHE>/share/man
 
-if {[is-loaded moose/.<GCC>] || [is-loaded gcc]} {
+if {[is-loaded moose/.<GCC>] || [is-loaded <GCC>]} {
   setenv           CC                 "ccache gcc"
   setenv           CXX                "ccache g++"
 }
-if {[is-loaded moose/.<CLANG>] || [is-loaded clang]} {
+if {[is-loaded moose/.<CLANG>] || [is-loaded <CLANG>]} {
   setenv           CC                 "ccache clang"
   setenv           CXX                "ccache clang++"
 }
@@ -73,4 +70,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR=<PACKAGES_DIR>
+RELATIVE_DIR=<RELATIVE_DIR>
+DOWNLOAD_DIR=<DOWNLOAD_DIR>
+TEMP_PREFIX=<TEMP_PREFIX>
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source $RELATIVE_DIR/functions $@

@@ -99,7 +99,8 @@ def buildOnly(dag_object, args):
 def alterVersions(version_template, args):
     packages_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'packages')
     name_length = 0
-    if os.path.exists(packages_path) is not True:
+
+    if os.path.exists(packages_path) is not True and not args.dryrun:
         os.makedirs(packages_path)
 
     for module in os.listdir(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'template')):
@@ -109,12 +110,28 @@ def alterVersions(version_template, args):
         with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'template', module), 'r') as template_module:
             tmp_str = template_module.read()
 
-        with open(os.path.join(packages_path, module), 'w') as batchfile:
-            for item in version_template.iteritems():
-                tmp_str = tmp_str.replace('<' + item[0] + '>', item[1])
-            batchfile.write(tmp_str)
+        if not args.dryrun:
+            with open(os.path.join(packages_path, module), 'w') as batchfile:
+                # Substitute base line environment variables
+                for env_var, value in args.baseline_vars:
+                    tmp_str = tmp_str.replace('<' + env_var + '>', value)
 
-        os.chmod(os.path.join(packages_path, module), 0755)
+                # Substitute module names and versions
+                for module_key, module_name in version_template.iteritems():
+                    tmp_str = tmp_str.replace('<' + module_key + '>', module_name)
+
+                # If there are any substitutions remaining, it means this module will
+                # not be supported on this platform.
+                remaining_tags = re.findall(r'<\w+>', tmp_str)
+                for tag in remaining_tags:
+                    tmp_str = tmp_str.replace(tag, '')
+
+                batchfile.write(tmp_str)
+
+            os.chmod(os.path.join(packages_path, module), 0755)
+
+    if args.dryrun:
+        packages_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'template')
 
     # Set term_width and some buffer room based on longest length name
     args.name_length = name_length
@@ -193,14 +210,13 @@ def which(program):
                 return exe_file
     return None
 
-def prepareDownloads(download_directory, download_locks):
+def prepareDownloads(download_directory):
     if not os.path.exists(download_directory):
         os.makedirs(download_directory)
 
     # Clean previous locks if any
-    if os.path.exists(download_locks):
-        shutil.rmtree(download_locks)
-    os.makedirs(download_locks)
+    if os.path.exists(os.path.join(download_directory, '.LOCKS')):
+        shutil.rmtree(os.path.join(download_directory, '.LOCKS'))
 
 if __name__ == '__main__':
     # Pre-requirements that we are aware of that on some linux machines is not sometimes available by default:
@@ -215,30 +231,22 @@ if __name__ == '__main__':
         sys.exit(1)
 
     args = parseArguments()
+    args.baseline_vars = [('PACKAGES_DIR', args.prefix),
+                          ('RELATIVE_DIR', os.path.join(os.path.abspath(os.path.dirname(__file__)))),
+                          ('DOWNLOAD_DIR', os.path.join(args.temp_dir, 'moose_package_download_temp')),
+                          ('DOWNLOAD_ONLY', str(args.download_only)),
+                          ('TEMP_PREFIX', os.path.join(args.temp_dir, 'moose_package_build_temp')),
+                          ('MOOSE_JOBS', args.cpu_count),
+                          ('KEEP_FAILED', str(args.keep_failed))]
+
     templates = getTemplate(args)
     packages_path = alterVersions(templates, args)
-    download_directory = os.path.join(args.temp_dir, 'moose_package_download_temp')
-    download_locks = os.path.join(download_directory, 'download_locks')
 
     if not args.dryrun:
-        prepareDownloads(download_directory, download_locks)
+        prepareDownloads(os.path.join(args.temp_dir, 'moose_package_download_temp'))
 
-    os.environ['TEMP_PREFIX'] = os.path.join(args.temp_dir, 'moose_package_build_temp')
-    os.environ['RELATIVE_DIR'] = os.path.join(os.path.abspath(os.path.dirname(__file__)))
-    os.environ['DOWNLOAD_DIR'] = download_directory
-    os.environ['DOWNLOAD_LOCKS'] = download_locks
-    os.environ['MOOSE_JOBS'] = str((int(args.cpu_count) * int(args.max_modules)))
-
-    os.environ['DOWNLOAD_ONLY'] = 'False'
     if args.download_only:
-        print 'Downloads will be saved to:', download_directory
-        os.environ['DOWNLOAD_ONLY'] = 'True'
-
-    elif not args.dryrun:
-        os.environ['PACKAGES_DIR'] = args.prefix
-
-    if args.keep_failed:
-        os.environ['KEEP_FAILED'] = 'True'
+        print 'Downloads will be saved to:', os.path.join(args.temp_dir, 'moose_package_download_temp')
 
     packages_dag = buildDAG(packages_path, args)
 
@@ -254,6 +262,6 @@ if __name__ == '__main__':
         pass
 
     if args.download_only:
-        print '\nDownloads saved to: %s' %(download_directory)
+        print '\nDownloads saved to: %s' %(os.path.join(args.temp_dir, 'moose_package_download_temp'))
 
     print 'Total Time:', str(datetime.timedelta(seconds=int(time.time()) - int(start_time)))

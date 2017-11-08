@@ -3,7 +3,8 @@
 ## Specifics
 ##
 DEP=(modules)
-PACKAGE='autoconf'
+PACKAGE="<AUTOCONF>"
+BASE_DIR='autotools'
 
 #####
 # Set the operating system allowed to build this module
@@ -15,24 +16,25 @@ ARCH=(Darwin Linux)
 # This is useful for items like 'autojump' which requires a git clone/checkout
 DOWNLOAD='http://mooseframework.org/source_packages/<AUTOCONF>.tar.gz'
 EXTRACT='<AUTOCONF>.tar.gz'
-CONFIGURE="./configure --prefix=$PACKAGES_DIR/autotools"
+CONFIGURE='true'
 BUILD='true'
 INSTALL='true'
 
 pre_run() {
-    return
+    # Remove previous module file
+    rm -f $PACKAGES_DIR/Modules/<MODULES>/adv_modules/autotools
 }
 
 post_run() {
     cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/adv_modules/autotools
 #%Module1.0#####################################################################
 ##
-## Autotools Module file
+## <AUTOCONF> <AUTOMAKE> Module file
 ##
 ##
 ##
 set BASE_PATH       $PACKAGES_DIR
-prepend-path        PATH       \$BASE_PATH/autotools/bin
+prepend-path        PATH       \$BASE_PATH/$BASE_DIR/<AUTOCONF>/bin
 EOF
 }
 ##
@@ -52,4 +54,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR=<PACKAGES_DIR>
+RELATIVE_DIR=<RELATIVE_DIR>
+DOWNLOAD_DIR=<DOWNLOAD_DIR>
+TEMP_PREFIX=<TEMP_PREFIX>
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source $RELATIVE_DIR/functions $@

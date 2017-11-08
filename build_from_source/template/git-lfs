@@ -3,7 +3,7 @@
 ## Specifics
 ##
 DEP=(modules)
-PACKAGE='git-lfs'
+PACKAGE="<GITLFS>"
 SERIAL=True
 
 #####
@@ -21,18 +21,15 @@ BUILD='false'
 INSTALL='false'
 
 pre_run() {
-    if [ -d $PACKAGES_DIR/$PACKAGE ]; then
-      rm -rf $PACKAGES_DIR/$PACKAGE
-    fi
-    mkdir -p $PACKAGES_DIR/$PACKAGE
-    cp $PACKAGE $PACKAGES_DIR/$PACKAGE/
+    mkdir -p $PACKAGES_DIR/<GITLFS>
+    cp git-lfs $PACKAGES_DIR/<GITLFS>/
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/$PACKAGE
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/git-lfs
 #%Module1.0#####################################################################
 ##
-## $PACKAGE modulefile
+## <GITLFS> modulefile
 ##
 ##
 ##
@@ -50,7 +47,7 @@ proc ModulesHelp { } {
         puts stderr "\n\t\tgit lfs uninstall\n"
 }
 
-prepend-path     PATH       \$BASE_PATH/$PACKAGE
+prepend-path     PATH       \$BASE_PATH/<GITLFS>
 
 EOF
 }
@@ -71,4 +68,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR=<PACKAGES_DIR>
+RELATIVE_DIR=<RELATIVE_DIR>
+DOWNLOAD_DIR=<DOWNLOAD_DIR>
+TEMP_PREFIX=<TEMP_PREFIX>
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source $RELATIVE_DIR/functions $@

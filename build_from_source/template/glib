@@ -3,7 +3,7 @@
 ## Specifics
 ##
 DEP=(modules pkg-config pcre libffi gettext)
-PACKAGE='glib'
+PACKAGE="<GLIB>"
 
 #####
 # Set the operating system allowed to build this module
@@ -20,17 +20,14 @@ BUILD='true'
 INSTALL='true'
 
 pre_run() {
-    if [ -d $PACKAGES_DIR/$PACKAGE ]; then
-      rm -rf $PACKAGES_DIR/$PACKAGE
-    fi
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
     module load moose-tools
-    CONFIGURE="PATH=$PACKAGES_DIR/pcre/bin:$PACKAGES_DIR/gettext/bin:$PATH LDFLAGS=-L$PACKAGES_DIR/gettext/lib CPPFLAGS=-I$PACKAGES_DIR/gettext/include ./configure --prefix=$PACKAGES_DIR/$PACKAGE"
+    CONFIGURE="PATH=$PACKAGES_DIR/<PCRE>/bin:$PACKAGES_DIR/<GETTEXT>/bin:$PATH LDFLAGS=-L$PACKAGES_DIR/<GETTEXT>/lib CPPFLAGS=-I$PACKAGES_DIR/<GETTEXT>/include ./configure --prefix=$PACKAGES_DIR/<GLIB>"
 }
 
 post_run() {
-    cp $PACKAGES_DIR/$PACKAGE/lib/pkgconfig/* $PKG_CONFIG_PATH
+    cp $PACKAGES_DIR/<GLIB>/lib/pkgconfig/* $PKG_CONFIG_PATH
 }
 ##
 ## End Specifics
@@ -49,4 +46,10 @@ post_run() {
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR=<PACKAGES_DIR>
+RELATIVE_DIR=<RELATIVE_DIR>
+DOWNLOAD_DIR=<DOWNLOAD_DIR>
+TEMP_PREFIX=<TEMP_PREFIX>
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source $RELATIVE_DIR/functions $@

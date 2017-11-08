@@ -2,9 +2,9 @@
 #############
 ## Specifics
 ##
-DEP=(modules cmake gcc llvm mpich-clang)
-PACKAGE='<PETSC_ALT>-mpich-clang-dbg'
-
+DEP=(modules cmake gcc llvm mpich-clang blaslapack)
+PACKAGE="<MPICH>_<CLANG>-dbg"
+BASE_DIR="<PETSC_ALT>"
 
 #####
 # Set the operating system allowed to build this module
@@ -21,11 +21,9 @@ BUILD='false'
 INSTALL='false'
 
 clean_petsc() {
-    if [ -d $PACKAGES_DIR/petsc/mpich_<PETSC_ALT>/clang-dbg-superlu ]; then
-	rm -rf $PACKAGES_DIR/petsc/mpich_<PETSC_ALT>/clang-dbg-superlu
-    fi
     clean_attempt
     extract
+    # Fix for darwin Fortran linking issue:
     if [ `uname` = "Darwin" ]; then
         cat << "EOF" > petsc_darwin.patch
 --- config/BuildSystem/config/libraries.py	2015-06-09 15:24:49.000000000 -0600
@@ -45,12 +43,11 @@ EOF
 }
 
 pre_run() {
-    # Fix for darwin Fortran linking issue:
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
-    module load advanced_modules cmake mpich-clang
+    module load advanced_modules cmake moose/.<MPICH>_<CLANG> moose/.<BLASLAPACK>
     CONFIGURE="./configure \
---prefix=$PACKAGES_DIR/petsc/mpich_<PETSC_ALT>/clang-dbg-superlu \
+--prefix=$PACKAGES_DIR/<PETSC_ALT>/<MPICH>_<CLANG>-dbg \
 --download-hypre=1 \
 --with-ssl=0 \
 --with-debugging=1 \
@@ -61,7 +58,7 @@ pre_run() {
 --with-fc=mpif90 \
 --download-metis=1 \
 --download-parmetis=1 \
---download-fblaslapack=1 \
+--with-blas-lapack-dir=$BLASLAPACK_DIR/lib \
 --download-superlu_dist=1 \
 --download-mumps=1 \
 --download-scalapack=1 \
@@ -83,15 +80,18 @@ pre_run() {
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.mpich_<PETSC_ALT>_dbg-clang
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<PETSC_ALT>_<MPICH>_<CLANG>-dbg
 #%Module1.0#####################################################################
 ##
-## MPICH Clang <PETSC_ALT> debug superlu modulefile
+## <MPICH> <CLANG> <PETSC_ALT> debug superlu modulefile
 ##
 ##
 ##
 set         BASE_PATH        $PACKAGES_DIR
-setenv      PETSC_DIR        \$BASE_PATH/petsc/mpich_<PETSC_ALT>/clang-dbg-superlu
+if { ! [ is-loaded moose/.<BLASLAPACK> ] || ! [ is-loaded blaslapack ] } {
+  module load moose/.<BLASLAPACK>
+}
+setenv      PETSC_DIR        \$BASE_PATH/<PETSC_ALT>/<MPICH>_<CLANG>-dbg
 EOF
 
     cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/mpich-clang-petsc_alt_dbg
@@ -102,17 +102,17 @@ EOF
 ## <CLANG>
 ## <MPICH>
 ##
-module load moose/.<MPICH>_clang
-module load moose/.mpich_<PETSC_ALT>_dbg-clang
+module load moose/.<MPICH>_<CLANG>
+module load moose/.<PETSC_ALT>_<MPICH>_<CLANG>-dbg
 module load moose/.<TBB>
-module load moose/.<CPPUNIT>-clang
+module load moose/.<CPPUNIT>_<CLANG>
 module load ccache
 module load moose-tools
 
 EOF
 
     cd $PACKAGES_DIR/Modules/<MODULES>/mpich_clang
-    ln -s ../modulefiles/moose/.mpich_<PETSC_ALT>_dbg-clang <PETSC_ALT>-dbg
+    ln -s ../modulefiles/moose/.<PETSC_ALT>_<MPICH>_<CLANG>-dbg <PETSC_ALT>-dbg
 
 }
 
@@ -133,4 +133,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR=<PACKAGES_DIR>
+RELATIVE_DIR=<RELATIVE_DIR>
+DOWNLOAD_DIR=<DOWNLOAD_DIR>
+TEMP_PREFIX=<TEMP_PREFIX>
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source $RELATIVE_DIR/functions $@

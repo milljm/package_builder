@@ -3,7 +3,8 @@
 ## Specifics
 ##
 DEP=(modules gcc)
-PACKAGE='mpich-gcc'
+PACKAGE="<GCC>"
+BASE_DIR="<MPICH>"
 
 #####
 # Set the operating system allowed to build this module
@@ -15,29 +16,27 @@ ARCH=(Darwin Linux)
 # This is useful for items like 'autojump' which requires a git clone/checkout
 DOWNLOAD='http://mooseframework.org/source_packages/<MPICH>.tar.gz'
 EXTRACT='<MPICH>.tar.gz'
-CONFIGURE="../configure --prefix=$PACKAGES_DIR/mpich/<MPICH>/gcc-opt --enable-shared --enable-sharedlibs=gcc --enable-fast=03 --enable-debuginfo --enable-totalview --enable-two-level-namespace CC=gcc CXX=g++ FC=gfortran F77=gfortran F90='' CFLAGS='' CXXFLAGS='' FFLAGS='' FCFLAGS='' F90FLAGS='' F77FLAGS=''"
+CONFIGURE='false'
 BUILD='true'
 INSTALL='true'
 
 pre_run() {
-    if [ -d $PACKAGES_DIR/mpich/<MPICH>/gcc-opt ]; then
-	rm -rf $PACKAGES_DIR/mpich/<MPICH>/gcc-opt
-    fi
     mkdir gcc-opt; cd gcc-opt
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
-    module load advanced_modules gcc
+    module load moose/.<GCC>
+    CONFIGURE="../configure --prefix=$PACKAGES_DIR/<MPICH>/<GCC> --enable-shared --enable-sharedlibs=gcc --enable-fast=03 --enable-debuginfo --enable-totalview --enable-two-level-namespace CC=gcc CXX=g++ FC=gfortran F77=gfortran F90='' CFLAGS='' CXXFLAGS='' FFLAGS='' FCFLAGS='' F90FLAGS='' F77FLAGS=''"
 }
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<MPICH>_gcc
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<MPICH>_<GCC>
 #%Module1.0#####################################################################
 ##
-## MPICH GCC
+## <MPICH> <GCC>
 ##
 set BASE_PATH   $PACKAGES_DIR
 
-set             MPI_PATH           \$BASE_PATH/mpich/<MPICH>/gcc-opt
-conflict moose/.<MPICH>_clang moose/.<OPENMPI>_clang moose/.<OPENMPI>_gcc mpich_clang openmpi_clang openmpi_gcc
+set             MPI_PATH           \$BASE_PATH/<MPICH>/<GCC>
+conflict moose/.<MPICH>_<CLANG> moose/.<OPENMPI>_<CLANG> moose/.<OPENMPI>_<GCC> mpich_clang openmpi_clang openmpi_gcc
 module load moose/.<GCC>
 
 prepend-path    C_INCLUDE_PATH     \$MPI_PATH/include
@@ -57,15 +56,15 @@ EOF
     cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/adv_modules/mpich-gcc
 #%Module1.0#####################################################################
 ##
-## MPICH GCC
+## <MPICH> <GCC>
 ##
 set BASE_PATH   $PACKAGES_DIR
 
-set             MPI_PATH           \$BASE_PATH/mpich/<MPICH>/gcc-opt
+set             MPI_PATH           \$BASE_PATH/<MPICH>/<GCC>
 
-conflict moose/.<MPICH>_gcc moose/.<MPICH>_clang moose/.<OPENMPI>_clang moose/.<OPENMPI>_gcc mpich_clang openmpi_clang openmpi_gcc
+conflict moose/.<MPICH>_<GCC> moose/.<MPICH>_<CLANG> moose/.<OPENMPI>_<CLANG> moose/.<OPENMPI>_<GCC> mpich_clang openmpi_clang openmpi_gcc
 
-if { ! [ is-loaded <GCC> ] } {
+if { ! [ is-loaded <GCC> ] || ! [ is-loaded moose/.<GCC> ] } {
   module load moose/.<GCC>
 }
 
@@ -85,7 +84,7 @@ prepend-path    PATH              \$MPI_PATH/bin
 
 append-path     MODULEPATH        \$BASE_PATH/Modules/<MODULES>/mpich_gcc
 EOF
-    module load advanced_modules mpich-gcc
+    module load moose/.<MPICH>_<GCC>
     cd $MPI_HOME/lib
     for sfile in `find . -type f -name "*.la"`; do
 	if [ `grep -c 'src_temp_' $sfile` -ge 1 ]; then
@@ -111,4 +110,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR=<PACKAGES_DIR>
+RELATIVE_DIR=<RELATIVE_DIR>
+DOWNLOAD_DIR=<DOWNLOAD_DIR>
+TEMP_PREFIX=<TEMP_PREFIX>
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source $RELATIVE_DIR/functions $@

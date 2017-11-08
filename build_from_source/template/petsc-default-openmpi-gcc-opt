@@ -2,9 +2,9 @@
 #############
 ## Specifics
 ##
-DEP=(modules cmake gcc openmpi-gcc)
-PACKAGE='<PETSC_DEFAULT>-openmpi-gcc-opt'
-
+DEP=(modules cmake gcc openmpi-gcc blaslapack)
+PACKAGE="<OPENMPI>_<GCC>-opt"
+BASE_DIR="<PETSC_DEFAULT>"
 
 #####
 # Set the operating system allowed to build this module
@@ -21,9 +21,6 @@ BUILD='false'
 INSTALL='false'
 
 clean_petsc() {
-    if [ -d $PACKAGES_DIR/petsc/openmpi_<PETSC_DEFAULT>/gcc-opt-superlu ]; then
-	rm -rf $PACKAGES_DIR/petsc/openmpi_<PETSC_DEFAULT>/gcc-opt-superlu
-    fi
     clean_attempt
     extract
     # Fix for darwin Fortran linking issue:
@@ -48,9 +45,9 @@ EOF
 pre_run() {
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
-    module load advanced_modules cmake openmpi-gcc
+    module load advanced_modules cmake moose/.<OPENMPI>_<GCC> moose/.<BLASLAPACK>
     CONFIGURE="./configure \
---prefix=$PACKAGES_DIR/petsc/openmpi_<PETSC_DEFAULT>/gcc-opt-superlu \
+--prefix=$PACKAGES_DIR/<PETSC_DEFAULT>/<OPENMPI>_<GCC>-opt \
 --download-hypre=1 \
 --with-ssl=0 \
 --with-debugging=no \
@@ -59,7 +56,7 @@ pre_run() {
 --with-cc=mpicc \
 --with-cxx=mpicxx \
 --with-fc=mpif90 \
---download-fblaslapack=1 \
+--with-blas-lapack-dir=$BLASLAPACK_DIR/lib \
 --download-metis=1 \
 --download-parmetis=1 \
 --download-superlu_dist=1 \
@@ -83,18 +80,21 @@ pre_run() {
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.openmpi_<PETSC_DEFAULT>_opt-gcc
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<PETSC_DEFAULT>_<OPENMPI>_<GCC>-opt
 #%Module1.0#####################################################################
 ##
-## OpenMPI GCC <PETSC_DEFAULT> optimized superlu modulefile
+## <OPENMPI> <GCC> <PETSC_DEFAULT> optimized superlu modulefile
 ##
 ##
 ##
 set         BASE_PATH        $PACKAGES_DIR
-setenv      PETSC_DIR        \$BASE_PATH/petsc/mpich_<PETSC_DEFAULT>/gcc-opt-superlu
+if { ! [ is-loaded moose/.<BLASLAPACK> ] || ! [ is-loaded blaslapack ] } {
+  module load moose/.<BLASLAPACK>
+}
+setenv      PETSC_DIR        \$BASE_PATH/<PETSC_DEFAULT>/<OPENMPI>_<GCC>-opt
 EOF
     cd $PACKAGES_DIR/Modules/<MODULES>/openmpi_gcc
-    ln -s ../modulefiles/moose/.openmpi_<PETSC_DEFAULT>_opt-gcc <PETSC_DEFAULT>
+    ln -s ../modulefiles/moose/.<PETSC_DEFAULT>_<OPENMPI>_<GCC>-opt <PETSC_DEFAULT>
 }
 
 ##
@@ -114,4 +114,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR=<PACKAGES_DIR>
+RELATIVE_DIR=<RELATIVE_DIR>
+DOWNLOAD_DIR=<DOWNLOAD_DIR>
+TEMP_PREFIX=<TEMP_PREFIX>
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source $RELATIVE_DIR/functions $@
