@@ -4,6 +4,7 @@
 ##
 DEP=(modules miniconda cmake gcc)
 PACKAGE="llvm-<LLVM>"
+NO_CCACHE='true'
 
 #####
 # Set the operating system allowed to build this module
@@ -71,6 +72,7 @@ pre_run() {
 -DCLANG_DEFAULT_OPENMP_RUNTIME=libomp \
 -DPYTHON_EXECUTABLE=`which python2.7` \
 -DCMAKE_BUILD_TYPE="Release" \
+-DLLVM_TARGETS_TO_BUILD="X86" \
 ../llvm
     fi
     cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<CLANG>
@@ -145,8 +147,6 @@ EOF
           cd $PACKAGES_DIR/$PACKAGE/lib/
           sh change_links.sh
           rm -f change_links.sh
-          cd /usr/local/lib
-          ln -s $PACKAGES_DIR/$PACKAGE/lib/libomp.dyld .
     fi
     cp -R $1/llvm/tools/clang/bindings $PACKAGES_DIR/$PACKAGE/
 }

@@ -309,10 +309,24 @@ cleanup() {
     exit $1
 }
 
+function_help() {
+    echo -e "Usage:\n\t-h | --help  This message\n\t-d | --debug Run in interactive mode\n\t-j | --jobs  Override jobs with specified amount"
+}
+
 for i in "$@"; do
     case $i in
+        -h|--help)
+            function_help
+            exit 0
+            ;;
         -d|--debug)
             DEBUG="True"
+            shift
+            ;;
+        -j|--jobs)
+            MOOSE_JOBS=$2
+            shift 2
+            ;;
     esac
 done
 
@@ -335,7 +349,7 @@ if [ "$DOWNLOAD_ONLY" = "True" ] && [ "$CONTINUE" = "true" ]; then
     exit 0
 elif [ "$CONTINUE" = "true" ]; then
     touch $PROGRESS
-    if [ `grep -c $ME $PROGRESS` -eq 0 ] || [ "$DEBUG" = "True" ]; then
+    if [ `grep -c ^$ME $PROGRESS` -eq 0 ] || [ "$DEBUG" = "True" ]; then
         error=""
         for dependency in ${DEP[*]}; do
             if [ `grep -ci ^$dependency $PROGRESS` -eq 0 ]; then

@@ -4,6 +4,7 @@
 ##
 DEP=(modules automake autoconf)
 PACKAGE="<GCC>"
+NO_CCACHE='true'
 
 #####
 # Set the operating system allowed to build this module
