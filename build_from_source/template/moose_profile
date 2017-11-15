@@ -25,21 +25,21 @@ pre_run() {
 }
 
 post_run() {
-    mkdir -p $PACKAGES_DIR/environments
-    cat <<EOF > $PACKAGES_DIR/environments/moose_profile
+    mkdir -p "$PACKAGES_DIR/environments"
+    cat <<EOF > "$PACKAGES_DIR/environments/moose_profile"
 #!/bin/bash
 # Modules Source
 if [ -n "\$MODULEPATH" ]; then
-  export MODULEPATH=$PACKAGES_DIR/Modules/<MODULES>/modulefiles
+  export MODULEPATH="$PACKAGES_DIR/Modules/<MODULES>/modulefiles"
 fi
-source $PACKAGES_DIR/Modules/<MODULES>/init/bash
+source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
 
 # MOOSE_PPS_WIDTH
 export MOOSE_PPS_WIDTH=180
 
 # Source the autojump profile if requested:
 if [ -n "\$MOOSE_JUMP" ]; then
-  source $PACKAGES_DIR/environments/autojump_profile
+  source "$PACKAGES_DIR/environments/autojump_profile"
 fi
 
 # If, anyone wants to use our prompt:
@@ -57,7 +57,7 @@ else
 fi
 
 # Load custom MOOSE command bash autocomplete rules
-source $PACKAGES_DIR/environments/autocomplete_moose
+source "$PACKAGES_DIR/environments/autocomplete_moose"
 EOF
 }
 ##
@@ -77,10 +77,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-PACKAGES_DIR=<PACKAGES_DIR>
-RELATIVE_DIR=<RELATIVE_DIR>
-DOWNLOAD_DIR=<DOWNLOAD_DIR>
-TEMP_PREFIX=<TEMP_PREFIX>
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
 MOOSE_JOBS=<MOOSE_JOBS>
 KEEP_FAILED=<KEEP_FAILED>
-source $RELATIVE_DIR/functions $@
+source "$RELATIVE_DIR/functions" $@

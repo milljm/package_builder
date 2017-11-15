@@ -22,19 +22,19 @@ INSTALL='true'
 
 pre_run() {
     # Remove previous module file
-    rm -f $PACKAGES_DIR/Modules/<MODULES>/adv_modules/autotools
+    rm -f "$PACKAGES_DIR/Modules/<MODULES>/adv_modules/autotools"
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/adv_modules/autotools
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/adv_modules/autotools"
 #%Module1.0#####################################################################
 ##
 ## <AUTOCONF> <AUTOMAKE> Module file
 ##
 ##
 ##
-set BASE_PATH       $PACKAGES_DIR
-prepend-path        PATH       \$BASE_PATH/$BASE_DIR/<AUTOCONF>/bin
+set BASE_PATH       "$PACKAGES_DIR"
+prepend-path        PATH       "\$BASE_PATH/$BASE_DIR/<AUTOCONF>/bin"
 EOF
 }
 ##
@@ -54,10 +54,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-PACKAGES_DIR=<PACKAGES_DIR>
-RELATIVE_DIR=<RELATIVE_DIR>
-DOWNLOAD_DIR=<DOWNLOAD_DIR>
-TEMP_PREFIX=<TEMP_PREFIX>
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
 MOOSE_JOBS=<MOOSE_JOBS>
 KEEP_FAILED=<KEEP_FAILED>
-source $RELATIVE_DIR/functions $@
+source "$RELATIVE_DIR/functions" $@

@@ -21,7 +21,7 @@ INSTALL='true'
 
 pre_run() {
     unset MODULEPATH
-    source $PACKAGES_DIR/Modules/<MODULES>/init/bash
+    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
     module load moose-tools
     CONFIGURE="./configure --prefix=$PACKAGES_DIR/<LIBPNG> --with-pkgconfigdir=$PKG_CONFIG_PATH"
 }
@@ -46,10 +46,10 @@ post_run() {
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-PACKAGES_DIR=<PACKAGES_DIR>
-RELATIVE_DIR=<RELATIVE_DIR>
-DOWNLOAD_DIR=<DOWNLOAD_DIR>
-TEMP_PREFIX=<TEMP_PREFIX>
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
 MOOSE_JOBS=<MOOSE_JOBS>
 KEEP_FAILED=<KEEP_FAILED>
-source $RELATIVE_DIR/functions $@
+source "$RELATIVE_DIR/functions" $@

@@ -44,7 +44,7 @@ EOF
 
 pre_run() {
     unset MODULEPATH
-    source $PACKAGES_DIR/Modules/<MODULES>/init/bash
+    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
     module load advanced_modules cmake moose/.<MPICH>_<GCC> moose/.<BLASLAPACK>
     CONFIGURE="./configure \
 --prefix=$PACKAGES_DIR/<PETSC_DEFAULT>/<MPICH>_<GCC>-64 \
@@ -79,21 +79,21 @@ pre_run() {
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<PETSC_DEFAULT>_<MPICH>_<GCC>-64
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<PETSC_DEFAULT>_<MPICH>_<GCC>-64"
 #%Module1.0#####################################################################
 ##
 ## <MPICH> <GCC> <PETSC_DEFAULT> 64bit indices modulefile
 ##
 ##
 ##
-set         BASE_PATH        $PACKAGES_DIR
+set         BASE_PATH        "$PACKAGES_DIR"
 if { ! [ is-loaded moose/.<BLASLAPACK> ] || ! [ is-loaded blaslapack ] } {
   module load moose/.<BLASLAPACK>
 }
-setenv      PETSC_DIR        \$BASE_PATH/<PETSC_DEFAULT>/<MPICH>_<GCC>-64
+setenv      PETSC_DIR        "\$BASE_PATH/<PETSC_DEFAULT>/<MPICH>_<GCC>-64"
 EOF
 
-        cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/mpich-gcc-petsc_default_64
+        cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/civet/mpich-gcc-petsc_default_64"
 #%Module1.0#####################################################################
 ##
 ## Civet support module
@@ -110,7 +110,7 @@ module load moose-tools
 
 EOF
 
-    cd $PACKAGES_DIR/Modules/<MODULES>/mpich_gcc
+    cd "$PACKAGES_DIR/Modules/<MODULES>/mpich_gcc"
     ln -s ../modulefiles/moose/.<PETSC_DEFAULT>_<MPICH>_<GCC>-64 <PETSC_DEFAULT>-64
 }
 
@@ -131,10 +131,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-PACKAGES_DIR=<PACKAGES_DIR>
-RELATIVE_DIR=<RELATIVE_DIR>
-DOWNLOAD_DIR=<DOWNLOAD_DIR>
-TEMP_PREFIX=<TEMP_PREFIX>
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
 MOOSE_JOBS=<MOOSE_JOBS>
 KEEP_FAILED=<KEEP_FAILED>
-source $RELATIVE_DIR/functions $@
+source "$RELATIVE_DIR/functions" $@

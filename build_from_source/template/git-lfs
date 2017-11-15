@@ -21,19 +21,19 @@ BUILD='false'
 INSTALL='false'
 
 pre_run() {
-    mkdir -p $PACKAGES_DIR/<GITLFS>
-    cp git-lfs $PACKAGES_DIR/<GITLFS>/
+    mkdir -p "$PACKAGES_DIR/<GITLFS>"
+    cp git-lfs "$PACKAGES_DIR/<GITLFS>/"
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/git-lfs
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/git-lfs"
 #%Module1.0#####################################################################
 ##
 ## <GITLFS> modulefile
 ##
 ##
 ##
-set              BASE_PATH   $PACKAGES_DIR
+set              BASE_PATH   "$PACKAGES_DIR"
 proc ModulesHelp { } {
         puts stderr "\tTo use $PACKAGE you must first run:"
         puts stderr "\n\t\tgit lfs install"
@@ -47,7 +47,7 @@ proc ModulesHelp { } {
         puts stderr "\n\t\tgit lfs uninstall\n"
 }
 
-prepend-path     PATH       \$BASE_PATH/<GITLFS>
+prepend-path     PATH       "\$BASE_PATH/<GITLFS>"
 
 EOF
 }
@@ -68,10 +68,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-PACKAGES_DIR=<PACKAGES_DIR>
-RELATIVE_DIR=<RELATIVE_DIR>
-DOWNLOAD_DIR=<DOWNLOAD_DIR>
-TEMP_PREFIX=<TEMP_PREFIX>
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
 MOOSE_JOBS=<MOOSE_JOBS>
 KEEP_FAILED=<KEEP_FAILED>
-source $RELATIVE_DIR/functions $@
+source "$RELATIVE_DIR/functions" $@

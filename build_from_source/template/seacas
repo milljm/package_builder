@@ -20,14 +20,14 @@ BUILD='false'
 INSTALL='false'
 
 pre_run() {
-    cd $PACKAGES_DIR
+    cd "$PACKAGES_DIR"
     if [ -d seacas ]; then rm -rf seacas; fi
     try_command 3 "git clone https://github.com/milljm/seacas.git"
     cd seacas
     git checkout jasons_installer
     if [ $? -ne 0 ]; then echo "Failed to checkout branch"; cleanup 1; fi
     cd contrib
-    export ACCESS=$PACKAGES_DIR/seacas
+    export ACCESS="$PACKAGES_DIR/seacas"
     ./download_and_configure_prereqs.sh
     if [ $? -ne 0 ]; then echo "Failed to build SEACAS"; cleanup 1; fi
 }
@@ -51,10 +51,10 @@ post_run() {
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-export PACKAGES_DIR=<PACKAGES_DIR>
-RELATIVE_DIR=<RELATIVE_DIR>
-DOWNLOAD_DIR=<DOWNLOAD_DIR>
-TEMP_PREFIX=<TEMP_PREFIX>
+export PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
 export MOOSE_JOBS=<MOOSE_JOBS>
 KEEP_FAILED=<KEEP_FAILED>
-source $RELATIVE_DIR/functions $@
+source "$RELATIVE_DIR/functions" $@

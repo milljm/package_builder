@@ -22,7 +22,7 @@ INSTALL='true'
 
 pre_run() {
     unset MODULEPATH
-    source $PACKAGES_DIR/Modules/<MODULES>/init/bash
+    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
     module load advanced_modules cmake moose/.<MPICH>_<CLANG>
 
     ## OS X High Sierra fix ##
@@ -40,26 +40,26 @@ pre_run() {
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<VTK>_<CLANG>
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<VTK>_<CLANG>"
 #%Module1.0#####################################################################
 ##
 ## <VTK> <CLANG> Module
 ##
 ##
 ##
-set             BASE_PATH          $PACKAGES_DIR
+set             BASE_PATH          "$PACKAGES_DIR"
 
 if { [uname sysname] != "Darwin" } {
-  prepend-path    LD_LIBRARY_PATH    \$BASE_PATH/<VTK>/<CLANG>/lib
+  prepend-path    LD_LIBRARY_PATH    "\$BASE_PATH/<VTK>/<CLANG>/lib"
 }
 
-setenv          VTKINCLUDE_DIR                \$BASE_PATH/<VTK>/<CLANG>/include/<VTK_INCLUDE>
-prepend-path    INCLUDE_PATH                  \$BASE_PATH/<VTK>/<CLANG>/include/<VTK_INCLUDE>
-setenv          VTKLIB_DIR                    \$BASE_PATH/<VTK>/<CLANG>/lib
-setenv          VTK6_PYTHON_DIR               \$BASE_PATH/<VTK>/<CLANG>/lib/python2.7/site-packages
+setenv          VTKINCLUDE_DIR                "\$BASE_PATH/<VTK>/<CLANG>/include/<VTK_INCLUDE>"
+prepend-path    INCLUDE_PATH                  "\$BASE_PATH/<VTK>/<CLANG>/include/<VTK_INCLUDE>"
+setenv          VTKLIB_DIR                    "\$BASE_PATH/<VTK>/<CLANG>/lib"
+setenv          VTK6_PYTHON_DIR               "\$BASE_PATH/<VTK>/<CLANG>/lib/python2.7/site-packages"
 EOF
     unset CC CXX
-    cd $PACKAGES_DIR/Modules/<MODULES>/adv_modules
+    cd "$PACKAGES_DIR/Modules/<MODULES>/adv_modules"
     if [ -f vtk-clang ]; then rm -f vtk-clang; fi
     ln -s ../modulefiles/moose/.<VTK>_<CLANG> vtk-clang
 }
@@ -80,10 +80,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-PACKAGES_DIR=<PACKAGES_DIR>
-RELATIVE_DIR=<RELATIVE_DIR>
-DOWNLOAD_DIR=<DOWNLOAD_DIR>
-TEMP_PREFIX=<TEMP_PREFIX>
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
 MOOSE_JOBS=<MOOSE_JOBS>
 KEEP_FAILED=<KEEP_FAILED>
-source $RELATIVE_DIR/functions $@
+source "$RELATIVE_DIR/functions" $@

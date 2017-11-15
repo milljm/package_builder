@@ -22,7 +22,7 @@ INSTALL='true'
 
 pre_run() {
     unset MODULEPATH
-    source $PACKAGES_DIR/Modules/<MODULES>/init/bash
+    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
     module load advanced_modules cmake moose/.<MPICH>_<CLANG> moose/.<BLASLAPACK>
 
     # Clone Trilinos
@@ -114,24 +114,24 @@ cmake \
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<MPICH>_<CLANG>_<TRILINOS>-opt
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<MPICH>_<CLANG>_<TRILINOS>-opt"
 #%Module1.0#####################################################################
 ##
 ##  <TRILINOS> <MPICH> <CLANG> Optimized Module 
 ##
 ##
 ##
-set          BASE_PATH          $PACKAGES_DIR
+set          BASE_PATH          "$PACKAGES_DIR"
 
 if { [uname sysname] != "Darwin" } {
-  prepend-path         LD_LIBRARY_PATH     \$BASE_PATH/<TRILINOS>/<MPICH>_<CLANG>-opt/lib
+  prepend-path         LD_LIBRARY_PATH     "\$BASE_PATH/<TRILINOS>/<MPICH>_<CLANG>-opt/lib"
 }
 if { ! [ is-loaded moose/.<BLASLAPACK> ] || ! [ is-loaded blaslapack ] } {
   module load moose/.<BLASLAPACK>
 }
-setenv       TRILINOS_DIR                \$BASE_PATH/<TRILINOS>/<MPICH>_<CLANG>-opt
+setenv       TRILINOS_DIR                "\$BASE_PATH/<TRILINOS>/<MPICH>_<CLANG>-opt"
 EOF
-    cd $PACKAGES_DIR/Modules/<MODULES>/mpich_clang; rm <TRILINOS>-opt
+    cd "$PACKAGES_DIR/Modules/<MODULES>/mpich_clang; rm <TRILINOS>-opt"
     ln -s ../modulefiles/moose/.<MPICH>_<CLANG>_<TRILINOS>-opt <TRILINOS>-opt
 }
 ##
@@ -151,10 +151,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-PACKAGES_DIR=<PACKAGES_DIR>
-RELATIVE_DIR=<RELATIVE_DIR>
-DOWNLOAD_DIR=<DOWNLOAD_DIR>
-TEMP_PREFIX=<TEMP_PREFIX>
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
 MOOSE_JOBS=<MOOSE_JOBS>
 KEEP_FAILED=<KEEP_FAILED>
-source $RELATIVE_DIR/functions $@
+source "$RELATIVE_DIR/functions" $@

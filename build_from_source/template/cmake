@@ -24,16 +24,16 @@ pre_run() {
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/adv_modules/cmake
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/adv_modules/cmake"
 #%Module1.0#####################################################################
 ##
 ## <CMAKE> modulefile
 ##
 ##
 ##
-set          BASE_PATH          $PACKAGES_DIR
+set          BASE_PATH          "$PACKAGES_DIR"
 
-prepend-path PATH               \$BASE_PATH/<CMAKE>/bin
+prepend-path PATH               "\$BASE_PATH/<CMAKE>/bin"
 EOF
 }
 ##
@@ -53,10 +53,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-PACKAGES_DIR=<PACKAGES_DIR>
-RELATIVE_DIR=<RELATIVE_DIR>
-DOWNLOAD_DIR=<DOWNLOAD_DIR>
-TEMP_PREFIX=<TEMP_PREFIX>
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
 MOOSE_JOBS=<MOOSE_JOBS>
 KEEP_FAILED=<KEEP_FAILED>
-source $RELATIVE_DIR/functions $@
+source "$RELATIVE_DIR/functions" $@

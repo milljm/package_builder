@@ -44,7 +44,7 @@ EOF
 
 pre_run() {
     unset MODULEPATH
-    source $PACKAGES_DIR/Modules/<MODULES>/init/bash
+    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
     module load advanced_modules cmake moose/.<OPENMPI>_<GCC> moose/.<BLASLAPACK>
     CONFIGURE="./configure \
 --prefix=$PACKAGES_DIR/<PETSC_ALT>/<OPENMPI>_<GCC>-dbg \
@@ -80,20 +80,20 @@ pre_run() {
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<PETSC_ALT>_<OPENMPI>_<GCC>-dbg
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<PETSC_ALT>_<OPENMPI>_<GCC>-dbg"
 #%Module1.0#####################################################################
 ##
 ## <OPENMPI> <GCC> <PETSC_ALT> debug superlu modulefile
 ##
 ##
 ##
-set         BASE_PATH        $PACKAGES_DIR
+set         BASE_PATH        "$PACKAGES_DIR"
 if { ! [ is-loaded moose/.<BLASLAPACK> ] || ! [ is-loaded blaslapack ] } {
   module load moose/.<BLASLAPACK>
 }
-setenv      PETSC_DIR        \$BASE_PATH/<PETSC_ALT>/<OPENMPI>_<GCC>-dbg
+setenv      PETSC_DIR        "\$BASE_PATH/<PETSC_ALT>/<OPENMPI>_<GCC>-dbg"
 EOF
-    cd $PACKAGES_DIR/Modules/<MODULES>/openmpi_gcc
+    cd "$PACKAGES_DIR/Modules/<MODULES>/openmpi_gcc"
     ln -s ../modulefiles/moose/.<PETSC_ALT>_<OPENMPI>_<GCC>-dbg <PETSC_ALT>-dbg
 
 }
@@ -115,10 +115,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-PACKAGES_DIR=<PACKAGES_DIR>
-RELATIVE_DIR=<RELATIVE_DIR>
-DOWNLOAD_DIR=<DOWNLOAD_DIR>
-TEMP_PREFIX=<TEMP_PREFIX>
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
 MOOSE_JOBS=<MOOSE_JOBS>
 KEEP_FAILED=<KEEP_FAILED>
-source $RELATIVE_DIR/functions $@
+source "$RELATIVE_DIR/functions" $@

@@ -26,7 +26,7 @@ pre_run() {
 
 post_run() {
   for sfile in `ls $RELATIVE_DIR/../common_files`; do
-    cp -R $RELATIVE_DIR/../common_files/$sfile $PACKAGES_DIR
+    cp -R "$RELATIVE_DIR/../common_files/$sfile" "$PACKAGES_DIR"
   done
 }
 ##
@@ -46,10 +46,10 @@ post_run() {
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-PACKAGES_DIR=<PACKAGES_DIR>
-RELATIVE_DIR=<RELATIVE_DIR>
-DOWNLOAD_DIR=<DOWNLOAD_DIR>
-TEMP_PREFIX=<TEMP_PREFIX>
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
 MOOSE_JOBS=<MOOSE_JOBS>
 KEEP_FAILED=<KEEP_FAILED>
-source $RELATIVE_DIR/functions $@
+source "$RELATIVE_DIR/functions" $@
