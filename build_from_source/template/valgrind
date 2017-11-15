@@ -63,11 +63,11 @@ EOF
     patch -p1 < darwin.patch
     unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
-    module load moose/.<GCC>
-    CONFIGURE='./configure --prefix=$PACKAGES_DIR/<VALGRIND> --enable-only64bit'
+    module load advanced_modules autotools moose/.<MPICH>_<GCC>
+    CONFIGURE='./configure --prefix=$PACKAGES_DIR/<VALGRIND> --disable-dependency-tracking --enable-only64bit --build=amd64-darwin'
 }
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/adv_modules/<VALGRIND>
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/adv_modules/valgrind
 #%Module1.0#####################################################################
 ##
 ## <VALGRIND> modulefile

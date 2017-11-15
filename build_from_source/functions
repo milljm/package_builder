@@ -261,7 +261,7 @@ build() {
 
     echo -e "\nBuilding $ME with JOB count: $MOOSE_JOBS"
     make -j $MOOSE_JOBS
-    if [ $? -ne 0 ] && [ "$TYRING" = "FALSE" ]; then echo "Failed to make $1"; cleanup 1; fi
+    if [ $? -ne 0 ] && [ "$TRYING" = "FALSE" ]; then echo "Failed to make $1"; cleanup 1; fi
 }
 
 make_install() {
@@ -271,7 +271,7 @@ make_install() {
 
     echo -e "\nInstalling $PACKAGE..."
     make install
-    if [ $? -ne 0 ] && [ "$TYRING" = "FALSE" ]; then echo "Failed to install $1"; cleanup 1; fi
+    if [ $? -ne 0 ] && [ "$TRYING" = "FALSE" ]; then echo "Failed to install $1"; cleanup 1; fi
 
     # Make sure we have a symlink from lib64 to lib
     # OpenSUSE for example is creating nothing but lib64 directories when we are
@@ -282,8 +282,8 @@ make_install() {
 fix_libs() {
     # Find any lib64 directories and symlink them to lib if lib does not exist
     # (example: lib and lib64 properly exist in GCC builds)
-    if [ -d $PACKAGES_DIR/$PACKAGE/lib64 ] && ! [ -d $PACKAGES_DIR/$PACKAGE/lib ]; then
-        ln -s $PACKAGES_DIR/$PACKAGE/lib64 $PACKAGES_DIR/$PACKAGE/lib
+    if [ -d "$PACKAGES_DIR/$PACKAGE/lib64" ] && ! [ -d "$PACKAGES_DIR/$PACKAGE/lib" ]; then
+        ln -s "$PACKAGES_DIR/$PACKAGE/lib64" "$PACKAGES_DIR/$PACKAGE/lib"
     fi
 }
 
