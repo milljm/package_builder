@@ -27,7 +27,8 @@ freeglut3-dev \
 libxt-dev \
 libncurses5-dev \
 libedit-dev \
-zlib1g-dev
+zlib1g-dev \
+libperl-dev
 ```
 
 RedHat (CentOS):
@@ -50,7 +51,8 @@ freeglut3-devel \
 libXt-devel \
 ncurses-devel \
 libedit-devel \
-zlib-devel
+zlib-devel \
+libperl-devel
 ```
 
 For Darwin machines, simply having Xcode and Xcode Command Line Tools package will suffice.

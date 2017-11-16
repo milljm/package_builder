@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules gcc)
+DEP=(modules gcc mpich-gcc)
 PACKAGE="<VALGRIND>"
 NO_CCACHE='true'
 

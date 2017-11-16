@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules glib pango)
+DEP=(modules glib pango pcre)
 PACKAGE="<GRAPHVIZ>"
 
 #####

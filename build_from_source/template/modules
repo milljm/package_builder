@@ -95,46 +95,78 @@ if { [ info exists ::env(HOME) ] } {
   }
 }
 EOF
-    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
+    if [ `uname` = "Darwin" ]; then
+        cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
 #%Module1.0#####################################################################
 ##
 ## MOOSE Tools Module
 ##
 ##
 ##
-set             BASE_PATH        "$PACKAGES_DIR"
+set             BASE_PATH       "$PACKAGES_DIR"
 
 # SEACAS (insternally used)
 if { [uname sysname] != "Darwin" } {
   prepend-path  LD_LIBRARY_PATH  "\$BASE_PATH/seacas/lib"
 }
-prepend-path    PATH             "\$BASE_PATH/seacas/bin:$BASE_PATH/seacas/etc"
-prepend-path    MANPATH          "\$BASE_PATH/seacas/share/man"
-setenv          ACCESS           "\$BASE_PATH/seacas"
+prepend-path    PATH            "\$BASE_PATH/seacas/bin:$BASE_PATH/seacas/etc"
+prepend-path    MANPATH         "\$BASE_PATH/seacas/share/man"
+setenv          ACCESS          "\$BASE_PATH/seacas"
 
-# Darwin Specific
-if { [uname sysname] == "Darwin" } {
-  prepend-path        PATH            "\$BASE_PATH/<PKG_CONFIG>/bin"
-  prepend-path        PATH            "\$BASE_PATH/<GLIB>/bin"
-  prepend-path        PKG_CONFIG_PATH "\$BASE_PATH/<PKG_CONFIG>/pkgconfig"
-}
-
-# Binary PATH for Doxygen / Graphviz / Lcov / GNUPlot
-prepend-path    PATH             "\$BASE_PATH/<DOXYGEN>/bin"
-prepend-path    PATH             "\$BASE_PATH/<GRAPHVIZ>/bin"
-prepend-path    PATH             "\$BASE_PATH/<LCOV>/usr/bin"
-prepend-path    PATH             "\$BASE_PATH/<GNUPLOT>/bin"
+# Binary PATH for supporting binaries
+prepend-path    PKG_CONFIG_PATH "\$BASE_PATH/<PKG_CONFIG>/pkgconfig"
+prepend-path    PATH            "\$BASE_PATH/<PKG_CONFIG>/bin"
+prepend-path    PATH            "\$BASE_PATH/<GLIB>/bin"
+prepend-path    PATH            "\$BASE_PATH/<DOXYGEN>/bin"
+prepend-path    PATH            "\$BASE_PATH/<GRAPHVIZ>/bin"
+prepend-path    PATH            "\$BASE_PATH/<LCOV>/usr/bin"
+prepend-path    PATH            "\$BASE_PATH/<GNUPLOT>/bin"
 
 # MAN Pages for Doxygen / Graphviz / Lcov / GNUPlot
-prepend-path    MANPATH          "\$BASE_PATH/<DOXYGEN>/man"
-prepend-path    MANPATH          "\$BASE_PATH/<GRAPHVIZ>/share/man"
-prepend-path    MANPATH          "\$BASE_PATH/<LCOV>/usr/share/man"
-prepend-path    MANPATH          "\$BASE_PATH/<GNUPLOT>/share/man"
+prepend-path    MANPATH         "\$BASE_PATH/<DOXYGEN>/man"
+prepend-path    MANPATH         "\$BASE_PATH/<GRAPHVIZ>/share/man"
+prepend-path    MANPATH         "\$BASE_PATH/<LCOV>/usr/share/man"
+prepend-path    MANPATH         "\$BASE_PATH/<GNUPLOT>/share/man"
 
 # Load miniconda (enables Peacock)
 module load miniconda
 
 EOF
+    else
+        cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
+#%Module1.0#####################################################################
+##
+## MOOSE Tools Module
+##
+##
+##
+set             BASE_PATH       "$PACKAGES_DIR"
+
+# SEACAS (insternally used)
+if { [uname sysname] != "Darwin" } {
+  prepend-path  LD_LIBRARY_PATH  "\$BASE_PATH/seacas/lib"
+}
+prepend-path    PATH            "\$BASE_PATH/seacas/bin:$BASE_PATH/seacas/etc"
+prepend-path    MANPATH         "\$BASE_PATH/seacas/share/man"
+setenv          ACCESS          "\$BASE_PATH/seacas"
+
+# Binary PATH for supporting binaries
+prepend-path    PATH            "\$BASE_PATH/<DOXYGEN>/bin"
+prepend-path    PATH            "\$BASE_PATH/<GRAPHVIZ>/bin"
+prepend-path    PATH            "\$BASE_PATH/<LCOV>/usr/bin"
+prepend-path    PATH            "\$BASE_PATH/<GNUPLOT>/bin"
+
+# MAN Pages for Doxygen / Graphviz / Lcov / GNUPlot
+prepend-path    MANPATH         "\$BASE_PATH/<DOXYGEN>/man"
+prepend-path    MANPATH         "\$BASE_PATH/<GRAPHVIZ>/share/man"
+prepend-path    MANPATH         "\$BASE_PATH/<LCOV>/usr/share/man"
+prepend-path    MANPATH         "\$BASE_PATH/<GNUPLOT>/share/man"
+
+# Load miniconda (enables Peacock)
+module load miniconda
+
+EOF
+    fi
     cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-dev-clang"
 #%Module1.0#####################################################################
 ##
