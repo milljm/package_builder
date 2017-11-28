@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules cmake gcc llvm mpich-clang blaslapack)
+DEP=(modules cmake gcc llvm mpich-clang)
 PACKAGE="<MPICH>_<CLANG>-dbg"
 BASE_DIR="<PETSC_DEFAULT>"
 
@@ -45,7 +45,7 @@ EOF
 pre_run() {
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
-    module load advanced_modules cmake moose/.<MPICH>_<CLANG> moose/.<BLASLAPACK>
+    module load advanced_modules cmake moose/.<MPICH>_<CLANG>
     CONFIGURE="./configure \
 --prefix=$PACKAGES_DIR/<PETSC_DEFAULT>/<MPICH>_<CLANG>-dbg \
 --download-hypre=1 \
@@ -56,7 +56,7 @@ pre_run() {
 --with-cc=mpicc \
 --with-cxx=mpicxx \
 --with-fc=mpif90 \
---with-blas-lapack-dir=$BLASLAPACK_DIR/lib \
+--download-fblaslapack=1 \
 --download-metis=1 \
 --download-parmetis=1 \
 --download-superlu_dist=1 \
@@ -88,9 +88,6 @@ post_run() {
 ##
 ##
 set         BASE_PATH        "$PACKAGES_DIR"
-if { ! [ is-loaded moose/.<BLASLAPACK> ] || ! [ is-loaded blaslapack ] } {
-  module load moose/.<BLASLAPACK>
-}
 setenv      PETSC_DIR        "\$BASE_PATH/<PETSC_DEFAULT>/<MPICH>_<CLANG>-dbg"
 EOF
 

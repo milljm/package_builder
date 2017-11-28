@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules cmake gcc llvm openmpi-clang blaslapack)
+DEP=(modules cmake gcc llvm openmpi-clang)
 PACKAGE="<OPENMPI>_<CLANG>-opt"
 BASE_DIR="<PETSC_DEFAULT>"
 
@@ -45,7 +45,7 @@ EOF
 pre_run() {
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
-    module load advanced_modules cmake moose/.<OPENMPI>_<CLANG> moose/.<BLASLAPACK>
+    module load advanced_modules cmake moose/.<OPENMPI>_<CLANG>
     CONFIGURE="./configure \
 --prefix=$PACKAGES_DIR/<PETSC_DEFAULT>/<OPENMPI>_<CLANG>-opt \
 --download-hypre=1 \
@@ -56,7 +56,7 @@ pre_run() {
 --with-cc=mpicc \
 --with-cxx=mpicxx \
 --with-fc=mpif90 \
---with-blas-lapack-dir=$BLASLAPACK_DIR/lib \
+--download-fblaslapack=1 \
 --download-metis=1 \
 --download-parmetis=1 \
 --download-superlu_dist=1 \
@@ -88,109 +88,7 @@ post_run() {
 ##
 ##
 set         BASE_PATH        "$PACKAGES_DIR"
-if { ! [ is-loaded moose/.<BLASLAPACK> ] || ! [ is-loaded blaslapack ] } {
-  module load moose/.<BLASLAPACK>
-}
 setenv      PETSC_DIR        "\$BASE_PATH/<PETSC_DEFAULT>/<OPENMPI>_<CLANG>-opt"
-EOF
-
-    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/civet/openmpi-clang-petsc_default-vtk-trilinos-opt"
-#%Module1.0#####################################################################
-##
-## Civet support module
-## <PETSC_DEFAULT>
-## <CLANG>
-## <OPENMPI>
-## <VTK>
-## <TRILINOS>
-##
-module load moose/.<OPENMPI>_<CLANG>
-module load moose/.<PETSC_DEFAULT>_<OPENMPI>_<CLANG>-opt
-module load moose/.<VTK>_<CLANG>
-module load moose/.<TBB>
-module load moose/.<CPPUNIT>_<CLANG>
-module load moose/.<OPENMPI>_<CLANG>_<TRILINOS>-opt
-module load ccache
-module load moose-tools
-
-EOF
-
-    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/civet/openmpi-clang-petsc_default-vtk-trilinos-dbg"
-#%Module1.0#####################################################################
-##
-## Civet support module
-## <PETSC_DEFAULT>
-## <CLANG>
-## <OPENMPI>
-## <VTK>
-## <TRILINOS>
-##
-module load moose/.<OPENMPI>_<CLANG>
-module load moose/.<PETSC_DEFAULT>_<OPENMPI>_<CLANG>-opt
-module load moose/.<VTK>_<CLANG>
-module load moose/.<TBB>
-module load moose/.<CPPUNIT>_<CLANG>
-module load moose/.<OPENMPI>_<CLANG>_<TRILINOS>-dbg
-module load ccache
-module load moose-tools
-
-EOF
-
-    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/civet/openmpi-clang-petsc_default-trilinos-opt"
-#%Module1.0#####################################################################
-##
-## Civet support module
-## <PETSC_DEFAULT>
-## <CLANG>
-## <OPENMPI>
-## <TRILINOS>
-##
-module load moose/.<OPENMPI>_<CLANG>
-module load moose/.<PETSC_DEFAULT>_<OPENMPI>_<CLANG>-opt
-module load moose/.<TBB>
-module load moose/.<CPPUNIT>_<CLANG>
-module load moose/.<OPENMPI>_<CLANG>_<TRILINOS>-opt
-module load ccache
-module load moose-tools
-
-EOF
-
-    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/civet/openmpi-clang-petsc_default-trilinos-dbg"
-#%Module1.0#####################################################################
-##
-## Civet support module
-## <PETSC_DEFAULT>
-## <CLANG>
-## <OPENMPI>
-## <TRILINOS>
-##
-module load moose/.<OPENMPI>_<CLANG>
-module load moose/.<PETSC_DEFAULT>_<OPENMPI>_<CLANG>-opt
-module load moose/.<TBB>
-module load moose/.<CPPUNIT>_<CLANG>
-module load moose/.<OPENMPI>_<CLANG>_<TRILINOS>-dbg
-module load ccache
-module load moose-tools
-
-EOF
-
-    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/civet/openmpi-clang-petsc_default-vtk"
-#%Module1.0#####################################################################
-##
-## Civet support module
-## <PETSC_DEFAULT>
-## <CLANG>
-## <OPENMPI>
-## <VTK>
-##
-module load moose/.<OPENMPI>_<CLANG>
-module load moose/.<PETSC_DEFAULT>_<OPENMPI>_<CLANG>-opt
-module load moose/.<VTK>_<CLANG>
-module load moose/.<TBB>
-module load moose/.<CPPUNIT>_<CLANG>
-module load ccache
-module load moose-tools
-
 EOF
 
     cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/civet/openmpi-clang-petsc_default"
