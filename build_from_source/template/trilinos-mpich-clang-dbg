@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules cmake mpich-clang petsc-default-mpich-clang-opt)
+DEP=(modules cmake mpich-clang)
 PACKAGE="<MPICH>_<CLANG>-dbg"
 BASE_DIR="<TRILINOS>"
 
@@ -23,7 +23,7 @@ INSTALL='true'
 pre_run() {
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
-    module load advanced_modules cmake moose/.<MPICH>_<CLANG> moose/.<PETSC_DEFAULT>_<MPICH>_<CLANG>-opt
+    module load advanced_modules cmake moose/.<MPICH>_<CLANG>
 
     # Clone Trilinos
     try_command 5 "git clone https://github.com/trilinos/Trilinos.git"
@@ -105,10 +105,6 @@ cmake \
 -D TPL_ENABLE_HWLOC=OFF \
 -D TPL_ENABLE_BoostLib=OFF \
 -D TPL_ENABLE_Boost=OFF \
--D LAPACK_LIBRARY_DIRS=$PETSC_DIR/lib \
--D BLAS_LIBRARY_DIRS=$PETSC_DIR/lib \
--D TPL_LAPACK_LIBRARIES=$PETSC_DIR/lib/libflapack.a \
--D TPL_BLAS_LIBRARIES=$PETSC_DIR/lib/libfblas.a \
 ..
 "
 }
@@ -122,11 +118,7 @@ post_run() {
 ##
 ##
 set          BASE_PATH          "$PACKAGES_DIR"
-
-if { [uname sysname] != "Darwin" } {
-  prepend-path         LD_LIBRARY_PATH     "\$BASE_PATH/<TRILINOS>/<MPICH>_<CLANG>-dbg/lib"
-}
-setenv       TRILINOS_DIR                "\$BASE_PATH/<TRILINOS>/<MPICH>_<CLANG>-dbg"
+setenv       TRILINOS_DIR       "\$BASE_PATH/<TRILINOS>/<MPICH>_<CLANG>-dbg"
 EOF
 
     cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/civet/mpich-clang-petsc_alt-vtk-trilinos-dbg"
