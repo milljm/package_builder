@@ -3,8 +3,8 @@
 ## Specifics
 ##
 DEP=(modules cmake gcc llvm mpich-clang)
-PACKAGE='<PETSC_DEFAULT>-64-mpich-clang'
-SERIAL=True
+PACKAGE="<MPICH>_<CLANG>-64"
+BASE_DIR="<PETSC_DEFAULT>"
 
 #####
 # Set the operating system allowed to build this module
@@ -21,19 +21,33 @@ BUILD='false'
 INSTALL='false'
 
 clean_petsc() {
-    if [ -d $PACKAGES_DIR/petsc/mpich_<PETSC_DEFAULT>/clang-opt-64 ]; then
-	rm -rf $PACKAGES_DIR/petsc/mpich_<PETSC_DEFAULT>/clang-opt-64
-    fi
     clean_attempt
     extract
+    # Fix for darwin Fortran linking issue:
+    if [ `uname` = "Darwin" ]; then
+        cat << "EOF" > petsc_darwin.patch
+--- config/BuildSystem/config/libraries.py	2017-04-24 07:46:27.000000000 -0600
++++ config/BuildSystem/config/libraries.py	2017-10-25 15:59:23.000000000 -0600
+@@ -51,7 +51,7 @@
+         flagSubst = self.language[-1].upper()+'_LINKER_SLFLAG'
+         dirname   = os.path.dirname(library).replace('\\ ',' ').replace(' ', '\\ ').replace('\\(','(').replace('(', '\\(').replace('\\)',')').replace(')', '\\)')
+         if dirname.startswith('/Applications/Xcode.app') or dirname.startswith('/Library/Developer/CommandLineTools/usr/lib'): with_rpath = None
+-        if with_rpath:
++        if False:
+           if hasattr(self.setCompilers, flagName) and not getattr(self.setCompilers, flagName) is None:
+             return [getattr(self.setCompilers, flagName)+dirname,'-L'+dirname,'-l'+name]
+           if flagSubst in self.argDB:
+EOF
+        patch -p0 < petsc_darwin.patch
+    fi
 }
 
 pre_run() {
     unset MODULEPATH
-    source $PACKAGES_DIR/Modules/<MODULES>/init/bash
-    module load advanced_modules cmake mpich-clang
+    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    module load advanced_modules cmake moose/.<MPICH>_<CLANG>
     CONFIGURE="./configure \
---prefix=$PACKAGES_DIR/petsc/mpich_<PETSC_DEFAULT>/clang-opt-64 \
+--prefix=$PACKAGES_DIR/<PETSC_DEFAULT>/<MPICH>_<CLANG>-64 \
 --download-hypre=1 \
 --with-ssl=0 \
 --with-debugging=no \
@@ -56,27 +70,27 @@ pre_run() {
 -F77FLAGS='-fPIC -fopenmp'"
 
     if [ `uname` = "Darwin" ]; then
-	try_command 3 "clean_petsc; configure; make MAKE_NP=1 PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-darwin-c-opt all; make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-darwin-c-opt install"
+	try_command 3 "clean_petsc; configure; make MAKE_NP=$MOOSE_JOBS PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-darwin-c-opt all; make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-darwin-c-opt install"
     else
-	try_command 3 "clean_petsc; configure; make MAKE_NP=1 PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-opt all; make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-opt install"
+	try_command 3 "clean_petsc; configure; make MAKE_NP=$MOOSE_JOBS PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-opt all; make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-opt install"
     fi
     # So we do not run configure a second time
     CONFIGURE="false"
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.mpich_<PETSC_DEFAULT>-64-clang
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<PETSC_DEFAULT>_<MPICH_<CLANG>-64"
 #%Module1.0#####################################################################
 ##
-## MPICH Clang <PETSC_DEFAULT> 64bit indices modulefile
+## <MPICH> <CLANG> <PETSC_DEFAULT> 64bit indices modulefile
 ##
 ##
 ##
-set         BASE_PATH        $PACKAGES_DIR
-setenv      PETSC_DIR        \$BASE_PATH/petsc/mpich_<PETSC_DEFAULT>/clang-opt-64
+set         BASE_PATH        "$PACKAGES_DIR"
+setenv      PETSC_DIR        "\$BASE_PATH/<PETSC_DEFAULT>/<MPICH>_<CLANG>-64"
 EOF
 
-        cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/mpich-clang-petsc_default_64
+        cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/civet/mpich-clang-petsc_default_64"
 #%Module1.0#####################################################################
 ##
 ## Civet support module
@@ -84,16 +98,16 @@ EOF
 ## <CLANG>
 ## <MPICH>
 ##
-module load moose/.<MPICH>_clang
-module load moose/.mpich_<PETSC_DEFAULT>-64-clang
+module load moose/.<MPICH>_<CLANG>
+module load moose/.<PETSC_DEFAULT>_<MPICH_<CLANG>-64
 module load moose/.<TBB>
-module load moose/.<CPPUNIT>-clang
+module load moose/.<CPPUNIT>_<CLANG>
 module load ccache
 module load moose-tools
 
 EOF
-    cd $PACKAGES_DIR/Modules/<MODULES>/mpich_clang
-    ln -s ../modulefiles/moose/.mpich_<PETSC_DEFAULT>-64-clang <PETSC_DEFAULT>-64
+    cd "$PACKAGES_DIR/Modules/<MODULES>/mpich_clang"
+    ln -s ../modulefiles/moose/.<PETSC_DEFAULT>_<MPICH_<CLANG>-64 <PETSC_DEFAULT>-64
 }
 
 ##
@@ -113,4 +127,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source "$RELATIVE_DIR/functions" $@

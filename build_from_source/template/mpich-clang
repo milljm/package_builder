@@ -3,7 +3,8 @@
 ## Specifics
 ##
 DEP=(modules gcc llvm)
-PACKAGE='mpich-clang'
+PACKAGE="<CLANG>"
+BASE_DIR="<MPICH>"
 
 #####
 # Set the operating system allowed to build this module
@@ -15,39 +16,37 @@ ARCH=(Darwin Linux)
 # This is useful for items like 'autojump' which requires a git clone/checkout
 DOWNLOAD='http://mooseframework.org/source_packages/<MPICH>.tar.gz'
 EXTRACT='<MPICH>.tar.gz'
-CONFIGURE="../configure --prefix=$PACKAGES_DIR/mpich/<MPICH>/clang-opt --enable-shared --enable-sharedlibs=clang --enable-fast=03 --enable-debuginfo --enable-totalview --enable-two-level-namespace CC=clang CXX=clang++ FC=gfortran F77=gfortran F90='' CFLAGS='' CXXFLAGS='' FFLAGS='' FCFLAGS='' F90FLAGS='' F77FLAGS=''"
+CONFIGURE='false'
 BUILD='true'
 INSTALL='true'
 
 pre_run() {
-    if [ -d $PACKAGES_DIR/mpich/<MPICH>/clang-opt ]; then
-	rm -rf $PACKAGES_DIR/mpich/<MPICH>/clang-opt
-    fi
     mkdir clang-opt; cd clang-opt
     unset MODULEPATH
-    source $PACKAGES_DIR/Modules/<MODULES>/init/bash
-    module load advanced_modules clang
+    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    module load moose/.<CLANG>
+    CONFIGURE="../configure --prefix=$PACKAGES_DIR/<MPICH>/<CLANG> --enable-shared --enable-sharedlibs=clang --enable-fast=03 --enable-debuginfo --enable-totalview --enable-two-level-namespace CC=clang CXX=clang++ FC=gfortran F77=gfortran F90='' CFLAGS='' CXXFLAGS='' FFLAGS='' FCFLAGS='' F90FLAGS='' F77FLAGS=''"
 }
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<MPICH>_clang
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<MPICH>_<CLANG>"
 #%Module1.0#####################################################################
 ##
-## MPICH Clang
+## <MPICH> <CLANG>
 ##
-set BASE_PATH   $PACKAGES_DIR
+set BASE_PATH   "$PACKAGES_DIR"
 
-conflict moose/.<MPICH>_gcc moose/.<OPENMPI>_clang moose/.<OPENMPI>_gcc mpich_gcc openmpi_clang openmpi_gcc
+conflict moose/.<MPICH>_<GCC> moose/.<OPENMPI>_<CLANG> moose/.<OPENMPI>_<GCC> mpich_gcc openmpi_clang openmpi_gcc
 module load moose/.<CLANG>
 
-set             MPI_PATH                    \$BASE_PATH/mpich/<MPICH>/clang-opt
+set             MPI_PATH                    "\$BASE_PATH/<MPICH>/<CLANG>"
 if { [uname sysname] != "Darwin" } {
-  prepend-path    LD_LIBRARY_PATH  \$MPI_PATH/lib
+  prepend-path    LD_LIBRARY_PATH  "\$MPI_PATH/lib"
 }
 
-prepend-path    C_INCLUDE_PATH              \$MPI_PATH/include
-prepend-path    CPLUS_INCLUDE_PATH          \$MPI_PATH/include
-prepend-path    FPATH                       \$MPI_PATH/include
-prepend-path    MANPATH                     \$MPI_PATH/share/man
+prepend-path    C_INCLUDE_PATH              "\$MPI_PATH/include"
+prepend-path    CPLUS_INCLUDE_PATH          "\$MPI_PATH/include"
+prepend-path    FPATH                       "\$MPI_PATH/include"
+prepend-path    MANPATH                     "\$MPI_PATH/share/man"
 
 setenv CC       mpicc
 setenv CXX      mpicxx
@@ -55,32 +54,32 @@ setenv F90      mpif90
 setenv F77      mpif77
 setenv FC       mpif90
 
-setenv          MPI_HOME                    \$MPI_PATH
-prepend-path    PATH                        \$MPI_PATH/bin
+setenv          MPI_HOME                    "\$MPI_PATH"
+prepend-path    PATH                        "\$MPI_PATH/bin"
 
 EOF
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/adv_modules/mpich-clang
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/adv_modules/mpich-clang"
 #%Module1.0#####################################################################
 ##
-## MPICH Clang
+## <MPICH> <CLANG>
 ##
-set BASE_PATH   $PACKAGES_DIR
+set BASE_PATH   "$PACKAGES_DIR"
 
-conflict moose/.<MPICH>_clang moose/.<MPICH>_gcc moose/.<OPENMPI>_clang moose/.<OPENMPI>_gcc mpich_gcc openmpi_clang openmpi_gcc
+conflict moose/.<MPICH>_<CLANG> moose/.<MPICH>_<GCC> moose/.<OPENMPI>_<CLANG> moose/.<OPENMPI>_<GCC> mpich_gcc openmpi_clang openmpi_gcc
 
-if { ! [ is-loaded clang ] } {
+if { ! [ is-loaded <CLANG> ] || ! [ is-loaded moose/.<CLANG> ] } {
   module load moose/.<CLANG>
 }
 
-set             MPI_PATH                    \$BASE_PATH/mpich/<MPICH>/clang-opt
+set             MPI_PATH                    "\$BASE_PATH/<MPICH>/<CLANG>"
 if { [uname sysname] != "Darwin" } {
-  prepend-path    LD_LIBRARY_PATH  \$MPI_PATH/lib
+  prepend-path    LD_LIBRARY_PATH  "\$MPI_PATH/lib"
 }
 
-prepend-path    C_INCLUDE_PATH              \$MPI_PATH/include
-prepend-path    CPLUS_INCLUDE_PATH          \$MPI_PATH/include
-prepend-path    FPATH                       \$MPI_PATH/include
-prepend-path    MANPATH                     \$MPI_PATH/share/man
+prepend-path    C_INCLUDE_PATH              "\$MPI_PATH/include"
+prepend-path    CPLUS_INCLUDE_PATH          "\$MPI_PATH/include"
+prepend-path    FPATH                       "\$MPI_PATH/include"
+prepend-path    MANPATH                     "\$MPI_PATH/share/man"
 
 setenv CC       mpicc
 setenv CXX      mpicxx
@@ -88,13 +87,13 @@ setenv F90      mpif90
 setenv F77      mpif77
 setenv FC       mpif90
 
-setenv          MPI_HOME                    \$MPI_PATH
-prepend-path    PATH                        \$MPI_PATH/bin
+setenv          MPI_HOME                    "\$MPI_PATH"
+prepend-path    PATH                        "\$MPI_PATH/bin"
 
-append-path     MODULEPATH                  \$BASE_PATH/Modules/<MODULES>/mpich_clang
+append-path     MODULEPATH                  "\$BASE_PATH/Modules/<MODULES>/mpich_clang"
 EOF
-    module load advanced_modules mpich-clang
-    cd $MPI_HOME/lib
+    module load moose/.<MPICH>_<CLANG>
+    cd "$MPI_HOME/lib"
     for sfile in `find . -type f -name "*.la"`; do
 	if [ `grep -c 'src_temp_' $sfile` -ge 1 ]; then
 	    echo 'editing file: '$sfile
@@ -119,4 +118,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source "$RELATIVE_DIR/functions" $@

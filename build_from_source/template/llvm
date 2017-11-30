@@ -3,7 +3,8 @@
 ## Specifics
 ##
 DEP=(modules miniconda cmake gcc)
-PACKAGE='llvm'
+PACKAGE="llvm-<LLVM>"
+NO_CCACHE='true'
 
 #####
 # Set the operating system allowed to build this module
@@ -20,64 +21,68 @@ BUILD='true'
 INSTALL='true'
 
 pre_run() {
-    if [ -d $PACKAGES_DIR/llvm-<LLVM> ]; then
-      rm -rf $PACKAGES_DIR/llvm-<LLVM>
-      rm -f $PACKAGES_DIR/Modules/<MODULES>/adv_modules/clang
-    fi
-
     cd $1
 
     # Extract/Move LLVM, Clang, Clang-Extras, compiler-rt, libcxx/abi, openmp
     # !!! NOTE: Order is important !!!
     LLVM_PACKAGES=(llvm cfe clang-tools-extra compiler-rt libcxx libcxxabi openmp)
     for LLVM_PACKAGE in ${LLVM_PACKAGES[*]}; do
-      tar -xf $DOWNLOAD_DIR/$LLVM_PACKAGE-<LLVM>.src.tar.xz -C .
+      tar -xf "$DOWNLOAD_DIR/$LLVM_PACKAGE-<LLVM>.src.tar.xz" -C .
       if [ $? -ne 0 ]; then echo 'Failed to extract '$LLVM_PACKAGE; cleanup 1; fi
       if [ $LLVM_PACKAGE = 'cfe' ]; then
-	mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/clang
+          mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/clang
       elif [ $LLVM_PACKAGE = 'clang-tools-extra' ]; then
-	mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/clang/tools/extra
+          mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/clang/tools/extra
       elif [ $LLVM_PACKAGE = 'llvm' ]; then
-	mv $LLVM_PACKAGE-<LLVM>.src $LLVM_PACKAGE
+          mv $LLVM_PACKAGE-<LLVM>.src $LLVM_PACKAGE
       else
-	mv $LLVM_PACKAGE-<LLVM>.src llvm/projects/$LLVM_PACKAGE
+          mv $LLVM_PACKAGE-<LLVM>.src llvm/projects/$LLVM_PACKAGE
       fi
     done
 
-    mkdir $1/build; cd $1/build
+    mkdir "$1/build"; cd "$1/build"
     unset MODULEPATH
-    source $PACKAGES_DIR/Modules/<MODULES>/init/bash
+    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
     module load advanced_modules cmake miniconda
+
+    # Enable RTTI. Apparently this needs to be exporting while running make
+    # https://llvm.org/docs/Packaging.html
+    export REQUIRES_RTTI=1
+
     if [ `uname` != "Darwin" ]; then
-      module load gcc
+      module load moose/.<GCC>
       export CC=gcc; export CXX=g++
-      cmake -DCMAKE_C_COMPILER=$PACKAGES_DIR/<GCC>/bin/gcc \
--DCMAKE_CXX_COMPILER=$PACKAGES_DIR/<GCC>/bin/g++ \
--DGCC_INSTALL_PREFIX=$PACKAGES_DIR/<GCC> \
+      cmake -DCMAKE_C_COMPILER="$PACKAGES_DIR/<GCC>/bin/gcc" \
+-DCMAKE_CXX_COMPILER="$PACKAGES_DIR/<GCC>/bin/g++" \
+-DGCC_INSTALL_PREFIX="$PACKAGES_DIR/<GCC>" \
 -DCMAKE_CXX_LINK_FLAGS="-L$PACKAGES_DIR/<GCC>/lib64 -Wl,-rpath,$PACKAGES_DIR/<GCC>/lib64" \
--DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/llvm-<LLVM> \
--DCMAKE_INSTALL_RPATH:STRING=$PACKAGES_DIR/llvm-<LLVM>/lib \
+-DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
+-DCMAKE_INSTALL_RPATH:STRING="$PACKAGES_DIR/$PACKAGE/lib" \
+-DCMAKE_BUILD_WITH_INSTALL_RPATH=1 \
 -DLLVM_ENABLE_ASSERTIONS=ON \
+-DLLVM_ENABLE_RTTI=ON \
 -DCMAKE_BUILD_TYPE="Release" \
 -DPYTHON_EXECUTABLE=`which python2.7` \
 -DLLVM_TARGETS_TO_BUILD="X86" \
 ../llvm
     else
-      cmake -DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/llvm-<LLVM> \
+      cmake -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
 -DLLVM_BUILD_EXTERNAL_COMPILER_RT=ON \
+-DLLVM_ENABLE_RTTI=ON \
 -DCLANG_DEFAULT_OPENMP_RUNTIME=libomp \
 -DPYTHON_EXECUTABLE=`which python2.7` \
 -DCMAKE_BUILD_TYPE="Release" \
+-DLLVM_TARGETS_TO_BUILD="X86" \
 ../llvm
     fi
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<CLANG>
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<CLANG>"
 #%Module1.0#####################################################################
 ##
 ## <CLANG> modulefile
 ##
 ##
 ##
-set             BASE_PATH          $PACKAGES_DIR
+set             BASE_PATH          "$PACKAGES_DIR"
 
 module load moose/.<GCC>
 
@@ -93,16 +98,16 @@ if { [uname sysname] != "Darwin" } {
       unsetenv        MOOSE_OMP
     }
   }
-  prepend-path    LD_LIBRARY_PATH               \$BASE_PATH/llvm-<LLVM>/lib
+  prepend-path    LD_LIBRARY_PATH               "\$BASE_PATH/$PACKAGE/lib"
 }
 
-prepend-path    PATH                          \$BASE_PATH/llvm-<LLVM>/bin
-prepend-path    LIBRARY_PATH                  \$BASE_PATH/llvm-<LLVM>/lib
+prepend-path    PATH                          "\$BASE_PATH/$PACKAGE/bin"
+prepend-path    LIBRARY_PATH                  "\$BASE_PATH/$PACKAGE/lib"
 
 # Needed for Python Clang bindings
 # >>> clang.cindex.Config.set_library_path(os.getenv('MOOSE_CLANG_LIB'))
-prepend-path    PYTHONPATH                    \$BASE_PATH/llvm-<LLVM>/bindings/python
-setenv          MOOSE_CLANG_LIB               \$BASE_PATH/llvm-<LLVM>/lib
+prepend-path    PYTHONPATH                    "\$BASE_PATH/$PACKAGE/bindings/python"
+setenv          MOOSE_CLANG_LIB               "\$BASE_PATH/$PACKAGE/lib"
 
 setenv          CC                            clang
 setenv          CXX                           clang++
@@ -110,15 +115,15 @@ EOF
 }
 
 post_run() {
-    cd $PACKAGES_DIR/Modules/<MODULES>/adv_modules
-    if [ -f $PACKAGES_DIR/Modules/<MODULES>/adv_modules/clang ]; then
-	rm -f clang
+    cd "$PACKAGES_DIR/Modules/<MODULES>/adv_modules"
+    if [ -f clang ]; then
+        rm -f clang
     fi
     ln -s ../modulefiles/moose/.<CLANG> clang
     if [ `uname` = "Darwin" ]; then
-	# Because DYLD_LIBRARY_PATH no longer exists, we have to modify
-	# rpaths in all the llvm libraries to be absolute paths
-	cat <<'EOF' > $PACKAGES_DIR/llvm-<LLVM>/lib/change_links.sh
+        # Because DYLD_LIBRARY_PATH no longer exists, we have to modify
+        # rpaths in all the llvm libraries to be absolute paths
+        cat <<'EOF' > "$PACKAGES_DIR/$PACKAGE/lib/change_links.sh"
 #!/bin/bash
 for sfile in `ls | grep dylib`; do
   if ! [ -L $sfile ]; then
@@ -139,13 +144,11 @@ for sfile in `ls | grep dylib`; do
   fi
 done
 EOF
-	  cd $PACKAGES_DIR/llvm-<LLVM>/lib/
-	  sh change_links.sh
-	  rm -f change_links.sh
-	  cd /usr/local/lib
-	  ln -s $PACKAGES_DIR/llvm-<LLVM>/lib/libomp.dyld .
+          cd "$PACKAGES_DIR/$PACKAGE/lib/"
+          sh change_links.sh
+          rm -f change_links.sh
     fi
-    cp -R $1/llvm/tools/clang/bindings $PACKAGES_DIR/llvm-<LLVM>/
+    cp -R "$1/llvm/tools/clang/bindings" "$PACKAGES_DIR/$PACKAGE/"
 }
 ##
 ## End Specifics
@@ -164,4 +167,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source "$RELATIVE_DIR/functions" $@

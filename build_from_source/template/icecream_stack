@@ -29,34 +29,38 @@ pre_run() {
     fi
 
     unset MODULEPATH
-    source $PACKAGES_DIR/Modules/<MODULES>/init/bash
+    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
     module load advanced_modules autotools
 
     for ICECREAM_PACKAGE in ${ICECREAM_PACKAGES[*]}; do
+      target_dir=$(tar -tf "$DOWNLOAD_DIR/$ICECREAM_PACKAGE" | sed -e 's@/.*@@' | uniq)
       cd $1
-      tar -xf $DOWNLOAD_DIR/$ICECREAM_PACKAGE -C .
+      tar -xf "$DOWNLOAD_DIR/$ICECREAM_PACKAGE" -C .
       if [ $? -ne 0 ]; then echo 'Failed to extract '$ICECREAM_PACKAGE; cleanup 1; fi
-      cd $(tar -tf $DOWNLOAD_DIR/$ICECREAM_PACKAGE | sed -e 's@/.*@@' | uniq)
-      if [ $? -ne 0 ]; then echo 'Failed to enter source directory '$(tar -tf $DOWNLOAD_DIR/$ICECREAM_PACKAGE | sed -e 's@/.*@@' | uniq); cleanup 1; fi
-      ./configure --prefix=$1/install_deps/$(tar -tf $DOWNLOAD_DIR/$ICECREAM_PACKAGE | sed -e 's@/.*@@' | uniq)
+      cd $target_dir
+      if [ $? -ne 0 ]; then echo "Failed to enter source directory $1/$target_dir"; cleanup 1; fi
+      ./configure --prefix="$1/install_deps/$target_dir"
       if [ $? -ne 0 ]; then echo 'Failed to configure Icecream pacakge: '$ICECREAM_PACKAGE; cleanup 1; fi
       make -j $MOOSE_JOBS
       if [ $? -ne 0 ]; then echo 'Failed to build Icecream pacakge: '$ICECREAM_PACKAGE; cleanup 1; fi
       make install
       if [ $? -ne 0 ]; then echo 'Failed to install Icecream pacakge: '$ICECREAM_PACKAGE; cleanup 1; fi
+      if [ -d "$1/install_deps/$target_dir/lib64" ] && ! [ -d "$1/install_deps/$target_dir/lib" ]; then
+          ln -s "$1/install_deps/$target_dir/lib64" "$1/install_deps/$target_dir/lib"
+      fi
     done
 }
 post_run() {
     cd $1
-    tar -xf $DOWNLOAD_DIR/icecream-master.tar.gz -C .
+    tar -xf "$DOWNLOAD_DIR/icecream-master.tar.gz" -C .
     if [ $? -ne 0 ]; then echo 'Failed to extract icecream-master.tar.gz'; cleanup 1; fi
-    cd $(tar -tf $DOWNLOAD_DIR/icecream-master.tar.gz | sed -e 's@/.*@@' | uniq)
-    if [ $? -ne 0 ]; then echo 'Failed to enter source directory '$(tar -tf $DOWNLOAD_DIR/icecream-master.tar.gz | sed -e 's@/.*@@' | uniq | cut -d. -f 2); cleanup 1; fi
-    PATH=$1/install_deps/libtool-2.4.6/bin:$PATH ./autogen.sh
+    cd $(tar -tf "$DOWNLOAD_DIR/icecream-master.tar.gz" | sed -e 's@/.*@@' | uniq)
+    if [ $? -ne 0 ]; then echo 'Failed to enter source directory '$(tar -tf "$DOWNLOAD_DIR/icecream-master.tar.gz" | sed -e 's@/.*@@' | uniq | cut -d. -f 2); cleanup 1; fi
+    PATH="$1/install_deps/libtool-2.4.6/bin:$PATH" ./autogen.sh
     if [ `uname` != 'Darwin' ]; then
-        LDFLAGS="-L$1/install_deps/lzo-2.09/lib -llzo2 -L$1/install_deps/libcap-ng-0.7.8/lib -lcap-ng" CPPFLAGS="-I$1/install_deps/libcap-ng-0.7.8/include -I$1/install_deps/lzo-2.09/include" ./configure --prefix=$PACKAGES_DIR/$PACKAGE --without-man
+        LDFLAGS="-L$1/install_deps/lzo-2.09/lib -llzo2 -L$1/install_deps/libcap-ng-0.7.8/lib -lcap-ng" CPPFLAGS="-I$1/install_deps/libcap-ng-0.7.8/include -I$1/install_deps/lzo-2.09/include" ./configure --prefix="$PACKAGES_DIR/$PACKAGE" --without-man
     else
-        LDFLAGS="-L$1/install_deps/lzo-2.09/lib -llzo2" CPPFLAGS="-I$1/install_deps/lzo-2.09/include" ./configure --prefix=$PACKAGES_DIR/$PACKAGE --without-man
+        LDFLAGS="-L$1/install_deps/lzo-2.09/lib -llzo2" CPPFLAGS="-I$1/install_deps/lzo-2.09/include" ./configure --prefix="$PACKAGES_DIR/$PACKAGE" --without-man
     fi
 
     if [ $? -ne 0 ]; then echo 'Failed to configure icecream'; cleanup 1; fi
@@ -65,28 +69,28 @@ post_run() {
     make install
     if [ $? -ne 0 ]; then echo 'Failed to install icecream'; cleanup 1; fi
     if [ `uname` != 'Darwin' ]; then
-        PATH=$PACKAGES_DIR/icecream/bin:$PATH icecc-create-env --clang $PACKAGES_DIR/llvm-<LLVM>/bin/clang $PACKAGES_DIR/llvm-<LLVM>/bin/clang++
+        PATH="$PACKAGES_DIR/icecream/bin:$PATH" icecc-create-env --clang "$PACKAGES_DIR/llvm-<LLVM>/bin/clang" "$PACKAGES_DIR/llvm-<LLVM>/bin/clang++"
         if [ $? -ne 0 ]; then echo 'Failed to create LLVM Icecream payload'; cleanup 1; fi
-        mv *.tar.gz $PACKAGES_DIR/$PACKAGE/clang_<LLVM>.tar.gz
-        PATH=$PACKAGES_DIR/icecream/bin:$PATH icecc-create-env --gcc $PACKAGES_DIR/<GCC>/bin/gcc $PACKAGES_DIR/<GCC>/bin/g++
+        mv *.tar.gz "$PACKAGES_DIR/$PACKAGE/clang_<LLVM>.tar.gz"
+        PATH="$PACKAGES_DIR/icecream/bin:$PATH" icecc-create-env --gcc "$PACKAGES_DIR/<GCC>/bin/gcc" "$PACKAGES_DIR/<GCC>/bin/g++"
         if [ $? -ne 0 ]; then echo 'Failed to create GCC Icecream payload'; cleanup 1; fi
-        mv *.tar.gz $PACKAGES_DIR/$PACKAGE/<GCC>.tar.gz
+        mv *.tar.gz "$PACKAGES_DIR/$PACKAGE/<GCC>.tar.gz"
     else
-        PATH=$PACKAGES_DIR/icecream/bin:$PATH icecc-create-env --clang $PACKAGES_DIR/llvm-<LLVM>/bin/clang
+        PATH="$PACKAGES_DIR/icecream/bin:$PATH" icecc-create-env --clang "$PACKAGES_DIR/llvm-<LLVM>/bin/clang"
         if [ $? -ne 0 ]; then echo 'Failed to create LLVM Icecream payload'; cleanup 1; fi
-        mv *.tar.gz $PACKAGES_DIR/$PACKAGE/clang_<LLVM>.tar.gz
+        mv *.tar.gz "$PACKAGES_DIR/$PACKAGE/clang_<LLVM>.tar.gz"
     fi
-    cd $PACKAGES_DIR/$PACKAGE/libexec/icecc/bin
-    ln -s $PACKAGES_DIR/$PACKAGE/bin/icecc clang
-    ln -s $PACKAGES_DIR/$PACKAGE/bin/icecc clang++
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/icecream
+    cd "$PACKAGES_DIR/$PACKAGE/libexec/icecc/bin"
+    ln -s "$PACKAGES_DIR/$PACKAGE/bin/icecc" clang
+    ln -s "$PACKAGES_DIR/$PACKAGE/bin/icecc" clang++
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/icecream"
 #%Module1.0#####################################################################
 ##
 ## ICECREAM Job Scheduler
 ##
 ##
 ##
-set             BASE_PATH          $PACKAGES_DIR
+set             BASE_PATH          "$PACKAGES_DIR"
 
 proc ModulesHelp { } {
         puts stderr "\n\tThis is the ICECREAM cluster module."
@@ -94,25 +98,27 @@ proc ModulesHelp { } {
         puts stderr "\n\tfor more instructions.\n"
 }
 
-if {[is-loaded ccache]} {
-  append-path  PATH           \$BASE_PATH/icecream/bin
+if {[is-loaded <CCACHE>]} {
+  append-path  PATH           "\$BASE_PATH/$PACKAGE/bin"
   setenv       CCACHE_PREFIX  "icecc"
 } else {
-  prepend-path PATH           \$BASE_PATH/icecream/libexec/icecc/bin:\$BASE_PATH/icecream/sbin:\$BASE_PATH/icecream/bin
+  prepend-path PATH           "\$BASE_PATH/$PACKAGE/libexec/icecc/bin:\$BASE_PATH/$PACKAGE/sbin:\$BASE_PATH/$PACKAGE/bin"
 }
 
-if {[is-loaded moose/.<GCC>] || [is-loaded gcc]} {
-  setenv  ICECC_VERSION         \$BASE_PATH/icecream/<GCC>.tar.gz
+if {[is-loaded moose/.<GCC>] || [is-loaded <GCC>]} {
+  setenv  ICECC_VERSION         "\$BASE_PATH/$PACKAGE/<GCC>.tar.gz"
 }
 
 ## check for clang _after_ we have checked and possibly found gcc.
 ## as clang does require the gcc module to be loaded, but we want to use
 ## clang first (in our path)
-if {[is-loaded moose/.<CLANG>] || [is-loaded clang]} {
-  setenv  ICECC_VERSION         \$BASE_PATH/icecream/clang_<LLVM>.tar.gz
+if {[is-loaded moose/.<CLANG>] || [is-loaded <CLANG>]} {
+  setenv  ICECC_VERSION         "\$BASE_PATH/$PACKAGE/clang_<LLVM>.tar.gz"
 }
 EOF
-    cat <<EOF > $PACKAGES_DIR/icecream/com.moose.icecream.plist
+
+    # No need to double quote spaces in plist files
+    cat <<EOF > "$PACKAGES_DIR/icecream/com.moose.icecream.plist"
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC -//Apple Computer//DTD PLIST 1.0//EN
 http://www.apple.com/DTDs/PropertyList-1.0.dtd >
@@ -122,7 +128,7 @@ http://www.apple.com/DTDs/PropertyList-1.0.dtd >
   <string>moosenet.icecream</string>
 <key>ProgramArguments</key>
   <array>
-    <string>$PACKAGES_DIR/icecream/sbin/iceccd</string>
+    <string>$PACKAGES_DIR/$PACKAGE/sbin/iceccd</string>
     <string>-s</string>
     <string>icecream.inl.gov</string>
     <string>-N</string>
@@ -157,4 +163,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source "$RELATIVE_DIR/functions" $@

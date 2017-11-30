@@ -3,7 +3,7 @@
 ## Specifics
 ##
 DEP=(modules gcc)
-PACKAGE='cmake'
+PACKAGE="<CMAKE>"
 
 #####
 # Set the operating system allowed to build this module
@@ -15,28 +15,25 @@ ARCH=(Darwin Linux)
 # This is useful for items like 'autojump' which requires a git clone/checkout
 DOWNLOAD='http://mooseframework.org/source_packages/<CMAKE>.tar.gz'
 EXTRACT='<CMAKE>.tar.gz'
-CONFIGURE="./configure --prefix=$PACKAGES_DIR/$PACKAGE"
+CONFIGURE="true"
 BUILD='true'
 INSTALL='true'
 
 pre_run() {
-    if [ -d $PACKAGES_DIR/$PACKAGE ]; then
-      rm -rf $PACKAGES_DIR/$PACKAGE
-    fi
     return
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/adv_modules/cmake
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/adv_modules/cmake"
 #%Module1.0#####################################################################
 ##
-## Cmake 3.x modulefile
+## <CMAKE> modulefile
 ##
 ##
 ##
-set          BASE_PATH          $PACKAGES_DIR
+set          BASE_PATH          "$PACKAGES_DIR"
 
-prepend-path PATH               \$BASE_PATH/cmake/bin
+prepend-path PATH               "\$BASE_PATH/<CMAKE>/bin"
 EOF
 }
 ##
@@ -56,4 +53,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source "$RELATIVE_DIR/functions" $@

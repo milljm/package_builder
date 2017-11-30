@@ -3,7 +3,8 @@
 ## Specifics
 ##
 DEP=(modules llvm)
-PACKAGE='cppunit-clang'
+PACKAGE="<CLANG>"
+BASE_DIR="<CPPUNIT>"
 
 #####
 # Set the operating system allowed to build this module
@@ -20,45 +21,43 @@ BUILD='true'
 INSTALL='true'
 
 pre_run() {
-    if [ -d $PACKAGES_DIR/<CPPUNIT>/clang-opt ]; then
-	rm -rf $PACKAGES_DIR/<CPPUNIT>/clang-opt
-    fi
     unset MODULEPATH
-    source $PACKAGES_DIR/Modules/<MODULES>/init/bash
-    module load advanced_modules clang
+    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    module load moose/.<CLANG>
     # we have to run this our selves with out error checking. Mac machines appear to exhibit a bug:
     #
     # rm: conftest.dSYS: is a directory
     #
-    # autoconf tries to `rm -f` a directory (which requires an additional -r switch) that appears to only be created on Mac machines.
+    # autoconf tries to `rm -f` a directory (which requires an additional -r switch) that appears to
+    # only be created on Mac machines. So ignore a configure error here. Dangerous...
     if [ `uname` = "Darwin" ]; then
-	./configure --prefix=$PACKAGES_DIR/<CPPUNIT>/clang-opt
+	./configure --prefix="$PACKAGES_DIR/<CPPUNIT>/<CLANG>"
     else
-	./configure --prefix=$PACKAGES_DIR/<CPPUNIT>/clang-opt
-	if [ $? -ne 0 ]; then echo "Error while configuring cppunit"; cleanup 1; fi
+	CONFIGURE='true'
     fi
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<CPPUNIT>-clang
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<CPPUNIT>_<CLANG>"
 #%Module1.0#####################################################################
 ##
-## CPPUnit Clang 
+## <CPPUNIT> <CLANG>
 ##
-set          BASE_PATH         $PACKAGES_DIR
+set          BASE_PATH         "$PACKAGES_DIR"
 
-set          CPPUNIT_PATH      \$BASE_PATH/<CPPUNIT>/clang-opt
-setenv       CPPUNIT_DIR       \$CPPUNIT_PATH
+set          CPPUNIT_PATH      "\$BASE_PATH/<CPPUNIT>/<CLANG>"
+setenv       CPPUNIT_DIR       "\$CPPUNIT_PATH"
 
 if { [uname sysname] != "Darwin" } {
-  prepend-path LD_LIBRARY_PATH  \$CPPUNIT_PATH/lib
+  prepend-path LD_LIBRARY_PATH  "\$CPPUNIT_PATH/lib"
 }
 
-prepend-path INCLUDE                     \$CPPUNIT_PATH/include
-prepend-path PATH                        \$CPPUNIT_PATH/bin
+prepend-path INCLUDE                     "\$CPPUNIT_PATH/include"
+prepend-path PATH                        "\$CPPUNIT_PATH/bin"
 EOF
-    cd $PACKAGES_DIR/Modules/<MODULES>/adv_modules
-    ln -s ../modulefiles/moose/.<CPPUNIT>-clang cppunit-clang
+    cd "$PACKAGES_DIR/Modules/<MODULES>/adv_modules"
+    if [ -f cppunit-clang ]; then rm -f cppunit-clang; fi
+    ln -s ../modulefiles/moose/.<CPPUNIT>_<CLANG> cppunit-clang
 }
 ##
 ## End Specifics
@@ -77,4 +76,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source "$RELATIVE_DIR/functions" $@

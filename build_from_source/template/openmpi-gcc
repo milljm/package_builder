@@ -3,7 +3,8 @@
 ## Specifics
 ##
 DEP=(modules gcc)
-PACKAGE='openmpi-gcc'
+PACKAGE="<GCC>"
+BASE_DIR="<OPENMPI>"
 SERIAL=True
 
 #####
@@ -21,48 +22,45 @@ BUILD='false'
 INSTALL='true'
 
 pre_run() {
-    if [ -d $PACKAGES_DIR/openmpi/<OPENMPI>/gcc-opt ]; then
-	rm -rf $PACKAGES_DIR/openmpi/<OPENMPI>/gcc-opt
-    fi
     unset MODULEPATH
-    source $PACKAGES_DIR/Modules/<MODULES>/init/bash
-    module load advanced_modules gcc
+    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    module load moose/.<GCC>
 
     # Build and enter out-of-tree directory
     mkdir gcc-opt; cd gcc-opt
 
     # Configure
-    ../configure --prefix=$PACKAGES_DIR/openmpi/<OPENMPI>/gcc-opt \
+    ../configure --prefix="$PACKAGES_DIR/<OPENMPI>/<GCC>" \
 CC=gcc CXX=g++ FC=gfortran F77=gfortran \
 CFLAGS='' CXXFLAGS='' FFLAGS='' FCFLAGS='' F77FLAGS=''
-    if [ $? -ne 0 ]; then echo "Failed to configure $PACKAGE"; cleanup 1; fi
+    if [ $? -ne 0 ]; then echo "Failed to configure $ME"; cleanup 1; fi
 
     # Make serially
     make -j 1
-    if [ $? -ne 0 ]; then echo "Failed to make $1"; cleanup 1; fi
+    if [ $? -ne 0 ]; then echo "Failed to make $ME"; cleanup 1; fi
 
 }
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<OPENMPI>_gcc
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<OPENMPI>_<GCC>"
 #%Module1.0#####################################################################
 ##
-## OpenMPI GCC
+## <OPENMPI> <GCC>
 ##
-set BASE_PATH   $PACKAGES_DIR
+set BASE_PATH   "$PACKAGES_DIR"
 
-conflict moose/.<MPICH>_clang moose/.<MPICH>_gcc moose/.<OPENMPI>_gcc openmpi_clang mpich_clang mpich_gcc
+conflict moose/.<MPICH>_<CLANG> moose/.<MPICH>_<GCC> moose/.<OPENMPI>_<CLANG> openmpi_clang mpich_clang mpich_gcc
 module load moose/.<GCC>
 
-set             MPI_PATH           \$BASE_PATH/openmpi/<OPENMPI>/gcc-opt
+set             MPI_PATH           "\$BASE_PATH/<OPENMPI>/<GCC>"
 
 if { [uname sysname] != "Darwin" } {
-   prepend-path    LD_LIBRARY_PATH    \$MPI_PATH/lib
+   prepend-path    LD_LIBRARY_PATH    "\$MPI_PATH/lib"
 }
 
-prepend-path    C_INCLUDE_PATH     \$MPI_PATH/include
-prepend-path    CPLUS_INCLUDE_PATH \$MPI_PATH/include
-prepend-path    FPATH              \$MPI_PATH/include
-prepend-path    MANPATH            \$MPI_PATH/share/man
+prepend-path    C_INCLUDE_PATH     "\$MPI_PATH/include"
+prepend-path    CPLUS_INCLUDE_PATH "\$MPI_PATH/include"
+prepend-path    FPATH              "\$MPI_PATH/include"
+prepend-path    MANPATH            "\$MPI_PATH/share/man"
 
 setenv CC       mpicc
 setenv CXX      mpicxx
@@ -70,33 +68,33 @@ setenv F90      mpif90
 setenv F77      mpif77
 setenv FC       mpif90
 
-setenv          MPI_HOME          \$MPI_PATH
-prepend-path    PATH              \$MPI_PATH/bin
+setenv          MPI_HOME          "\$MPI_PATH"
+prepend-path    PATH              "\$MPI_PATH/bin"
 
 EOF
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/adv_modules/openmpi-gcc
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/adv_modules/openmpi-gcc"
 #%Module1.0#####################################################################
 ##
-## OpenMPI GCC
+## <OPENMPI> <GCC>
 ##
-set BASE_PATH   $PACKAGES_DIR
+set BASE_PATH   "$PACKAGES_DIR"
 
-conflict moose/.<OPENMPI>_gcc moose/.<MPICH>_clang moose/.<MPICH>_gcc moose/.<OPENMPI>_gcc openmpi_clang mpich_clang mpich_gcc
+conflict moose/.<OPENMPI>_<CLANG> moose/.<MPICH>_<CLANG> moose/.<MPICH>_<GCC> openmpi_clang mpich_clang mpich_gcc
 
-if { ! [ is-loaded <GCC> ] } {
+if { ! [ is-loaded <GCC> ] || ! [ is-loaded moose/.<GCC> ] } {
   module load moose/.<GCC>
 }
 
-set             MPI_PATH           \$BASE_PATH/openmpi/<OPENMPI>/gcc-opt
+set             MPI_PATH           "\$BASE_PATH/<OPENMPI>/<GCC>"
 
 if { [uname sysname] != "Darwin" } {
-   prepend-path    LD_LIBRARY_PATH    \$MPI_PATH/lib
+   prepend-path    LD_LIBRARY_PATH    "\$MPI_PATH/lib"
 }
 
-prepend-path    C_INCLUDE_PATH     \$MPI_PATH/include
-prepend-path    CPLUS_INCLUDE_PATH \$MPI_PATH/include
-prepend-path    FPATH              \$MPI_PATH/include
-prepend-path    MANPATH            \$MPI_PATH/share/man
+prepend-path    C_INCLUDE_PATH     "\$MPI_PATH/include"
+prepend-path    CPLUS_INCLUDE_PATH "\$MPI_PATH/include"
+prepend-path    FPATH              "\$MPI_PATH/include"
+prepend-path    MANPATH            "\$MPI_PATH/share/man"
 
 setenv CC       mpicc
 setenv CXX      mpicxx
@@ -104,13 +102,13 @@ setenv F90      mpif90
 setenv F77      mpif77
 setenv FC       mpif90
 
-setenv          MPI_HOME          \$MPI_PATH
-prepend-path    PATH              \$MPI_PATH/bin
+setenv          MPI_HOME          "\$MPI_PATH"
+prepend-path    PATH              "\$MPI_PATH/bin"
 
-append-path     MODULEPATH        \$BASE_PATH/Modules/<MODULES>/openmpi_gcc
+append-path     MODULEPATH        "\$BASE_PATH/Modules/<MODULES>/openmpi_gcc"
 EOF
-    module load advanced_modules openmpi-gcc
-    cd $MPI_HOME/lib
+    module load moose/.<OPENMPI>_<GCC>
+    cd "$MPI_HOME/lib"
     for sfile in `find . -type f -name "*.la"`; do
 	if [ `grep -c 'src_temp_' $sfile` -ge 1 ]; then
 	    echo 'editing file: '$sfile
@@ -135,4 +133,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source "$RELATIVE_DIR/functions" $@

@@ -3,7 +3,8 @@
 ## Specifics
 ##
 DEP=(modules automake autoconf)
-PACKAGE='gcc'
+PACKAGE="<GCC>"
+NO_CCACHE='true'
 
 #####
 # Set the operating system allowed to build this module
@@ -21,7 +22,7 @@ INSTALL='true'
 
 pre_run() {
     unset MODULEPATH
-    source $PACKAGES_DIR/Modules/<MODULES>/init/bash
+    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
     module load advanced_modules autotools
 
     #### NOTE: We no longer allow the build system to run ./contrib/download_prerequisites
@@ -32,55 +33,80 @@ pre_run() {
     # sed -i -e 's/wget/curl -O/g' contrib/download_prerequisites
     # ./contrib/download_prerequisites
 
+    if [ `uname` != "Darwin" ]; then
+        CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --disable-multilib --enable-languages=c,c++,fortran,jit --enable-checking=release --enable-host-shared --with-pic"
+    else
+        CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --enable-languages=c,c++,fortran,jit --enable-checking=release --enable-host-shared --with-pic"
+
+        # Patch Darwin gcc for JIT linking issue: https://gcc.gnu.org/ml/jit/2015-q3/msg00147.html
+        cat << 'EOF' > darwin-jit.patch
+--- a/gcc-7.2.0/gcc/jit/Make-lang.in	2017-01-01 05:07:43.000000000 -0700
++++ b/gcc-7.2.0/gcc/jit/Make-lang.in	2017-10-25 10:03:22.000000000 -0600
+@@ -85,8 +85,7 @@
+ 	     $(jit_OBJS) libbackend.a libcommon-target.a libcommon.a \
+ 	     $(CPPLIB) $(LIBDECNUMBER) $(LIBS) $(BACKENDLIBS) \
+ 	     $(EXTRA_GCC_OBJS) \
+-	     -Wl,--version-script=$(srcdir)/jit/libgccjit.map \
+-	     -Wl,-soname,$(LIBGCCJIT_SONAME)
++             -Wl,-install_name,$(LIBGCCJIT_SONAME)
+ 
+ $(LIBGCCJIT_SONAME_SYMLINK): $(LIBGCCJIT_FILENAME)
+ 	ln -sf $(LIBGCCJIT_FILENAME) $(LIBGCCJIT_SONAME_SYMLINK)
+EOF
+        patch -p2 < darwin-jit.patch
+    fi
+
     mkdir ../gcc_build; cd ../gcc_build
+
     # I've notice by the time we make it to this module (gcc), everything else is
     # on hold because everything else is requiring gcc to be completed.
     MAX=true
-    if [ `uname` != "Darwin" ]; then
-      CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --disable-multilib --enable-languages=c,c++,fortran,jit --enable-checking=release --enable-host-shared --with-pic"
-    else
-      CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --enable-languages=c,c++,fortran,jit --enable-checking=release --enable-host-shared --with-pic"
-    fi
-    configure
 }
 
 post_run() {
     unset MAX
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<GCC>
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<GCC>"
 #%Module1.0#####################################################################
 ##
 ## <GCC> modulefile
 ##
 ##
 ##
-set          BASE_PATH          $PACKAGES_DIR
-set          GCC_PATH           \$BASE_PATH/<GCC>
+set          BASE_PATH          "$PACKAGES_DIR"
+set          GCC_PATH           "\$BASE_PATH/<GCC>"
 
 if { [uname sysname] != "Darwin" } {
-  prepend-path LD_LIBRARY_PATH  \$GCC_PATH/lib64:\$GCC_PATH/lib:\$GCC_PATH/lib/i386
+  prepend-path LD_LIBRARY_PATH  "\$GCC_PATH/lib64:\$GCC_PATH/lib:\$GCC_PATH/lib/i386"
 }
 
-prepend-path PATH                        \$GCC_PATH/bin
-prepend-path MANPATH                     \$GCC_PATH/share/man
+prepend-path PATH                        "\$GCC_PATH/bin"
+prepend-path MANPATH                     "\$GCC_PATH/share/man"
 
-setenv       GCC_BIN                     \$GCC_PATH/bin
-setenv       GCC_LIB                     \$GCC_PATH/lib:\$GCC_PATH/lib/i386
-setenv       GCC_MAN                     \$GCC_PATH/share/man
+setenv       GCC_BIN                     "\$GCC_PATH/bin"
+setenv       GCC_LIB                     "\$GCC_PATH/lib:\$GCC_PATH/lib/i386"
+setenv       GCC_MAN                     "\$GCC_PATH/share/man"
 
 # Allow clang-formatting binary to be available even when not using clang
-prepend-path    PATH    $PACKAGES_DIR/llvm-<LLVM>/bin
+prepend-path    PATH    "$PACKAGES_DIR/llvm-<LLVM>/bin"
 
 EOF
-    cd $PACKAGES_DIR/Modules/<MODULES>/adv_modules
-    ln -s ../modulefiles/moose/.<GCC> $PACKAGE
-    module load $PACKAGE
-    cd $GCC_BIN/../
+    cd "$PACKAGES_DIR/Modules/<MODULES>/adv_modules"
+    if [ -f gcc ]; then rm -f gcc; fi
+    ln -s ../modulefiles/moose/.<GCC> gcc
+    module load moose/.<GCC>
+    cd "$GCC_BIN/../"
     for sfile in `find . -type f -name "*.la"`; do
         if [ `grep -c "$src_temp" $sfile` -ge 1 ]; then
             echo 'editing file: '$sfile
             perl -pi -e "s/-L.\S*build\S*[^'\s+]//g" $sfile
         fi
     done
+
+    # We need to change an rpath for the jit compiler (only for Darwin because
+    # Apple has removed the use of DYLD_LIBRARY_PATH)
+    if [ `uname` = "Darwin" ]; then
+        install_name_tool -id "$PACKAGES_DIR/<GCC>/lib/libgccjit.so" "$PACKAGES_DIR/<GCC>/lib/libgccjit.so"
+    fi
 }
 ##
 ## End Specifics
@@ -99,4 +125,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source "$RELATIVE_DIR/functions" $@

@@ -2,39 +2,70 @@
 ####
 # set common functions
 ccache_enable() {
+    # We are not sure building the entire package using CCACHE is wise. It breaks something
+    # interesting between clang and gcc when clang tries to link against gcc's fortran. Error:
+    #
+    # configure: error: ****  Incompatible Fortran and C Object File Types!  ****
+    # F77 Object File Type produced by "gfortran  " is : : Mach-O 64-bit object x86_64.
+    #  C  Object File Type produced by "clang   " is : : Mach-O object i386.
+    #
+    # Until we understand this error, we are disabling CCACHE.
+    return
+
     if [ -n "$NO_CCACHE" ]; then return; fi
+    pause "Enable ccache"
+    if [ "$?" = "1" ]; then return; fi
     if [ -d /opt/ccache ]; then
         echo -e "Enabling CCACHE..."
         export PATH=/opt/ccache/bin:$PATH
-        if [ `uname` == "Darwin" ] && [ "$CC" == "" ]; then
-            CC="clang"; CXX="clang++"
-        elif [ `uname` == "Linux" ] && [  "$CC" == "" ]; then
-            CC="gcc"; CXX="g++"
+
+        if [ `echo $CC | grep -ci mpi` -ge 1 ]; then
+            export CC="ccache `$CC -show | cut -d\  -f1`"
+            export CXX="ccache `$CXX -show | cut -d\  -f1`"
+        else
+            if [ -n "$CC" ]; then
+                export CC="ccache $CC"
+                export CXX="ccache $CXX"
+            elif [ `uname` = "Darwin" ]; then
+                export CC="ccache clang"
+                export CXX="ccache clang++"
+            else
+                export CC="ccache gcc"
+                export CXX="ccache g++"
+            fi
         fi
-        export CC="ccache $CC" CXX="ccache $CXX"
-        echo -e "CC=$CC CXX=$CXX"
+        export CCACHE_SLOPPINESS="time_macros"
+        export CCACHE_BASEDIR="$TEMP_PREFIX"
+        export CCACHE_COMPILERCHECK="content"
+        export CCACHE_DIR="$TEMP_PREFIX/.ccache"
+        echo -e "CCACHE set as follows: CC=$CC CXX=$CXX"
         echo "which ccache: "`which ccache`
+        ccache -M 8G
+        ccache -s
     fi
 }
 
 with_lock() {
     lock_count=0
-    while [ $lock_count -lt 350 ]; do
-        let lock_count=$lock_count+1
-        # mkdir is atomic
-        mkdir "$1"
+    lock_seconds=350
+    if ! [ -d "$DOWNLOAD_DIR/.LOCKS" ]; then mkdir -p "$DOWNLOAD_DIR/.LOCKS"; fi
+    echo -e "\nwaiting for file lock..."
+    while [ $lock_count -lt $lock_seconds ]; do
+        mkdir "$1" 2>/dev/null
         mkdir_code=$?
+        let lock_count=$lock_count+1
         if [ "$mkdir_code" != "0" ]; then
             sleep 1
         else
             return
         fi
     done
-    echo "Failed to lock $1 within 5 minutes"
+    echo -e "\nFailed to create lock in allotted time ($lock_seconds seconds)\n\t$1"
     cleanup 1
 }
 
 try_command() {
+    TRYING="TRUE"
     allowed_count=$1
     command_string="$2"
     try_count=0
@@ -42,20 +73,29 @@ try_command() {
         let try_count=try_count+1
         eval "$command_string"
         retcode=$?
-        if [ "$retcode" != "0" ] && [ "$try_count" == "$allowed_count" ]; then
+        if [ "$retcode" != "0" ] && [ $try_count = $allowed_count ]; then
             echo "Failed $1 times, trying to execute: $command_string"
             cleanup 1
         elif [ "$retcode" != "0" ]; then
             sleep 30
         else
-            return
+            break
         fi
     done
+    TRYING="FALSE"
 }
 
 pause() {
-    if [ "$DEBUG" = true ]; then
-        read -p "Press Enter to continue.."
+    if [ "$DEBUG" = "True" ]; then
+        while true; do
+            message=`echo -e "\nNEXT TASK: $@ \n\nDo this task? [Y,n] or ctrl-c to exit> "`
+            read -n1 -p "$message" skip_this
+            case $skip_this in
+                y|Y) echo ''; return 0;;
+                n|N) echo ''; return 1;;
+                *) echo "Please enter 'y' or 'n'"
+            esac
+        done
     fi
 }
 
@@ -63,8 +103,10 @@ md5sum_check() {
     REMOTE_MD5FILE="$1.md5"
     LOCAL_MD5FILE="$1.local_md5"
     MD5_DIFF="false"
+    pause "Perform MD5 Check"
+    if [ "$?" = "1" ]; then return; fi
 
-    echo "Running md5sum check..."
+    echo -e "\nRunning md5sum check..."
     # Apple always gotta be different :(
     # Create a temporary md5 file based on local downloaded data file
     if [ `uname` != "Darwin" ]; then
@@ -96,12 +138,13 @@ download() {
     let DOWNLOAD_CURRENT_ATTEMPTS=$DOWNLOAD_CURRENT_ATTEMPTS+1
 
     for url in ${DOWNLOAD[*]}; do
-        echo "Attempt $DOWNLOAD_CURRENT_ATTEMPTS downloading file: $url"
-        BASENAME=`basename $url`
+        pause "Download File\n\tcurl -o $DOWNLOAD_DIR/$BASENAME $url"
+        if [ "$?" = "1" ]; then return; fi
 
         # Wait for lock
-        with_lock "$DOWNLOAD_LOCKS/$BASENAME.lock"
-
+        BASENAME=`basename $url`
+        with_lock "$DOWNLOAD_DIR/.LOCKS/$BASENAME.lock"
+        echo -e "\nAttempt $DOWNLOAD_CURRENT_ATTEMPTS downloading file: $url"
         # If file is not present, download it and the corresponding md5
         if ! [ -f "$DOWNLOAD_DIR/$BASENAME" ]; then
             try_command 5 "curl -o $DOWNLOAD_DIR/$BASENAME $url"
@@ -111,10 +154,22 @@ download() {
                 rm -f "$DOWNLOAD_DIR/$BASENAME" "$DOWNLOAD_DIR/$BASENAME.md5"
                 cleanup 1
             fi
+        else
+            echo 'file previously downloaded'
+        fi
+        pause "Download MD5\n\t curl -s -o $DOWNLOAD_DIR/$BASENAME.md5 $url.md5"
+        if [ "$?" = "1" ]; then
+            if [ -d "$DOWNLOAD_DIR/.LOCKS/$BASENAME.lock" ]; then
+                echo -e "WARNING: download LOCK present. Another attempt will stall.\n\t$DOWNLOAD_DIR/.LOCKS/$BASENAME.lock"
+            fi
+            return
         fi
 
+        echo -e "\nverifying file..."
+
         # Verify downloaded file is correct
-        try_command 5 "curl -o $DOWNLOAD_DIR/$BASENAME.md5 $url.md5"
+        with_lock "$DOWNLOAD_DIR/.LOCKS/$BASENAME.md5.lock"
+        try_command 5 "curl -s -o $DOWNLOAD_DIR/$BASENAME.md5 $url.md5"
         if [ `file "$DOWNLOAD_DIR/$BASENAME.md5" | grep -c "ASCII text"` -le 0 ]; then
             echo -e "Downloaded file was not an MD5 file: \n"
             file "$DOWNLOAD_DIR/$BASENAME.md5"
@@ -124,22 +179,28 @@ download() {
 
         md5sum_check "$BASENAME"
         if [ "$MD5_DIFF" = "true" ]; then
-            rm -rf "$DOWNLOAD_DIR/$BASENAME" "$DOWNLOAD_DIR/$BASENAME.md5" "$DOWNLOAD_LOCKS/$BASENAME.lock"
+            rm -rf "$DOWNLOAD_DIR/$BASENAME" "$DOWNLOAD_DIR/$BASENAME.md5" "$DOWNLOAD_DIR/.LOCKS/$BASENAME.lock"
+            rm -rf "$DOWNLOAD_DIR/$BASENAME" "$DOWNLOAD_DIR/$BASENAME.md5" "$DOWNLOAD_DIR/.LOCKS/$BASENAME.md5.lock"
             download
         else
             echo "File previously downloaded is the latest available, moving on..."
             rm -f "$DOWNLOAD_DIR/$BASENAME.md5"
         fi
 
-        # Remove the lock
-        rm -rf "$DOWNLOAD_LOCKS/$BASENAME.lock"
+        # Remove the lock(s)
+        rm -rf "$DOWNLOAD_DIR/.LOCKS/$BASENAME.lock"
+        rm -rf "$DOWNLOAD_DIR/.LOCKS/$BASENAME.md5.lock"
     done
 }
 
 extract() {
     if [ "$EXTRACT" = "false" ]; then return; fi
+
     for DFILE in ${EXTRACT[*]}; do
-        echo "Extracting $DOWNLOAD_DIR/$DFILE..."
+        pause "Extract File\n\ttar -xf $DOWNLOAD_DIR/$DFILE -C $src_temp"
+        if [ "$?" = "1" ]; then return; fi
+
+        echo -e "\nExtracting $DOWNLOAD_DIR/$DFILE..."
         if [ `file $DOWNLOAD_DIR/$DFILE | grep -c "gzip\|archive\|compressed"` -ge 1 ]; then
             tar -xf "$DOWNLOAD_DIR/$DFILE" -C .
             if [ $? -ne 0 ]; then
@@ -157,85 +218,148 @@ extract() {
         echo -e "Failed to determine which directory to `cd` into"
         cleanup 1
     else
-        echo -e "Entered build directory: `pwd`"
+        echo -e "Entering build directory: `pwd`"
     fi
 }
 
 configure() {
     if [ "$CONFIGURE" = "false" ]; then return; fi
-    echo -e "Configure $PACKAGE with the following options: $CONFIGURE"
-    pause
-    eval "$CONFIGURE"
-    if [ $? -ne 0 ]; then echo "Failed to configure using following options: $CONFIGURE"; cleanup 1; fi
-    pause
+    if [ "$CONFIGURE" = "true" ]; then
+        if [ -n "$BASE_DIR" ]; then
+            CONFIG="./configure --prefix=$PACKAGES_DIR/$BASE_DIR/$PACKAGE"
+        else
+            CONFIG="./configure --prefix=$PACKAGES_DIR/$PACKAGE"
+        fi
+    else
+        CONFIG="$CONFIGURE"
+    fi
+    pause "Run Configure\n\t$CONFIG"
+    if [ "$?" = "1" ]; then return; fi
+
+    echo -e "\nConfigure $ME with the following options: $CONFIG"
+    eval "$CONFIG"
+    if [ $? -ne 0 ] && [ "$TRYING" = "FALSE" ]; then
+        echo "Failed to configure using following options: $CONFIG"
+        cleanup 1
+    fi
 }
 
 build() {
     if [ "$BUILD" = "false" ]; then return; fi
-    echo -e "Building $PACKAGE with JOB count: $MOOSE_JOBS"
-    pause
     # If $MAX is set, use all available CPUs for this one job
     if [ ! -z "$MAX" ]; then
-        if [ `uname -s` == "Darwin" ]; then
+        if [ `uname -s` = "Darwin" ]; then
             MOOSE_JOBS=`/usr/sbin/sysctl -n hw.ncpu`
         else
             MOOSE_JOBS=`cat /proc/cpuinfo | grep processor | wc -l`
         fi
+    elif [ -n "$SERIAL" ]; then
+        MOOSE_JOBS=1
     fi
-    ccache_enable
-    make -j $MOOSE_JOBS -l $MOOSE_JOBS
-    if [ $? -ne 0 ]; then echo "Failed to make $1"; cleanup 1; fi
-    pause
+    pause "Run make\n\tmake -j $MOOSE_JOBS"
+    if [ "$?" = "1" ]; then return; fi
+
+    echo -e "\nBuilding $ME with JOB count: $MOOSE_JOBS"
+    make -j $MOOSE_JOBS
+    if [ $? -ne 0 ] && [ "$TRYING" = "FALSE" ]; then echo "Failed to make $1"; cleanup 1; fi
 }
 
 make_install() {
     if [ "$INSTALL" = "false" ]; then return; fi
-    echo -e "Installing $PACKAGE..."
-    pause
+    pause "Install\n\tmake install"
+    if [ "$?" = "1" ]; then return; fi
+
+    echo -e "\nInstalling $PACKAGE..."
     make install
-    if [ $? -ne 0 ]; then echo "Failed to install $1"; cleanup 1; fi
+    if [ $? -ne 0 ] && [ "$TRYING" = "FALSE" ]; then echo "Failed to install $1"; cleanup 1; fi
+
+    # Make sure we have a symlink from lib64 to lib
+    # OpenSUSE for example is creating nothing but lib64 directories when we are
+    # creating module files assuming $PACKAGE/lib is created.
+    fix_libs
 }
+
+fix_libs() {
+    # Find any lib64 directories and symlink them to lib if lib does not exist
+    # (example: lib and lib64 properly exist in GCC builds)
+    if [ -d "$PACKAGES_DIR/$PACKAGE/lib64" ] && ! [ -d "$PACKAGES_DIR/$PACKAGE/lib" ]; then
+        ln -s "$PACKAGES_DIR/$PACKAGE/lib64" "$PACKAGES_DIR/$PACKAGE/lib"
+    fi
+}
+
 clean_attempt() {
-    # Clean a possible failed previous build directory
+    # Clean a possible failed previous temporary build directory
     if [ -d "$src_temp" ]; then
+        cd "$RELATIVE_DIR"
         rm -rf "$src_temp"
     fi
     mkdir -p "$src_temp"
     cd "$src_temp"
+
+    # Clean a possible existing --prefix directory because we are building again
+    if [ -n "$BASE_DIR" ] && [ -d "$PACKAGES_DIR/$BASE_DIR/$PACKAGE" ]; then
+        rm -rf "$PACKAGES_DIR/$BASE_DIR/$PACKAGE"
+    elif [ -z "$BASE_DIR" ] && [ -d "$PACKAGES_DIR/$PACKAGE" ]; then
+        rm -rf "$PACKAGES_DIR/$PACKAGE"
+    fi
 }
 
 cleanup() {
-    if [ $1 == 0 ]; then
+    if [ $1 = 0 ]; then
         echo "Deleting temporary build location: $src_temp"
         rm -rf "$src_temp"
-    elif [ -z "$KEEP_FAILED" ]; then
-        echo "Error while working on: $PACKAGE"
-        rm -rf "$src_temp"
+        exit $1
+    elif [ "$KEEP_FAILED" = "True" ] || [ "$DEBUG" = "True" ]; then
+        echo -e "\nError while working on: $ME located at: $src_temp"
     else
-        echo "Error while working on: $PACKAGE located at: $src_temp"
+        echo "Error while working on: $ME"
+        rm -rf "$src_temp"
     fi
+    echo -e "Execute the following script to run this again interactively:\n\t$RELATIVE_DIR/packages/$ME --debug"
     exit $1
 }
+
+function_help() {
+    echo -e "Usage:\n\t-h | --help  This message\n\t-d | --debug Run in interactive mode\n\t-j | --jobs  Override jobs with specified amount"
+}
+
+for i in "$@"; do
+    case $i in
+        -h|--help)
+            function_help
+            exit 0
+            ;;
+        -d|--debug)
+            DEBUG="True"
+            shift
+            ;;
+        -j|--jobs)
+            MOOSE_JOBS=$2
+            shift 2
+            ;;
+    esac
+done
 
 umask 022
 DOWNLOAD_MAX_ATTEMPTS=10
 DOWNLOAD_CURRENT_ATTEMPTS=0
-
+TRYING="FALSE"
 ME=`basename "$0"`
 PROGRESS="$RELATIVE_DIR/progress"
-export src_temp="$TEMP_PREFIX/$PACKAGE"
+touch $PROGRESS
+export src_temp="$TEMP_PREFIX/$ME"
 
 CONTINUE="false"
 for OPERATING_SYSTEM in ${ARCH[*]}; do
-    if [ "$OPERATING_SYSTEM" == `uname` ]; then CONTINUE="true"; fi
+    if [ "$OPERATING_SYSTEM" = `uname` ]; then CONTINUE="true"; fi
 done
 
-if [ "$DOWNLOAD_ONLY" == "True" ] && [ "$CONTINUE" == "true" ]; then
+if [ "$DOWNLOAD_ONLY" = "True" ] && [ "$CONTINUE" = "true" ]; then
     download
     exit 0
-elif [ "$CONTINUE" == "true" ]; then
+elif [ "$CONTINUE" = "true" ]; then
     touch $PROGRESS
-    if [ `grep -c $ME $PROGRESS` -eq 0 ]; then
+    if [ `grep -c ^$ME $PROGRESS` -eq 0 ] || [ "$DEBUG" = "True" ]; then
         error=""
         for dependency in ${DEP[*]}; do
             if [ `grep -ci ^$dependency $PROGRESS` -eq 0 ]; then
@@ -249,14 +373,23 @@ elif [ "$CONTINUE" == "true" ]; then
         clean_attempt
         download
         extract
+        ccache_enable
         pre_run "$src_temp"
         configure
         build
         make_install
         post_run "$src_temp"
         echo $ME >> $PROGRESS
+        echo "$ME success"
+        pause "Cleanup Temporary Build\n\t$src_temp"
+        if [ "$?" = "1" ]; then return; fi
         cleanup 0
     else
         echo -e "$ME previously built"
     fi
+else
+    if [ `grep -c "$ME" "$PROGRESS"` -eq 0 ]; then
+        echo "$ME" >> "$PROGRESS"
+    fi
+    echo -e "$ME not supported/needed on `uname`"
 fi

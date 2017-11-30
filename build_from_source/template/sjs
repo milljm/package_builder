@@ -21,17 +21,14 @@ BUILD='false'
 INSTALL='false'
 
 pre_run() {
-    if [ -d $PACKAGES_DIR/$PACKAGE ]; then
-	rm -rf $PACKAGES_DIR/$PACKAGE
-    fi
     cd $PACKAGES_DIR
-    git clone https://github.com/milljm/sjs.git
+    try_command 3 "git clone https://github.com/milljm/sjs.git"
     cd sjs
     git checkout pbs
     rm -rf .git
 }
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/adv_modules/pbs-emulator
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/adv_modules/pbs-emulator"
 #%Module1.0#####################################################################
 ##
 ##  PBS Emulator module
@@ -39,7 +36,7 @@ post_run() {
 ##
 ##
 
-set            BASE_PATH $PACKAGES_DIR
+set            BASE_PATH "$PACKAGES_DIR"
 
 proc ModulesHelp { } {
         puts stderr "PBS Emulator allows one to simulate a job scheduling environment."
@@ -55,7 +52,7 @@ proc ModulesHelp { } {
         puts stderr "re-run the qconf init 1 command to re-initialize the PBS database.\n"
 }
 
-prepend-path   PATH     \$BASE_PATH/sjs/links
+prepend-path   PATH     "\$BASE_PATH/sjs/links"
 setenv         SJS_ROOT /tmp/sjs
 if { ! [ file isdirectory /tmp/sjs ] } {
     puts stderr "You must now initialize the PBS database (qconf init 1)"
@@ -80,4 +77,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source "$RELATIVE_DIR/functions" $@

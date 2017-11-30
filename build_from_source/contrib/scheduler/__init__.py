@@ -1,5 +1,5 @@
 import subprocess, sys
-from time import sleep
+from time import sleep, strftime
 from timeit import default_timer as clock
 from multiprocessing.pool import ThreadPool
 import threading # for thread locking and thread timers
@@ -146,16 +146,16 @@ class Scheduler(object):
                     job_dag.delete_node(job)
                     self.active.remove(job)
                     if self.args.download_only:
-                        result = '-Downloaded | '
+                        result = ' -Downloaded | '
                     else:
-                        result = '-Finished   | '
+                        result = ' --Finished  | '
 
             else:
-                result = 'Launching   | '
+                result = ' Launching   | '
 
             # Format job name length field
             name_cnt = (self.term_width - len(job.name)) + 2 # 2 character buffer
-            result = result + job.name + ' '*name_cnt
+            result = strftime("%H:%M") + result + job.name + ' '*name_cnt
 
             # Format caveat length
             caveats = job_container.getCaveats()

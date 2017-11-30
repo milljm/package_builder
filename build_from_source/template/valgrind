@@ -2,8 +2,9 @@
 #############
 ## Specifics
 ##
-DEP=(modules gcc)
-PACKAGE='valgrind'
+DEP=(modules gcc mpich-gcc)
+PACKAGE="<VALGRIND>"
+NO_CCACHE='true'
 
 #####
 # Set the operating system allowed to build this module
@@ -15,7 +16,7 @@ ARCH=(Darwin)
 # This is useful for items like 'autojump' which requires a git clone/checkout
 DOWNLOAD='http://mooseframework.org/source_packages/<VALGRIND>.tar.gz'
 EXTRACT='<VALGRIND>.tar.gz'
-CONFIGURE='./configure --prefix=$PACKAGES_DIR/<VALGRIND> --enable-only64bit'
+CONFIGURE='false'
 BUILD='true'
 INSTALL='true'
 
@@ -23,10 +24,6 @@ pre_run() {
     if [ `uname` = "Darwin" ] && [ `uname -r | grep -c ^17.` -ge 1 ]; then
         echo "$PACKAGE not supported on High Sierra"
         cleanup 0
-    fi
-
-    if [ -d $PACKAGES_DIR/$PACKAGE ]; then
-	rm -rf $PACKAGES_DIR/$PACKAGE
     fi
     cat << 'EOF' > darwin.patch
 diff -ruN a/coregrind/m_syscall.c b/coregrind/m_syscall.c
@@ -64,20 +61,22 @@ diff -ruN a/coregrind/vg_preloaded.c b/coregrind/vg_preloaded.c
  #if defined(VGO_linux) || defined(VGO_solaris)
 EOF
     patch -p1 < darwin.patch
+    unset MODULEPATH
     source $PACKAGES_DIR/Modules/<MODULES>/init/bash
-    module load advanced_modules gcc
+    module load advanced_modules autotools moose/.<MPICH>_<GCC>
+    CONFIGURE='./configure --prefix=$PACKAGES_DIR/<VALGRIND> --disable-dependency-tracking --enable-only64bit --build=amd64-darwin'
 }
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/adv_modules/$PACKAGE
+    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/adv_modules/valgrind
 #%Module1.0#####################################################################
 ##
 ## <VALGRIND> modulefile
 ##
 ##
 ##
-set          BASE_PATH          $PACKAGES_DIR
+set          BASE_PATH          "$PACKAGES_DIR"
 
-prepend-path     PATH      \$BASE_PATH/<VALGRIND>/bin
+prepend-path     PATH      "\$BASE_PATH/<VALGRIND>/bin"
 EOF
 }
 
@@ -98,4 +97,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source "$RELATIVE_DIR/functions" $@

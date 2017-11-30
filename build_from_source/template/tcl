@@ -3,26 +3,23 @@
 ## Specifics
 ##
 DEP=()
-PACKAGE='tcl'
+PACKAGE="<TCL>"
 
 #####
 # Set the operating system allowed to build this module
 #
-ARCH=(Darwin Linux)
+ARCH=(Darwin)
 
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
 DOWNLOAD='http://mooseframework.org/source_packages/<TCL>-src.tar.gz'
 EXTRACT='<TCL>-src.tar.gz'
-CONFIGURE="./configure --prefix=$PACKAGES_DIR/$PACKAGE"
+CONFIGURE="true"
 BUILD='true'
 INSTALL='true'
 
 pre_run() {
-    if [ -d $PACKAGES_DIR/$PACKAGE ]; then
-	rm -rf $PACKAGES_DIR/$PACKAGE
-    fi
     cd unix
 }
 post_run() {
@@ -45,4 +42,10 @@ post_run() {
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source "$RELATIVE_DIR/functions" $@

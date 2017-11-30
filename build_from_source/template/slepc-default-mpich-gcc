@@ -3,7 +3,8 @@
 ## Specifics
 ##
 DEP=(petsc-default-mpich-gcc-opt)
-PACKAGE='<SLEPC_DEFAULT>-mpich-gcc'
+PACKAGE="<MPICH>_<GCC>"
+BASE_DIR="<SLEPC_DEFAULT>"
 SERIAL=True
 
 #####
@@ -16,39 +17,36 @@ ARCH=(Darwin Linux)
 # This is useful for items like 'autojump' which requires a git clone/checkout
 DOWNLOAD='http://mooseframework.org/source_packages/<SLEPC_DEFAULT>.tar.gz'
 EXTRACT='<SLEPC_DEFAULT>.tar.gz'
-CONFIGURE="./configure --prefix=$PACKAGES_DIR/slepc/$PACKAGE"
+CONFIGURE="true"
 BUILD='false'
 INSTALL='false'
 
 pre_run() {
-    if [ -d $PACKAGES_DIR/slepc/$PACKAGE ]; then
-	rm -rf $PACKAGES_DIR/slepc/$PACKAGE
-    fi
     unset MODULEPATH
-    source $PACKAGES_DIR/Modules/<MODULES>/init/bash
+    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
     module load civet/.civet mpich-gcc-petsc_default_opt
 }
 
 post_run() {
-    make SLEPC_DIR=`pwd` PETSC_DIR=$PETSC_DIR
-    if [ $? -ne 0 ]; then echo 'Failed to make '$PACKAGE; cleanup 1; fi
-    make SLEPC_DIR=`pwd` PETSC_DIR=$PETSC_DIR install
-    if [ $? -ne 0 ]; then echo 'Failed to make install '$PACKAGE; cleanup 1; fi
-    make SLEPC_DIR=$PACKAGES_DIR/slepc/$PACKAGE PETSC_DIR=$PETSC_DIR PETSC_ARCH="" test
-    if [ $? -ne 0 ]; then echo 'Failed to make test '$PACKAGE; cleanup 1; fi
+    make SLEPC_DIR=`pwd` PETSC_DIR="$PETSC_DIR"
+    if [ $? -ne 0 ]; then echo 'Failed to make '$ME; cleanup 1; fi
+    make SLEPC_DIR=`pwd` PETSC_DIR="$PETSC_DIR" install
+    if [ $? -ne 0 ]; then echo 'Failed to make install '$ME; cleanup 1; fi
+    make SLEPC_DIR="$PACKAGES_DIR/$BASE_DIR/$PACKAGE" PETSC_DIR="$PETSC_DIR" PETSC_ARCH="" test
+    if [ $? -ne 0 ]; then echo 'Failed to make test '$ME; cleanup 1; fi
 
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.mpich_<SLEPC_DEFAULT>-gcc
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<SLEPC_DEFAULT>_<MPICH>_<GCC>"
 #%Module1.0#####################################################################
 ##
 ## <SLEPC_DEFAULT> modulefile
 ##
 ##
 ##
-set         BASE_PATH        $PACKAGES_DIR
-setenv      SLEPC_DIR        \$BASE_PATH/slepc/$PACKAGE
+set         BASE_PATH        "$PACKAGES_DIR"
+setenv      SLEPC_DIR        "\$BASE_PATH/<SLEPC_DEFAULT>/<MPICH>_<GCC>"
 EOF
 
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/mpich-gcc-petsc_default-slepc
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/civet/mpich-gcc-petsc_default-slepc"
 #%Module1.0#####################################################################
 ##
 ## Civet support module
@@ -56,18 +54,18 @@ EOF
 ## <GCC>
 ## <MPICH>
 ##
-module load moose/.<MPICH>_gcc
-module load moose/.mpich_<PETSC_DEFAULT>_opt-gcc
-module load moose/.mpich_<SLEPC_DEFAULT>-gcc
+module load moose/.<MPICH>_<GCC>
+module load moose/.<PETSC_DEFAULT>_<MPICH>_<GCC>-opt
+module load moose/.<SLEPC_DEFAULT>_<MPICH>_<GCC>
 module load moose/.<TBB>
-module load moose/.<CPPUNIT>-gcc
+module load moose/.<CPPUNIT>_<GCC>
 module load ccache
 module load moose-tools
 
 EOF
 
-    cd $PACKAGES_DIR/Modules/<MODULES>/mpich_gcc
-    ln -s ../modulefiles/moose/.mpich_<SLEPC_DEFAULT>-gcc <SLEPC_DEFAULT>
+    cd "$PACKAGES_DIR/Modules/<MODULES>/mpich_gcc"
+    ln -s ../modulefiles/moose/.<SLEPC_DEFAULT>_<MPICH>_<GCC> <SLEPC_DEFAULT>
 }
 
 ##
@@ -87,4 +85,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source "$RELATIVE_DIR/functions" $@

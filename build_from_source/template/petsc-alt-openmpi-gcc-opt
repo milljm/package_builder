@@ -2,14 +2,14 @@
 #############
 ## Specifics
 ##
-DEP=(modules cmake gcc llvm mpich-clang)
-PACKAGE="<MPICH>_<CLANG>-opt"
+DEP=(modules cmake gcc openmpi-gcc)
+PACKAGE="<OPENMPI>_<GCC>-opt"
 BASE_DIR="<PETSC_ALT>"
 
 #####
 # Set the operating system allowed to build this module
 #
-ARCH=(Darwin Linux)
+ARCH=(Linux)
 
 #####
 # Setting any of these variables to 'false' effectively skips that step
@@ -45,9 +45,9 @@ EOF
 pre_run() {
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
-    module load advanced_modules cmake moose/.<MPICH>_<CLANG>
+    module load advanced_modules cmake moose/.<OPENMPI>_<GCC>
     CONFIGURE="./configure \
---prefix=$PACKAGES_DIR/<PETSC_ALT>/<MPICH>_<CLANG>-opt \
+--prefix=$PACKAGES_DIR/<PETSC_ALT>/<OPENMPI>_<GCC>-opt \
 --download-hypre=1 \
 --with-ssl=0 \
 --with-debugging=no \
@@ -80,36 +80,36 @@ pre_run() {
 }
 
 post_run() {
-    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<PETSC_ALT>_<MPICH>_<CLANG>-opt"
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<PETSC_ALT>_<OPENMPI>_<GCC>-opt"
 #%Module1.0#####################################################################
 ##
-## <MPICH> <CLANG> <PETSC_ALT> optimzed superlu modulefile
+## <OPENMPI> <GCC> <PETSC_ALT> optimized superlu modulefile
 ##
 ##
 ##
 set         BASE_PATH        "$PACKAGES_DIR"
-setenv      PETSC_DIR        "\$BASE_PATH/<PETSC_ALT>/<MPICH>_<CLANG>-opt"
+setenv      PETSC_DIR        "\$BASE_PATH/<PETSC_ALT>/<OPENMPI>_<GCC>-opt"
 EOF
 
-    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/civet/mpich-clang-petsc_alt_opt"
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/civet/openmpi-gcc-petsc_alt"
 #%Module1.0#####################################################################
 ##
 ## Civet support module
 ## <PETSC_ALT>
-## <CLANG>
-## <MPICH>
+## <GCC>
+## <OPENMPI>
 ##
-module load moose/.<MPICH>_<CLANG>
-module load moose/.<PETSC_ALT>_<MPICH>_<CLANG>-opt
+module load moose/.<OPENMPI>_<GCC>
+module load moose/.<PETSC_ALT>_<OPENMPI>_<GCC>-opt
 module load moose/.<TBB>
-module load moose/.<CPPUNIT>_<CLANG>
+module load moose/.<CPPUNIT>_<GCC>
 module load ccache
 module load moose-tools
 
 EOF
 
-    cd "$PACKAGES_DIR/Modules/<MODULES>/mpich_clang"
-    ln -s ../modulefiles/moose/.<PETSC_ALT>_<MPICH>_<CLANG>-opt <PETSC_ALT>
+    cd "$PACKAGES_DIR/Modules/<MODULES>/openmpi_gcc"
+    ln -s ../modulefiles/moose/.<PETSC_ALT>_<OPENMPI>_<GCC>-opt <PETSC_ALT>
 
 }
 

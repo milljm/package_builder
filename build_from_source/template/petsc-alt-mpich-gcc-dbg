@@ -3,8 +3,8 @@
 ## Specifics
 ##
 DEP=(modules cmake gcc mpich-gcc)
-PACKAGE='<PETSC_ALT>-mpich-gcc-dbg'
-SERIAL=True
+PACKAGE="<MPICH>_<GCC>-dbg"
+BASE_DIR="<PETSC_ALT>"
 
 #####
 # Set the operating system allowed to build this module
@@ -21,19 +21,33 @@ BUILD='false'
 INSTALL='false'
 
 clean_petsc() {
-    if [ -d $PACKAGES_DIR/petsc/mpich_<PETSC_ALT>/gcc-dbg-superlu ]; then
-	rm -rf $PACKAGES_DIR/petsc/mpich_<PETSC_ALT>/gcc-dbg-superlu
-    fi
     clean_attempt
     extract
+    # Fix for darwin Fortran linking issue:
+    if [ `uname` = "Darwin" ]; then
+        cat << "EOF" > petsc_darwin.patch
+--- config/BuildSystem/config/libraries.py	2015-06-09 15:24:49.000000000 -0600
++++ config/BuildSystem/config/libraries.py	2017-10-26 13:11:53.000000000 -0600
+@@ -50,7 +50,7 @@
+         flagName  = self.language[-1]+'SharedLinkerFlag'
+         flagSubst = self.language[-1].upper()+'_LINKER_SLFLAG'
+         dirname   = os.path.dirname(library).replace('\\ ',' ').replace(' ', '\\ ').replace('\\(','(').replace('(', '\\(').replace('\\)',')').replace(')', '\\)')
+-        if hasattr(self.setCompilers, flagName) and not getattr(self.setCompilers, flagName) is None:
++        if False:
+           return [getattr(self.setCompilers, flagName)+dirname,'-L'+dirname,'-l'+name]
+         if flagSubst in self.argDB:
+           return [self.argDB[flagSubst]+dirname,'-L'+dirname,'-l'+name]
+EOF
+        patch -p0 < petsc_darwin.patch
+    fi
 }
 
 pre_run() {
     unset MODULEPATH
-    source $PACKAGES_DIR/Modules/<MODULES>/init/bash
-    module load advanced_modules cmake mpich-gcc
+    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    module load advanced_modules cmake moose/.<MPICH>_<GCC>
     CONFIGURE="./configure \
---prefix=$PACKAGES_DIR/petsc/mpich_<PETSC_ALT>/gcc-dbg-superlu \
+--prefix=$PACKAGES_DIR/<PETSC_ALT>/<MPICH>_<GCC>-dbg \
 --download-hypre=1 \
 --with-ssl=0 \
 --with-debugging=1 \
@@ -57,27 +71,27 @@ pre_run() {
 -F77FLAGS='-fPIC -fopenmp'"
 
     if [ `uname` = "Darwin" ]; then
-	try_command 3 "clean_petsc; configure; make MAKE_NP=1 PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-darwin-c-debug all; make PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-darwin-c-debug install"
+	try_command 3 "clean_petsc; configure; make MAKE_NP=$MOOSE_JOBS PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-darwin-c-debug all; make PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-darwin-c-debug install"
     else
-	try_command 3 "clean_petsc; configure; make MAKE_NP=1 PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-linux2-c-debug all; make PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-linux2-c-debug install"
+	try_command 3 "clean_petsc; configure; make MAKE_NP=$MOOSE_JOBS PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-linux2-c-debug all; make PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-linux2-c-debug install"
     fi
     # So we do not run configure a second time
     CONFIGURE="false"
 }
 
 post_run() {
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.mpich_<PETSC_ALT>_dbg-gcc
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<PETSC_ALT>_<MPICH>_<GCC>-dbg"
 #%Module1.0#####################################################################
 ##
-## MPICH GCC <PETSC_ALT> debug superlu modulefile
+## <MPICH> <GCC> <PETSC_ALT> debug superlu modulefile
 ##
 ##
 ##
-set         BASE_PATH        $PACKAGES_DIR
-setenv      PETSC_DIR        \$BASE_PATH/petsc/mpich_<PETSC_ALT>/gcc-dbg-superlu
+set         BASE_PATH        "$PACKAGES_DIR"
+setenv      PETSC_DIR        "\$BASE_PATH/<PETSC_ALT>/<MPICH>_<GCC>-dbg"
 EOF
 
-    cat <<EOF > $PACKAGES_DIR/Modules/<MODULES>/civet/mpich-gcc-petsc_alt_dbg
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/civet/mpich-gcc-petsc_alt_dbg"
 #%Module1.0#####################################################################
 ##
 ## Civet support module
@@ -85,17 +99,17 @@ EOF
 ## <GCC>
 ## <MPICH>
 ##
-module load moose/.<MPICH>_gcc
-module load moose/.mpich_<PETSC_ALT>_dbg-gcc
+module load moose/.<MPICH>_<GCC>
+module load moose/.<PETSC_ALT>_<MPICH>_<GCC>-dbg
 module load moose/.<TBB>
-module load moose/.<CPPUNIT>-gcc
+module load moose/.<CPPUNIT>_<GCC>
 module load ccache
 module load moose-tools
 
 EOF
 
-    cd $PACKAGES_DIR/Modules/<MODULES>/mpich_gcc
-    ln -s ../modulefiles/moose/.mpich_<PETSC_ALT>_dbg-gcc <PETSC_ALT>-dbg
+    cd "$PACKAGES_DIR/Modules/<MODULES>/mpich_gcc"
+    ln -s ../modulefiles/moose/.<PETSC_ALT>_<MPICH>_<GCC>-dbg <PETSC_ALT>-dbg
 
 }
 
@@ -116,4 +130,10 @@ EOF
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
-source $RELATIVE_DIR/functions
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+source "$RELATIVE_DIR/functions" $@
