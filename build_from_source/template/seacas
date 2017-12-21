@@ -24,6 +24,8 @@ pre_run() {
     if [ -d seacas ]; then rm -rf seacas; fi
     try_command 3 "git clone https://github.com/milljm/seacas.git"
     cd seacas
+    # Updated external repository, adding this comment to trigger a change
+    # (build netcdf with X11 support to allow blot to be built)
     git checkout jasons_installer
     if [ $? -ne 0 ]; then echo "Failed to checkout branch"; cleanup 1; fi
     cd contrib
