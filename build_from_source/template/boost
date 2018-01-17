@@ -2,8 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules)
-PACKAGE="<BOOST>"
+DEP=(modules miniconda)
 
 #####
 # Set the operating system allowed to build this module
@@ -13,30 +12,30 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='http://mooseframework.org/source_packages/<BOOST>.tar.gz'
-EXTRACT='<BOOST>.tar.gz'
+DOWNLOAD='false'
+EXTRACT='false'
 CONFIGURE='false'
 BUILD='false'
 INSTALL='false'
 
 pre_run() {
-    ./bootstrap.sh --prefix="$PACKAGES_DIR/<BOOST>"
-    if [ $? -ne 0 ]; then echo 'Failed to run bootstrap.sh for $ME'; cleanup 1; fi
-    ./b2 install -j $MOOSE_JOBS
-    if [ $? -ne 0 ]; then echo 'Failed to build $ME'; cleanup 1; fi
+    unset MODULEPATH
+    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    module load miniconda
+    try_command 5 "PATH=$PACKAGES_DIR/miniconda/bin:$PATH conda install boost gmp mpfr --yes"
 }
 
 post_run() {
-    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/adv_modules/$PACKAGE"
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/adv_modules/boost"
 #%Module1.0#####################################################################
 ##
-## <BOOST> Module file
+## boost Module file
 ##
 ##
 ##
 set BASE_PATH       "$PACKAGES_DIR"
-prepend-path        PATH       "\$BASE_PATH/<BOOST>/bin"
-setenv              BOOST_DIR  "\$BASE_PATH/<BOOST>"
+prepend-path        PATH       "\$BASE_PATH/miniconda/bin"
+setenv              BOOST_DIR  "\$BASE_PATH/miniconda"
 EOF
 }
 ##
