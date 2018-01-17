@@ -9,7 +9,7 @@ BASE_DIR="<PETSC_DEFAULT>"
 #####
 # Set the operating system allowed to build this module
 #
-ARCH=(Linux)
+ARCH=()
 
 #####
 # Setting any of these variables to 'false' effectively skips that step
