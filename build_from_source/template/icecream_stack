@@ -117,34 +117,6 @@ if {[is-loaded moose/.<CLANG>] || [is-loaded <CLANG>]} {
 }
 EOF
 
-    # No need to double quote spaces in plist files
-    cat <<EOF > "$PACKAGES_DIR/icecream/com.moose.icecream.plist"
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC -//Apple Computer//DTD PLIST 1.0//EN
-http://www.apple.com/DTDs/PropertyList-1.0.dtd >
-<plist version="1.0">
-<dict>
-<key>Label</key>
-  <string>moosenet.icecream</string>
-<key>ProgramArguments</key>
-  <array>
-    <string>$PACKAGES_DIR/$PACKAGE/sbin/iceccd</string>
-    <string>-s</string>
-    <string>icecream.inl.gov</string>
-    <string>-N</string>
-    <string><CHANGEME></string>
-    <string>-m</string>
-    <string><CPUS></string>
-  </array>
-<key>RunAtLoad</key>
-  <true/>
-<key>GroupName</key>
-  <string>daemon</string>
-<key>KeepAlive</key>
-  <true/>
-</dict>
-</plist>
-EOF
 }
 ##
 ## End Specifics

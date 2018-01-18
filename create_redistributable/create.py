@@ -263,7 +263,8 @@ Class for building RedHat based packages
     os.chdir(self.temp_dir)
     os.environ['NO_BRP_CHECK_RPATH'] = 'true'
     os.environ['QA_SKIP_RPATHS'] = 'true'
-    package_builder = subprocess.Popen(['QA_RPATHS=$(( 0x0001|0x0010|0x0002|0x0020 ))', 'rpmbuild', '-bb',
+    os.environ['QA_RPATHS'] = '$(( 0x0001|0x0010|0x0002|0x0020 ))'
+    package_builder = subprocess.Popen(['rpmbuild', '-bb',
                                         '--define=_topdir %s' % (os.path.join(self.temp_dir, 'rpm')),
                                         os.path.join(self.temp_dir, 'rpm/SPECS/moose-compilers.spec')],
                                        stdout=subprocess.PIPE,
