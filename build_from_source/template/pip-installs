@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(miniconda miniconda-old)
+DEP=(miniconda)
 PACKAGE='pip-installs'
 
 #####
@@ -23,8 +23,7 @@ pre_run() {
     cd $1
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
-    condas=(miniconda miniconda-old)
-    for which_conda in ${condas[*]}; do
+    for which_conda in ${DEP[*]}; do
 	module purge
 	module load advanced_modules $which_conda
 	pip install --no-cache-dir markdown python-markdown-math pybtex bs4 jinja2 livereload daemonlite pylint==1.6.5 lxml pylatexenc anytree
