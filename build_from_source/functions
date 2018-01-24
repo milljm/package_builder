@@ -297,10 +297,14 @@ clean_attempt() {
     cd "$src_temp"
 
     # Clean a possible existing --prefix directory because we are building again
-    if [ -n "$BASE_DIR" ] && [ -d "$PACKAGES_DIR/$BASE_DIR/$PACKAGE" ]; then
-        rm -rf "$PACKAGES_DIR/$BASE_DIR/$PACKAGE"
-    elif [ -z "$BASE_DIR" ] && [ -d "$PACKAGES_DIR/$PACKAGE" ]; then
-        rm -rf "$PACKAGES_DIR/$PACKAGE"
+    if [ -n "$BASE_DIR" ] && [ -n "$PACKAGE" ]; then
+        if [ -d "$PACKAGES_DIR/$BASE_DIR/$PACKAGE" ]; then
+            rm -rf "$PACKAGES_DIR/$BASE_DIR/$PACKAGE"
+        fi
+    elif [ -n "$PACKAGE" ]; then
+        if [ -d "$PACKAGES_DIR/$PACKAGE" ]; then
+            rm -rf "$PACKAGES_DIR/$PACKAGE"
+        fi
     fi
 }
 

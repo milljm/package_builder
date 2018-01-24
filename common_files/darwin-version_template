@@ -39,5 +39,4 @@ FONTCONFIG=fontconfig-2.12.1
 HARFBUZZ=harfbuzz-1.3.2
 GITLFS=git-lfs-darwin-amd64-1.4.3
 VALGRIND=valgrind-3.13.0
-BOOST=boost_1_63_0
 BLASLAPACK=lapack-3.7.1

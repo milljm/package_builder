@@ -26,5 +26,4 @@ MODULES=3.2.10
 TRILINOS=trilinos-release-12-6-2
 DTK=2.0.0
 GITLFS=git-lfs-linux-amd64-1.4.3
-BOOST=boost_1_63_0
 BLASLAPACK=lapack-3.7.1
