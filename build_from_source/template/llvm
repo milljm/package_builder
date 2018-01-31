@@ -14,23 +14,61 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD=(http://mooseframework.org/source_packages/llvm-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/cfe-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/clang-tools-extra-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/compiler-rt-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/libcxx-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/libcxxabi-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/openmp-<LLVM>.src.tar.xz)
+DOWNLOAD=(http://mooseframework.org/source_packages/llvm-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/cfe-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/clang-tools-extra-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/compiler-rt-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/libcxx-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/libcxxabi-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/openmp-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/lldb-<LLVM>.src.tar.xz)
 EXTRACT="false"
 CONFIGURE="false"
 BUILD='true'
 INSTALL='true'
 
 pre_run() {
-    cd $1
+    unset MODULEPATH
+    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    module load advanced_modules cmake miniconda
 
-    # Extract/Move LLVM, Clang, Clang-Extras, compiler-rt, libcxx/abi, openmp
-    # !!! NOTE: Order is important !!!
-    LLVM_PACKAGES=(llvm cfe clang-tools-extra compiler-rt libcxx libcxxabi openmp)
+    if [ `uname` != "Darwin" ]; then
+      module load moose/.<GCC>
+      export CC=gcc CXX=g++
+    fi
+
+    # Build the bootstrapper. We need to build the entire project using the same compiler
+    # we ultimately want to build. Sounds strange, but we do this to streamline the process
+    # so we can build LLDB, along side the rest of the 'projects' (compiler-rt, openmp, etc)
+    mkdir "$1/boot"; cd "$1/boot"
+    LLVM_PACKAGES=(llvm cfe)
     for LLVM_PACKAGE in ${LLVM_PACKAGES[*]}; do
       tar -xf "$DOWNLOAD_DIR/$LLVM_PACKAGE-<LLVM>.src.tar.xz" -C .
       if [ $? -ne 0 ]; then echo 'Failed to extract '$LLVM_PACKAGE; cleanup 1; fi
       if [ $LLVM_PACKAGE = 'cfe' ]; then
           mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/clang
+      elif [ $LLVM_PACKAGE = 'llvm' ]; then
+          mv $LLVM_PACKAGE-<LLVM>.src $LLVM_PACKAGE
+      fi
+    done
+    mkdir "$1/boot/build"; cd "$1/boot/build"
+    cmake ../llvm
+    if [ $? -ne 0 ]; then echo 'Failed to configure llvm/clang bootstrap'; cleanup 1; fi
+    make $MOOSE_JOBS
+    if [ $? -ne 0 ]; then echo 'Failed to build llvm/clang bootstrap'; cleanup 1; fi
+
+    # Source the bootstrapper
+    if [ `uname` != "Darwin" ]; then
+      module unload moose/.<GCC>
+    fi
+    export PATH="$1/boot/build/bin":$PATH
+    export CC=clang CXX=clang++
+
+    # Our Clang bootstrapper has been built, lets build the real thing.
+    # Extract/Move LLVM, Clang, LLDB, Clang-Extras, compiler-rt, libcxx/abi, openmp
+    # !!! NOTE: Order is important !!!
+    cd "$1"
+    LLVM_PACKAGES=(llvm cfe lldb clang-tools-extra compiler-rt libcxx libcxxabi openmp)
+    for LLVM_PACKAGE in ${LLVM_PACKAGES[*]}; do
+      tar -xf "$DOWNLOAD_DIR/$LLVM_PACKAGE-<LLVM>.src.tar.xz" -C .
+      if [ $? -ne 0 ]; then echo 'Failed to extract '$LLVM_PACKAGE; cleanup 1; fi
+      if [ $LLVM_PACKAGE = 'cfe' ]; then
+          mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/clang
+      elif [ $LLVM_PACKAGE = 'lldb' ]; then
+          mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/lldb
       elif [ $LLVM_PACKAGE = 'clang-tools-extra' ]; then
           mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/clang/tools/extra
       elif [ $LLVM_PACKAGE = 'llvm' ]; then
@@ -41,11 +79,8 @@ pre_run() {
     done
 
     mkdir "$1/build"; cd "$1/build"
-    unset MODULEPATH
-    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
-    module load advanced_modules cmake miniconda
 
-    # Enable RTTI. Apparently this needs to be exporting while running make
+    # Enable RTTI. Apparently this needs to be exported while running make
     # https://llvm.org/docs/Packaging.html
     export REQUIRES_RTTI=1
 
@@ -68,6 +103,7 @@ pre_run() {
     else
       cmake -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
 -DLLVM_BUILD_EXTERNAL_COMPILER_RT=ON \
+-DLLDB_CODESIGN_IDENTITY='' \
 -DLLVM_ENABLE_RTTI=ON \
 -DCLANG_DEFAULT_OPENMP_RUNTIME=libomp \
 -DPYTHON_EXECUTABLE=`which python2.7` \
