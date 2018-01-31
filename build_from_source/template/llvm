@@ -20,6 +20,36 @@ CONFIGURE="false"
 BUILD='true'
 INSTALL='true'
 
+change_links() {
+    # If on darwin, search for every dylib in working directory, and alter the
+    # rpath for an absolute path, if rpath is a relative path
+    if [ `uname` = "Darwin" ]; then
+        cat <<'EOF' > "change_links.sh"
+#!/bin/bash
+for sfile in `ls | grep dylib`; do
+  if ! [ -L $sfile ]; then
+    if [ `otool -L $sfile | grep -c rpath` -ge 1 ]; then
+      rpaths=($(otool -L $sfile | grep rpath | cut -f 1 -d\  ))
+      echo "Changing id: `pwd`/$sfile"
+      install_name_tool -id `pwd`/$sfile `pwd`/$sfile
+      for link in ${rpaths[*]}; do
+        echo "$link $sfile"
+        if [ `echo $link | grep -c $sfile` -le 0 ]; then
+          orig_link=$link
+          fixed_link=$(echo $link | sed -e 's?@rpath?'`pwd`'?g')
+          echo "install_name_tool -change $orig_link $fixed_link $sfile"
+          install_name_tool -change $orig_link $fixed_link $sfile
+        fi
+      done
+    fi
+  fi
+done
+EOF
+          sh change_links.sh
+          rm -f change_links.sh
+    fi
+}
+
 pre_run() {
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
@@ -34,7 +64,7 @@ pre_run() {
     # we ultimately want to build. Sounds strange, but we do this to streamline the process
     # so we can build LLDB, along side the rest of the 'projects' (compiler-rt, openmp, etc)
     mkdir "$1/boot"; cd "$1/boot"
-    LLVM_PACKAGES=(llvm cfe)
+    LLVM_PACKAGES=(llvm cfe libcxx libcxxabi)
     for LLVM_PACKAGE in ${LLVM_PACKAGES[*]}; do
       tar -xf "$DOWNLOAD_DIR/$LLVM_PACKAGE-<LLVM>.src.tar.xz" -C .
       if [ $? -ne 0 ]; then echo 'Failed to extract '$LLVM_PACKAGE; cleanup 1; fi
@@ -42,13 +72,19 @@ pre_run() {
           mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/clang
       elif [ $LLVM_PACKAGE = 'llvm' ]; then
           mv $LLVM_PACKAGE-<LLVM>.src $LLVM_PACKAGE
+      else
+          mv $LLVM_PACKAGE-<LLVM>.src llvm/projects/$LLVM_PACKAGE
       fi
     done
     mkdir "$1/boot/build"; cd "$1/boot/build"
-    cmake ../llvm
+    cmake -DCMAKE_BUILD_TYPE="Release" -DLLVM_TARGETS_TO_BUILD="X86" -DBUILD_SHARED_LIBS="on" -Wno-dev ../llvm
     if [ $? -ne 0 ]; then echo 'Failed to configure llvm/clang bootstrap'; cleanup 1; fi
-    make $MOOSE_JOBS
+    make -j $MOOSE_JOBS
     if [ $? -ne 0 ]; then echo 'Failed to build llvm/clang bootstrap'; cleanup 1; fi
+
+    # We need to convert all those RPATH links to ABS path ones
+    cd "$1/boot/build/lib"
+    change_links
 
     # Source the bootstrapper
     if [ `uname` != "Darwin" ]; then
@@ -78,11 +114,11 @@ pre_run() {
       fi
     done
 
-    mkdir "$1/build"; cd "$1/build"
-
     # Enable RTTI. Apparently this needs to be exported while running make
     # https://llvm.org/docs/Packaging.html
     export REQUIRES_RTTI=1
+
+    mkdir "$1/build"; cd "$1/build"
 
     if [ `uname` != "Darwin" ]; then
       module load moose/.<GCC>
@@ -99,6 +135,7 @@ pre_run() {
 -DCMAKE_BUILD_TYPE="Release" \
 -DPYTHON_EXECUTABLE=`which python2.7` \
 -DLLVM_TARGETS_TO_BUILD="X86" \
+-Wno-dev \
 ../llvm
     else
       cmake -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
@@ -109,6 +146,7 @@ pre_run() {
 -DPYTHON_EXECUTABLE=`which python2.7` \
 -DCMAKE_BUILD_TYPE="Release" \
 -DLLVM_TARGETS_TO_BUILD="X86" \
+-Wno-dev \
 ../llvm
     fi
     cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<CLANG>"
@@ -156,34 +194,8 @@ post_run() {
         rm -f clang
     fi
     ln -s ../modulefiles/moose/.<CLANG> clang
-    if [ `uname` = "Darwin" ]; then
-        # Because DYLD_LIBRARY_PATH no longer exists, we have to modify
-        # rpaths in all the llvm libraries to be absolute paths
-        cat <<'EOF' > "$PACKAGES_DIR/$PACKAGE/lib/change_links.sh"
-#!/bin/bash
-for sfile in `ls | grep dylib`; do
-  if ! [ -L $sfile ]; then
-    if [ `otool -L $sfile | grep -c rpath` -ge 1 ]; then
-      rpaths=($(otool -L $sfile | grep rpath | cut -f 1 -d\  ))
-      echo "Changing id: `pwd`/$sfile"
-      install_name_tool -id `pwd`/$sfile `pwd`/$sfile
-      for link in ${rpaths[*]}; do
-        echo "$link $sfile"
-        if [ `echo $link | grep -c $sfile` -le 0 ]; then
-          orig_link=$link
-          fixed_link=$(echo $link | sed -e 's?@rpath?'`pwd`'?g')
-          echo "install_name_tool -change $orig_link $fixed_link $sfile"
-          install_name_tool -change $orig_link $fixed_link $sfile
-        fi
-      done
-    fi
-  fi
-done
-EOF
-          cd "$PACKAGES_DIR/$PACKAGE/lib/"
-          sh change_links.sh
-          rm -f change_links.sh
-    fi
+    cd "$PACKAGES_DIR/$PACKAGE/lib"
+    change_links
     cp -R "$1/llvm/tools/clang/bindings" "$PACKAGES_DIR/$PACKAGE/"
 }
 ##
