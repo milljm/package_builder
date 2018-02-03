@@ -358,8 +358,10 @@ for OPERATING_SYSTEM in ${ARCH[*]}; do
     if [ "$OPERATING_SYSTEM" = `uname` ]; then CONTINUE="true"; fi
 done
 
-if [ "$DOWNLOAD_ONLY" = "True" ] && [ "$CONTINUE" = "true" ]; then
-    download
+if [ "$DOWNLOAD_ONLY" = "True" ]; then
+    if [ "$CONTINUE" = "true" ]; then
+        download
+    fi
     exit 0
 elif [ "$CONTINUE" = "true" ]; then
     touch $PROGRESS

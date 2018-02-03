@@ -23,7 +23,7 @@ pre_run() {
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
     module load moose-tools
-    CONFIGURE="CCPFLAGS='-I/opt/X11/include' ./configure --prefix=$PACKAGES_DIR/<GRAPHVIZ> --without-x --without-qt --disable-tcl"
+    CONFIGURE="CCPFLAGS='-I/opt/X11/include' ./configure --prefix=$PACKAGES_DIR/<GRAPHVIZ> --without-x --without-qt --disable-tcl --enable-swig=no"
 }
 post_run() {
     return
@@ -51,4 +51,5 @@ DOWNLOAD_DIR="<DOWNLOAD_DIR>"
 TEMP_PREFIX="<TEMP_PREFIX>"
 MOOSE_JOBS=<MOOSE_JOBS>
 KEEP_FAILED=<KEEP_FAILED>
+DOWNLOAD_ONLY=<DOWNLOAD_ONLY>
 source "$RELATIVE_DIR/functions" $@

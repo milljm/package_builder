@@ -110,25 +110,26 @@ def alterVersions(version_template, args):
         with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'template', module), 'r') as template_module:
             tmp_str = template_module.read()
 
-        if not args.dryrun:
-            with open(os.path.join(packages_path, module), 'w') as batchfile:
-                # Substitute base line environment variables
-                for env_var, value in args.baseline_vars:
-                    tmp_str = tmp_str.replace('<' + env_var + '>', value)
+            if not args.dryrun:
+                with open(os.path.join(packages_path, module), 'w') as batchfile:
+                    # Substitute base line environment variables
+                    for env_var, value in args.baseline_vars:
+                        if value:
+                            tmp_str = tmp_str.replace('<' + env_var + '>', value)
 
-                # Substitute module names and versions
-                for module_key, module_name in version_template.iteritems():
-                    tmp_str = tmp_str.replace('<' + module_key + '>', module_name)
+                    # Substitute module names and versions
+                    for module_key, module_name in version_template.iteritems():
+                        tmp_str = tmp_str.replace('<' + module_key + '>', module_name)
 
-                # If there are any substitutions remaining, it means this module will
-                # not be supported on this platform.
-                remaining_tags = re.findall(r'<\w+>', tmp_str)
-                for tag in remaining_tags:
-                    tmp_str = tmp_str.replace(tag, '')
+                    # If there are any substitutions remaining, it means this module will
+                    # not be supported on this platform.
+                    remaining_tags = re.findall(r'<\w+>', tmp_str)
+                    for tag in remaining_tags:
+                        tmp_str = tmp_str.replace(tag, '')
 
-                batchfile.write(tmp_str)
+                    batchfile.write(tmp_str)
 
-            os.chmod(os.path.join(packages_path, module), 0755)
+                os.chmod(os.path.join(packages_path, module), 0755)
 
     if args.dryrun:
         packages_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'template')
