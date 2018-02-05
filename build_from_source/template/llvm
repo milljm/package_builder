@@ -134,6 +134,7 @@ pre_run() {
 -DLLVM_ENABLE_RTTI=ON \
 -DCMAKE_BUILD_TYPE="Release" \
 -DPYTHON_EXECUTABLE=`which python2.7` \
+-DLLDB_DISABLE_PYTHON=1 \
 -DLLVM_TARGETS_TO_BUILD="X86" \
 -Wno-dev \
 ../llvm
