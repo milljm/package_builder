@@ -324,7 +324,7 @@ cleanup() {
 }
 
 function_help() {
-    echo -e "Usage:\n\t-h | --help  This message\n\t-d | --debug Run in interactive mode\n\t-j | --jobs  Override jobs with specified amount"
+    echo -e "Usage:\n\t-h | --help\t\tThis message\n\t-d | --debug\t\tRun in interactive mode\n\t-j | --jobs\t\tOverride jobs with specified amount\n\t-i | --ignore-deps\tIgnore dependencies"
 }
 
 for i in "$@"; do
@@ -340,6 +340,10 @@ for i in "$@"; do
         -j|--jobs)
             MOOSE_JOBS=$2
             shift 2
+            ;;
+        -i|--ignore-deps)
+            IGNORE_DEPENDENCIES="True"
+            shift
             ;;
     esac
 done
@@ -373,8 +377,12 @@ elif [ "$CONTINUE" = "true" ]; then
             fi
         done
         if ! [ -z "$error" ]; then
-            echo -e "\nDependencies not met: $error"
-            exit 0
+            if ! [ -z "$IGNORE_DEPENDENCIES" ]; then
+                echo -e "\nWarning: Ignoring dependencies not met:   $error"
+            else
+                echo -e "\nDependencies not met:   $error"
+                exit 0
+            fi
         fi
         clean_attempt
         download
