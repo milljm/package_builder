@@ -13,7 +13,7 @@ ccache_enable() {
     return
 
     if [ -n "$NO_CCACHE" ]; then return; fi
-    pause "Enable ccache"
+    pause ${FUNCNAME[0]} "Enable ccache"
     if [ "$?" = "1" ]; then return; fi
     if [ -d /opt/ccache ]; then
         echo -e "Enabling CCACHE..."
@@ -88,12 +88,13 @@ try_command() {
 pause() {
     if [ "$DEBUG" = "True" ]; then
         while true; do
-            message=`echo -e "\nNEXT TASK: $@ \n\nDo this task? [Y,n] or ctrl-c to exit> "`
+            message=`echo -e "\n##########\nNEXT TASK:\n\t\t$@ \n\nDo this task?\t[Y,n] or ctrl-c to exit.\n\t\t[e|E] will print function's contents> "`
             read -n1 -p "$message" skip_this
             case $skip_this in
                 y|Y) echo ''; return 0;;
                 n|N) echo ''; return 1;;
-                *) echo "Please enter 'y' or 'n'"
+                e|E) echo '\n'; type $1; echo -e "\n-----------------------\nCurrent Environment Variables:\n\tPACKAGES_DIR:\t$PACKAGES_DIR\n\tRELATIVE_DIR:\t$RELATIVE_DIR\n\tBASE_DIR:\t$BASE_DIR\n\tPACKAGE:\t$PACKAGE\n\tsrc_temp:\t$src_temp\n-----------------------";;
+                *) echo "Please enter 'y' or 'n'. e|E will print function's contents"
             esac
         done
     fi
@@ -103,7 +104,7 @@ md5sum_check() {
     REMOTE_MD5FILE="$1.md5"
     LOCAL_MD5FILE="$1.local_md5"
     MD5_DIFF="false"
-    pause "Perform MD5 Check"
+    pause ${FUNCNAME[0]} "Perform MD5 Check"
     if [ "$?" = "1" ]; then return; fi
 
     echo -e "\nRunning md5sum check..."
@@ -138,7 +139,7 @@ download() {
     let DOWNLOAD_CURRENT_ATTEMPTS=$DOWNLOAD_CURRENT_ATTEMPTS+1
 
     for url in ${DOWNLOAD[*]}; do
-        pause "Download File\n\tcurl -o $DOWNLOAD_DIR/$BASENAME $url"
+        pause ${FUNCNAME[0]} "Download File\n\tcurl -o $DOWNLOAD_DIR/$BASENAME $url"
         if [ "$?" = "1" ]; then return; fi
 
         # Wait for lock
@@ -157,7 +158,7 @@ download() {
         else
             echo 'file previously downloaded'
         fi
-        pause "Download MD5\n\t curl -s -o $DOWNLOAD_DIR/$BASENAME.md5 $url.md5"
+        pause ${FUNCNAME[0]} "Download MD5\n\t curl -s -o $DOWNLOAD_DIR/$BASENAME.md5 $url.md5"
         if [ "$?" = "1" ]; then
             if [ -d "$DOWNLOAD_DIR/.LOCKS/$BASENAME.lock" ]; then
                 echo -e "WARNING: download LOCK present. Another attempt will stall.\n\t$DOWNLOAD_DIR/.LOCKS/$BASENAME.lock"
@@ -197,7 +198,7 @@ extract() {
     if [ "$EXTRACT" = "false" ]; then return; fi
 
     for DFILE in ${EXTRACT[*]}; do
-        pause "Extract File\n\ttar -xf $DOWNLOAD_DIR/$DFILE -C $src_temp"
+        pause ${FUNCNAME[0]} "Extract File\n\ttar -xf $DOWNLOAD_DIR/$DFILE -C $src_temp"
         if [ "$?" = "1" ]; then return; fi
 
         echo -e "\nExtracting $DOWNLOAD_DIR/$DFILE..."
@@ -222,6 +223,18 @@ extract() {
     fi
 }
 
+pre_run_base() {
+    pause "pre_run Perform pre_run function?"
+    if [ "$?" = "1" ]; then return; fi
+    pre_run "$src_tmp"
+}
+
+post_run_base() {
+    pause "post_run Perform post_run function?"
+    if [ "$?" = "1" ]; then return; fi
+    post_run "$src_temp"
+}
+
 configure() {
     if [ "$CONFIGURE" = "false" ]; then return; fi
     if [ "$CONFIGURE" = "true" ]; then
@@ -233,7 +246,7 @@ configure() {
     else
         CONFIG="$CONFIGURE"
     fi
-    pause "Run Configure\n\t$CONFIG"
+    pause ${FUNCNAME[0]} "Run Configure\n\t$CONFIG"
     if [ "$?" = "1" ]; then return; fi
 
     echo -e "\nConfigure $ME with the following options: $CONFIG"
@@ -256,7 +269,7 @@ build() {
     elif [ -n "$SERIAL" ]; then
         MOOSE_JOBS=1
     fi
-    pause "Run make\n\tmake -j $MOOSE_JOBS"
+    pause ${FUNCNAME[0]} "Run make\n\tmake -j $MOOSE_JOBS"
     if [ "$?" = "1" ]; then return; fi
 
     echo -e "\nBuilding $ME with JOB count: $MOOSE_JOBS"
@@ -266,7 +279,7 @@ build() {
 
 make_install() {
     if [ "$INSTALL" = "false" ]; then return; fi
-    pause "Install\n\tmake install"
+    pause ${FUNCNAME[0]} "Install\n\tmake install"
     if [ "$?" = "1" ]; then return; fi
 
     echo -e "\nInstalling $PACKAGE..."
@@ -288,6 +301,9 @@ fix_libs() {
 }
 
 clean_attempt() {
+    pause ${FUNCNAME[0]} "Perform clean"
+    if [ "$?" = "1" ]; then return; fi
+
     # Clean a possible failed previous temporary build directory
     if [ -d "$src_temp" ]; then
         cd "$RELATIVE_DIR"
@@ -388,11 +404,11 @@ elif [ "$CONTINUE" = "true" ]; then
         download
         extract
         ccache_enable
-        pre_run "$src_temp"
+        pre_run_base "$src_temp"
         configure
         build
         make_install
-        post_run "$src_temp"
+        post_run_base "$src_temp"
         echo $ME >> $PROGRESS
         echo "$ME success"
         pause "Cleanup Temporary Build\n\t$src_temp"
