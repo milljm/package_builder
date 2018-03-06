@@ -2,47 +2,8 @@
 ####
 # set common functions
 ccache_enable() {
-    # We are not sure building the entire package using CCACHE is wise. It breaks something
-    # interesting between clang and gcc when clang tries to link against gcc's fortran. Error:
-    #
-    # configure: error: ****  Incompatible Fortran and C Object File Types!  ****
-    # F77 Object File Type produced by "gfortran  " is : : Mach-O 64-bit object x86_64.
-    #  C  Object File Type produced by "clang   " is : : Mach-O object i386.
-    #
-    # Until we understand this error, we are disabling CCACHE.
+    # We do not want to perform any ccache builds
     return
-
-    if [ -n "$NO_CCACHE" ]; then return; fi
-    pause ${FUNCNAME[0]} "Enable ccache"
-    if [ "$?" = "1" ]; then return; fi
-    if [ -d /opt/ccache ]; then
-        echo -e "Enabling CCACHE..."
-        export PATH=/opt/ccache/bin:$PATH
-
-        if [ `echo $CC | grep -ci mpi` -ge 1 ]; then
-            export CC="ccache `$CC -show | cut -d\  -f1`"
-            export CXX="ccache `$CXX -show | cut -d\  -f1`"
-        else
-            if [ -n "$CC" ]; then
-                export CC="ccache $CC"
-                export CXX="ccache $CXX"
-            elif [ `uname` = "Darwin" ]; then
-                export CC="ccache clang"
-                export CXX="ccache clang++"
-            else
-                export CC="ccache gcc"
-                export CXX="ccache g++"
-            fi
-        fi
-        export CCACHE_SLOPPINESS="time_macros"
-        export CCACHE_BASEDIR="$TEMP_PREFIX"
-        export CCACHE_COMPILERCHECK="content"
-        export CCACHE_DIR="$TEMP_PREFIX/.ccache"
-        echo -e "CCACHE set as follows: CC=$CC CXX=$CXX"
-        echo "which ccache: "`which ccache`
-        ccache -M 8G
-        ccache -s
-    fi
 }
 
 with_lock() {
@@ -226,13 +187,13 @@ extract() {
 pre_run_base() {
     pause "pre_run Perform pre_run function?"
     if [ "$?" = "1" ]; then return; fi
-    pre_run "$src_tmp"
+    pre_run "$@"
 }
 
 post_run_base() {
     pause "post_run Perform post_run function?"
     if [ "$?" = "1" ]; then return; fi
-    post_run "$src_temp"
+    post_run "$@"
 }
 
 configure() {
@@ -306,7 +267,6 @@ clean_attempt() {
 
     # Clean a possible failed previous temporary build directory
     if [ -d "$src_temp" ]; then
-        cd "$RELATIVE_DIR"
         rm -rf "$src_temp"
     fi
     mkdir -p "$src_temp"
