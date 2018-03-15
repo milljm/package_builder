@@ -26,7 +26,7 @@ pre_run() {
     for which_conda in ${DEP[*]}; do
 	module purge
 	module load advanced_modules $which_conda
-	pip install --no-cache-dir markdown python-markdown-math pybtex bs4 jinja2 livereload daemonlite pylint==1.6.5 lxml pylatexenc anytree
+	pip install --no-cache-dir pybtex livereload daemonlite pylint==1.6.5 lxml pylatexenc anytree
 	if [ $? -ne 0 ]; then echo "Failed to install dependency packages for $PACKAGE"; cleanup 1; fi
     done
 }
