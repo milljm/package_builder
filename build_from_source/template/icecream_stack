@@ -13,7 +13,7 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD=(http://mooseframework.org/source_packages/libtool-2.4.6.tar.gz http://mooseframework.org/source_packages/lzo-2.09.tar.gz http://mooseframework.org/source_packages/libcap-ng-0.7.8.tar.gz http://mooseframework.org/source_packages/icecream-master.tar.gz)
+DOWNLOAD=(http://mooseframework.inl.gov/source_packages/libtool-2.4.6.tar.gz http://mooseframework.inl.gov/source_packages/lzo-2.09.tar.gz http://mooseframework.inl.gov/source_packages/libcap-ng-0.7.8.tar.gz http://mooseframework.inl.gov/source_packages/icecream-master.tar.gz)
 EXTRACT='false'
 CONFIGURE="false"
 BUILD='false'

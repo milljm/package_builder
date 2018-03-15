@@ -14,7 +14,7 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD=(http://mooseframework.org/source_packages/llvm-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/cfe-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/clang-tools-extra-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/compiler-rt-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/libcxx-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/libcxxabi-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/openmp-<LLVM>.src.tar.xz http://mooseframework.org/source_packages/lldb-<LLVM>.src.tar.xz)
+DOWNLOAD=(http://mooseframework.inl.gov/source_packages/llvm-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/cfe-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/clang-tools-extra-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/compiler-rt-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/libcxx-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/libcxxabi-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/openmp-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/lldb-<LLVM>.src.tar.xz)
 EXTRACT="false"
 CONFIGURE="false"
 BUILD='true'

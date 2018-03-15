@@ -14,7 +14,7 @@ ARCH=(Darwin)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='http://mooseframework.org/source_packages/<VALGRIND>.tar.gz'
+DOWNLOAD='http://mooseframework.inl.gov/source_packages/<VALGRIND>.tar.gz'
 EXTRACT='<VALGRIND>.tar.gz'
 CONFIGURE='false'
 BUILD='true'

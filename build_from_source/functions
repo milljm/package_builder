@@ -100,7 +100,7 @@ download() {
     let DOWNLOAD_CURRENT_ATTEMPTS=$DOWNLOAD_CURRENT_ATTEMPTS+1
 
     for url in ${DOWNLOAD[*]}; do
-        pause ${FUNCNAME[0]} "Download File\n\tcurl -o $DOWNLOAD_DIR/$BASENAME $url"
+        pause ${FUNCNAME[0]} "Download File\n\tcurl -L -o $DOWNLOAD_DIR/$BASENAME $url"
         if [ "$?" = "1" ]; then return; fi
 
         # Wait for lock
@@ -109,7 +109,7 @@ download() {
         echo -e "\nAttempt $DOWNLOAD_CURRENT_ATTEMPTS downloading file: $url"
         # If file is not present, download it and the corresponding md5
         if ! [ -f "$DOWNLOAD_DIR/$BASENAME" ]; then
-            try_command 5 "curl -o $DOWNLOAD_DIR/$BASENAME $url"
+            try_command 5 "curl -L -o $DOWNLOAD_DIR/$BASENAME $url"
             if [ `file "$DOWNLOAD_DIR/$BASENAME" | grep -c "gzip\|archive\|compressed\|data\|executable"` -le 0 ]; then
                 echo -e "Downloaded file was not an archive: \n"
                 file "$DOWNLOAD_DIR/$BASENAME"
@@ -119,7 +119,7 @@ download() {
         else
             echo 'file previously downloaded'
         fi
-        pause ${FUNCNAME[0]} "Download MD5\n\t curl -s -o $DOWNLOAD_DIR/$BASENAME.md5 $url.md5"
+        pause ${FUNCNAME[0]} "Download MD5\n\t curl -s -L -o $DOWNLOAD_DIR/$BASENAME.md5 $url.md5"
         if [ "$?" = "1" ]; then
             if [ -d "$DOWNLOAD_DIR/.LOCKS/$BASENAME.lock" ]; then
                 echo -e "WARNING: download LOCK present. Another attempt will stall.\n\t$DOWNLOAD_DIR/.LOCKS/$BASENAME.lock"
@@ -131,7 +131,7 @@ download() {
 
         # Verify downloaded file is correct
         with_lock "$DOWNLOAD_DIR/.LOCKS/$BASENAME.md5.lock"
-        try_command 5 "curl -s -o $DOWNLOAD_DIR/$BASENAME.md5 $url.md5"
+        try_command 5 "curl -s -L -o $DOWNLOAD_DIR/$BASENAME.md5 $url.md5"
         if [ `file "$DOWNLOAD_DIR/$BASENAME.md5" | grep -c "ASCII text"` -le 0 ]; then
             echo -e "Downloaded file was not an MD5 file: \n"
             file "$DOWNLOAD_DIR/$BASENAME.md5"

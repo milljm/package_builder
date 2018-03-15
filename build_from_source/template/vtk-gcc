@@ -14,7 +14,7 @@ ARCH=(Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='http://mooseframework.org/source_packages/<VTK>.tar.gz'
+DOWNLOAD='http://mooseframework.inl.gov/source_packages/<VTK>.tar.gz'
 EXTRACT='<VTK>.tar.gz'
 CONFIGURE='false'
 BUILD='true'
