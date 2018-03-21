@@ -15,7 +15,7 @@ ARCH=()
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='http://mooseframework.org/source_packages/<OPENMPI>.tar.gz'
+DOWNLOAD='http://mooseframework.inl.gov/source_packages/<OPENMPI>.tar.gz'
 EXTRACT='<OPENMPI>.tar.gz'
 CONFIGURE="false"
 BUILD='false'

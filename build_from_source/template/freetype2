@@ -13,7 +13,7 @@ ARCH=(Darwin)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='http://mooseframework.org/source_packages/<FREETYPE2>.tar.gz'
+DOWNLOAD='http://mooseframework.inl.gov/source_packages/<FREETYPE2>.tar.gz'
 EXTRACT='<FREETYPE2>.tar.gz'
 CONFIGURE="true"
 BUILD='true'
