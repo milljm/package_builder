@@ -454,9 +454,11 @@ _mac_version_to_name = {'10.9'  : 'mavericks',
 if __name__ == '__main__':
   args = parseArguments()
   package = args.package_type(args)
-  if package.prepare_area():
-    if package.create_tarball():
-      if package.create_redistributable():
-        print 'Finished successfully. Removing temporary files..'
+  if (package.prepare_area()
+      and package.create_tarball()
+      and package.create_redistributable()):
+    print 'Finished successfully. Removing temporary files..'
+  else:
+    sys.exit(1)
   if not args.keep_temporary_files:
     package.clean_up()
