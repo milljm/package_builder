@@ -1,9 +1,9 @@
 MPICH=mpich-3.2
 OPENMPI=openmpi-1.10.2
-PETSC_DEFAULT=petsc-3.7.6
-PETSC_ALT=petsc-3.8.3
-SLEPC_DEFAULT=slepc-3.7.3
-SLEPC_ALT=slepc-3.8.2
+PETSC_ALT=petsc-3.7.6
+PETSC_DEFAULT=petsc-3.8.3
+SLEPC_ALT=slepc-3.7.3
+SLEPC_DEFAULT=slepc-3.8.2
 PETSC_BLEEDINGEDGE=petsc-bleedingedge
 AUTOCONF=autoconf-2.69
 AUTOMAKE=automake-1.13
