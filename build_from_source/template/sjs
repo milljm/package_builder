@@ -22,6 +22,7 @@ INSTALL='false'
 
 pre_run() {
     cd $PACKAGES_DIR
+    # new commit into sjs to allow new queueing system to function
     try_command 3 "git clone https://github.com/milljm/sjs.git"
     cd sjs
     git checkout pbs
