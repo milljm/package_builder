@@ -174,15 +174,16 @@ Class for building Debian based packages
 
   def create_redistributable(self):
     print 'Building redistributable using dpkg... This can take a long time'
+    f = tempfile.TemporaryFile()
     os.chdir(self.temp_dir)
     package_builder = subprocess.Popen(['dpkg', '-b', 'deb'],
-                                       stdout=subprocess.PIPE,
-                                       stderr=subprocess.PIPE)
+                                       stdout=f,
+                                       stderr=f)
     while package_builder.poll() == None:
       time.sleep(1)
-    results = package_builder.communicate()
+    f.seek(0)
     if package_builder.poll() != 0:
-      print 'There was error building the redistributable package using dpkg:\n\n', results[1]
+      print 'There was error building the redistributable package using dpkg:\n\n', f.read()
       return False
     else:
       shutil.move(os.path.join(self.temp_dir, 'deb.deb'), os.path.join(self.args.relative_path, self.redistributable_name))
@@ -260,6 +261,7 @@ Class for building RedHat based packages
 
   def create_redistributable(self):
     print 'Building redistributable using rpmbuild... This can take a long time'
+    f = tempfile.TemporaryFile()
     os.chdir(self.temp_dir)
     os.environ['NO_BRP_CHECK_RPATH'] = 'true'
     os.environ['QA_SKIP_RPATHS'] = 'true'
@@ -267,13 +269,13 @@ Class for building RedHat based packages
     package_builder = subprocess.Popen(['rpmbuild', '-bb',
                                         '--define=_topdir %s' % (os.path.join(self.temp_dir, 'rpm')),
                                         os.path.join(self.temp_dir, 'rpm/SPECS/moose-compilers.spec')],
-                                       stdout=subprocess.PIPE,
-                                       stderr=subprocess.PIPE)
+                                       stdout=f,
+                                       stderr=f)
     while package_builder.poll() == None:
       time.sleep(1)
-    results = package_builder.communicate()
+    f.seek(0)
     if package_builder.poll() != 0:
-      print 'There was error building the redistributable package using rpmbuild:\n\n', results[1]
+      print 'There was error building the redistributable package using rpmbuild:\n\n', f.read()
       return False
     else:
       # There is only going to be one file in the following location

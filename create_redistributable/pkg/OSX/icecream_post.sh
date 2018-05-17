@@ -21,10 +21,11 @@ else
     CPU_COUNT=0
 fi
 
-if ! [ -f /Library/LaunchDaemons/com.moose.icecream.plist ]; then
+# true if file does not exists, or is empty
+if ! [ -f /Library/LaunchDaemons/com.moose.icecream.plist ] || [ -s /Library/LaunchDaemons/com.moose.icecream.plist ]; then
     sed -e "s/<CHANGEME>/`hostname | cut -d. -f1`_$USER/g" <PACKAGES_DIR>/com.moose.icecream.plist | \
-        sed -e "s/<CPUS>/$CPU_COUNT/g" /Library/LaunchDaemons/com.moose.icecream.plist | \
-        sed -e "s/<PACKAGE_PREFIX>/<PACKAGES_DIR>/g" > /Library/LaunchDaemons/com.moose.icecream.plist
+        sed -e "s/<CPUS>/$CPU_COUNT/g" | \
+        sed -e "s|<PACKAGE_PREFIX>|<PACKAGES_DIR>|g" > /Library/LaunchDaemons/com.moose.icecream.plist
     chown root:wheel /Library/LaunchDaemons/com.moose.icecream.plist
     launchctl load /Library/LaunchDaemons/com.moose.icecream.plist
 else
