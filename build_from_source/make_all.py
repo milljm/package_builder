@@ -179,6 +179,16 @@ def verifyArgs(args):
             print 'Unable to write to specified prefix location. Please chown this location manually before continuing'
             sys.exit(1)
 
+    if args.code_sign_name and not args.code_sign_cert:
+        print 'Codesign name supplied but not a path to the certificate'
+        sys.exit(1)
+    elif args.code_sign_cert and not args.code_sign_name:
+        print 'Codesign certificate path set, but not the name of the certificate'
+        sys.exit(1)
+    elif args.code_sign_cert and not os.path.exists(args.code_sign_cert):
+        print 'Path to Codesign cert does not exists'
+        sys.exit(1)
+
     args.prefix = args.prefix.rstrip(os.path.sep)
     return args
 
@@ -187,6 +197,8 @@ def parseArguments(args=None):
     parser.add_argument('-p', '--prefix', help='Directory to install everything into')
     parser.add_argument('-j', '--cpu-count', default='4', help='Specify MAX CPU count available')
     parser.add_argument('-m', '--max-modules', default='2', help='Specify the maximum amount of modules to run simultaneously')
+    parser.add_argument('--code-sign-name', help='Keychain code signing certificate name available to sign LLDB with (OS X Only)')
+    parser.add_argument('--code-sign-cert', help='Path to code signing certificate to include for redistribution (for use with OS X codesign)')
     parser.add_argument('--build-only', help='Build only the necessary things up to specified package')
     parser.add_argument('--temp-dir', default=tempfile.gettempdir(), help='Use this location as my scratch area when building')
     parser.add_argument('--show-available', action='store_const', const=True, default=False, help='Print out the list of available packages to build')
@@ -238,7 +250,9 @@ if __name__ == '__main__':
                           ('DOWNLOAD_ONLY', str(args.download_only)),
                           ('TEMP_PREFIX', os.path.join(args.temp_dir, 'moose_package_build_temp')),
                           ('MOOSE_JOBS', args.cpu_count),
-                          ('KEEP_FAILED', str(args.keep_failed))]
+                          ('KEEP_FAILED', str(args.keep_failed)),
+                          ('CODESIGN_NAME', args.code_sign_name),
+                          ('CODESIGN_CERT', args.code_sign_cert)]
 
     templates = getTemplate(args)
     packages_path = alterVersions(templates, args)

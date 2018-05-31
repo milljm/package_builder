@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules gcc llvm)
+DEP=(common_files modules gcc llvm)
 PACKAGE='icecream'
 
 #####

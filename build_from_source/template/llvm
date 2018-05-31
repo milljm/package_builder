@@ -139,9 +139,17 @@ pre_run() {
 -Wno-dev \
 ../llvm
     else
+      # check if we are code signing LLDB
+      if [ "$CODESIGN_NAME" == "None" ]; then
+        CODESIGN_NAME=''
+      else
+        mkdir -p "$PACKAGES_DIR/$PACKAGE/codesign"
+        cp "$CODESIGN_CERT" "$PACKAGES_DIR/$PACKAGE/codesign/moose_codesign.cert"
+        echo "$CODESIGN_NAME" > "$PACKAGES_DIR/$PACKAGE/codesign/codesign_name"
+      fi
       cmake -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
 -DLLVM_BUILD_EXTERNAL_COMPILER_RT=ON \
--DLLDB_CODESIGN_IDENTITY='' \
+-DLLDB_CODESIGN_IDENTITY=$CODESIGN_NAME \
 -DLLDB_DISABLE_PYTHON=0 \
 -DLLVM_ENABLE_RTTI=ON \
 -DCLANG_DEFAULT_OPENMP_RUNTIME=libomp \
@@ -224,6 +232,8 @@ post_run() {
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package
+CODESIGN_NAME="<CODESIGN_NAME>"
+CODESIGN_CERT="<CODESIGN_CERT>"
 PACKAGES_DIR="<PACKAGES_DIR>"
 RELATIVE_DIR="<RELATIVE_DIR>"
 DOWNLOAD_DIR="<DOWNLOAD_DIR>"
