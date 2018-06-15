@@ -29,7 +29,7 @@ pre_run() {
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
     module load advanced_modules cmake moose/.<OPENMPI>_<CLANG>
-    CONFIGURE="./configure \
+    CONFIGURE="python2 ./configure \
 --prefix=$PACKAGES_DIR/<PETSC_DEFAULT>/<OPENMPI>_<CLANG>-opt \
 --download-hypre=1 \
 --with-ssl=0 \
