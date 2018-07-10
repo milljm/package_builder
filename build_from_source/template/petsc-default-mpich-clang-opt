@@ -26,6 +26,9 @@ clean_petsc() {
 }
 
 pre_run() {
+    if [ `uname` = "Darwin" ]; then
+        alias python2=python
+    fi
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
     module load advanced_modules cmake moose/.<MPICH>_<CLANG>
