@@ -44,12 +44,14 @@ EOF
 
 pre_run() {
     if [ `uname` = "Darwin" ]; then
-        alias python2=python
+        export PYTHON_BIN=python
+    else
+        export PYTHON_BIN=python2
     fi
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
     module load advanced_modules cmake moose/.<MPICH>_<CLANG>
-    CONFIGURE="python2 ./configure \
+    CONFIGURE="$PYTHON_BIN ./configure \
 --prefix=$PACKAGES_DIR/<PETSC_ALT>/<MPICH>_<CLANG>-opt \
 --download-hypre=1 \
 --with-ssl=0 \
