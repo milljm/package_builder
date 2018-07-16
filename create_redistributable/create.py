@@ -12,10 +12,11 @@ Base class for building packages
     self.version_template = self._getVersionTemplate()
     self.redistributable_version = self._get_build_version()
     print 'incrementing to version', self.redistributable_version
-    self.redistributable_name = '-'.join([self.base_name, str(self.redistributable_version)]) + '_' + \
-                                '-'.join([self.args.release, self.args.version]) + '_' + \
-                                self.args.arch + '.' + \
-                                self.__class__.__name__.lower()
+    self.redistributable_name = '-'.join(['_'.join([self.base_name,
+                                                    self.args.release]),
+                                          '_'.join([self.args.version,
+                                                    str(self.redistributable_version),
+                                                    self.args.arch + "." + self.__class__.__name__])]).lower()
 
     self.temp_dir = tempfile.mkdtemp()
 
