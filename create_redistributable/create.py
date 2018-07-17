@@ -353,6 +353,7 @@ def machineArch():
 
   # Darwin Specific
   if uname == 'Darwin':
+    release = 'osx'
     try:
       sw_ver_process = subprocess.Popen(['sw_vers'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except:
@@ -365,18 +366,18 @@ def machineArch():
       sys.exit(1)
     else:
       try:
-        version = re.findall(r'ProductVersion:\W+(\S+)', sw_ver_stdout[0])[0]
+        mac_version = re.findall(r'ProductVersion:\W+(\S+)', sw_ver_stdout[0])[0]
       except IndexError:
         print 'sw_vers returned information I did not understand:\n%s' % (sw_ver_stdout[0])
         sys.exit(1)
 
-      release = None
+      version = None
       for osx_version, version_name in _mac_version_to_name.iteritems():
-        if version.find(osx_version) != -1:
-          release = _mac_version_to_name[osx_version]
+        if mac_version.find(osx_version) != -1:
+          version = _mac_version_to_name[osx_version]
           break
 
-      if release == None:
+      if version == None:
         print 'Unable to determine OS X friendly name'
         sys.exit(1)
 
@@ -483,7 +484,7 @@ _need_symbolic_link = ['']
 ### A dictionary of class pointers corresponding to OS type
 _pathetic_dict = { RPM : ['FEDORA', 'SUSE', 'CENTOS', 'RHEL'],
                    DEB : ['UBUNTU', 'MINT', 'DEBIAN', 'KUBUNTU'],
-                   PKG : ['ELCAPITAN', 'SIERRA', 'HIGHSIERRA']}
+                   PKG : ['OSX']}
 
 ### Conversion of OS X version to release name
 _mac_version_to_name = {'10.11' : 'elcapitan',
