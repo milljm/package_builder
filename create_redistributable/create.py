@@ -1,5 +1,5 @@
 #!/usr/bin/env python2.7
-import os, sys, re, argparse, shlex, shutil, subprocess, tempfile, platform, time
+import os, sys, re, argparse, shlex, shutil, subprocess, tempfile, time
 
 class PackageCreator:
   """
@@ -8,56 +8,21 @@ Base class for building packages
   def __init__(self, args):
     self.args = args
     self.base_name = _base_name
-    self.uname = platform.platform()
-    self.arch = platform.machine()
-    if self.uname.upper().find('DARWIN') != -1:
-      self.me = 'darwin'
-      self.version = '.'.join(platform.mac_ver()[0].split('.')[:2])
-      self.release = _mac_version_to_name[self.version]
-    else:
-      # See if linux_distribution is going to provide anything useful
-      self.me = 'linux'
-      self.release, self.version, junk = [x.replace(' ', '') for x in platform.linux_distribution()]
-      if self._linux_detection() is not True:
-        if self.args.force is not True:
-          print 'I am unable to properly determine your system release or version:', \
-            '\n\t', ' '.join(platform.linux_distribution()), \
-            '\nSometimes using a non-system specific version of python (like miniconda) will', \
-            '\nreport platform identifiers incorrectly. Please make sure that `python` is', \
-            '\n/usr/bin/python'
-          sys.exit(1)
-        else:
-          print 'You have opted to force package creation regardless of package name.', \
-            '\nThis will cause the finished package to be named non-accordingly,', \
-            '\nas well as not being easily version controlled.'
-          self.release = 'generic'
-          self.version = '1.0'
+
     self.version_template = self._getVersionTemplate()
     self.redistributable_version = self._get_build_version()
     print 'incrementing to version', self.redistributable_version
-    self.redistributable_name = '-'.join([self.base_name, str(self.redistributable_version)]) + '_' + \
-                                '-'.join([self.release, self.version]) + '_' + \
-                                self.arch + '.' + \
-                                self.__class__.__name__.lower()
+    self.redistributable_name = '-'.join(['_'.join([self.base_name,
+                                                    self.args.release]),
+                                          '_'.join([self.args.version,
+                                                    str(self.redistributable_version),
+                                                    self.args.arch + "." + self.__class__.__name__])]).lower()
 
     self.temp_dir = tempfile.mkdtemp()
 
-  def _linux_detection(self):
-    try:
-      lsb_release_process = subprocess.Popen(['lsb_release', '-a'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
-      lsb_release_stdout = lsb_release_process.communicate()[0]
-      for identifier in platform.linux_distribution():
-        if lsb_release_stdout.find(identifier) != -1:
-          return True
-    except:
-      # not every Linux OS has lsb_release, so we do not want to exit due to this
-      print 'Warning: lsb_release binary is not installed. This _may_ cause an error', \
-        '\nlater on when attempting to name the package accordingly.'
-    return False
-
   def _getVersionTemplate(self):
     version_template = {}
-    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), '../common_files', self.me + '-version_template')) as template_file:
+    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), '../common_files', self.args.uname.lower() + '-version_template')) as template_file:
       template = template_file.read()
       for item in template.split('\n'):
         if len(item):
@@ -66,18 +31,18 @@ Base class for building packages
 
   # Method for maintaining the package version based on package class (pkg, rpm, deb)
   def _get_build_version(self):
-    if not os.path.exists(os.path.join(args.meta_dir, self.__class__.__name__.lower(), self.release + '-' + self.version + '_build')):
+    if not os.path.exists(os.path.join(args.meta_dir, self.__class__.__name__.lower(), self.args.release + '-' + self.args.version + '_build')):
       if not os.path.exists(os.path.join(args.meta_dir, self.__class__.__name__.lower())):
         try:
           os.makedirs(os.path.join(args.meta_dir, self.__class__.__name__.lower()))
         except OSError:
           print 'Failed to create versioning meta directory:', args.meta_dir
           sys.exit(1)
-      with open(os.path.join(args.meta_dir, self.__class__.__name__.lower(), self.release + '-' + self.version + '_build'), 'w') as version_file:
+      with open(os.path.join(args.meta_dir, self.__class__.__name__.lower(), self.args.release + '-' + self.args.version + '_build'), 'w') as version_file:
         version_file.write('1')
       new_version = 1
     else:
-      with open(os.path.join(args.meta_dir, self.__class__.__name__.lower(), self.release + '-' + self.version + '_build'), 'r+') as version_file:
+      with open(os.path.join(args.meta_dir, self.__class__.__name__.lower(), self.args.release + '-' + self.args.version + '_build'), 'r+') as version_file:
         new_version = int(version_file.read()) + 1
         version_file.truncate(0)
         version_file.seek(0)
@@ -298,7 +263,7 @@ Class for building Macintosh Packages
             tmp_file.truncate(0)
             tmp_file.seek(0)
             xml_string = xml_string.replace('<TEMP_DIR>', os.path.join(self.temp_dir, 'pkg/OSX'))
-            xml_string = xml_string.replace('<MAC_VERSION>', self.version)
+            xml_string = xml_string.replace('<MAC_VERSION>', self.args.version)
             xml_string = xml_string.replace('<REDISTRIBUTABLE_FILE>', self.redistributable_name)
             tmp_file.write(xml_string)
 
@@ -313,7 +278,7 @@ Class for building Macintosh Packages
           # If we are only building a package for OS X El Capitan (10.11), set a special
           # switch that allows the installer to create a symbolic link to our openMP
           # implementation (DYLD_LIBRARY_PATH issue)
-          if html_file == 'common_post.sh' and self.version in _need_symbolic_link:
+          if html_file == 'common_post.sh' and self.args.version in _need_symbolic_link:
             html_str = html_str.replace('<BOOL>', '1')
           else:
             html_str = html_str.replace('<BOOL>', '0')
@@ -369,19 +334,94 @@ Class for building Macintosh Packages
         os.path.join(self.args.relative_path, 'osx.pkg'), '\n'
     return True
 
+def machineArch():
+  try:
+    uname_process = subprocess.Popen(['uname', '-sm'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  except:
+    print 'Error invoking: uname -sm'
+
+  uname_stdout = uname_process.communicate()
+  if uname_stdout[1]:
+    print uname_stdout[1]
+    sys.exit(1)
+  else:
+    try:
+      uname, arch = re.findall(r'(\S+)', uname_stdout[0])
+    except ValueError:
+      print 'uname -sm returned information I did not understand:\n%s' % (uname_stdout[0])
+      sys.exit(1)
+
+  # Darwin Specific
+  if uname == 'Darwin':
+    release = 'osx'
+    try:
+      sw_ver_process = subprocess.Popen(['sw_vers'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except:
+      print 'Error invoking: sw_vers'
+      sys.exit(1)
+
+    sw_ver_stdout = sw_ver_process.communicate()
+    if sw_ver_stdout[1]:
+      print sw_ver_stdout[1]
+      sys.exit(1)
+    else:
+      try:
+        mac_version = re.findall(r'ProductVersion:\W+(\S+)', sw_ver_stdout[0])[0]
+      except IndexError:
+        print 'sw_vers returned information I did not understand:\n%s' % (sw_ver_stdout[0])
+        sys.exit(1)
+
+      version = None
+      for osx_version, version_name in _mac_version_to_name.iteritems():
+        if mac_version.find(osx_version) != -1:
+          version = _mac_version_to_name[osx_version]
+          break
+
+      if version == None:
+        print 'Unable to determine OS X friendly name'
+        sys.exit(1)
+
+  # Linux Specific
+  else:
+    try:
+      lsb_release_process = subprocess.Popen(['lsb_release', '-a'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except:
+      print 'Error invoking: lsb_release -a'
+      sys.exit(1)
+
+    lsb_stdout = lsb_release_process.communicate()
+    if lsb_stdout[1]:
+      print lsb_stdout[1]
+      sys.exit(1)
+    else:
+      fail_message = 'lsb_release -a returned information I did not understand:\n%s' % (lsb_stdout[0])
+      try:
+        version = re.findall(r'Release:\W+(\S+)', lsb_stdout[0])[0]
+        release = re.findall(r'Distributor ID:\W+(\S+)', lsb_stdout[0])[0]
+      except IndexError:
+        print fail_message
+        sys.exit(1)
+      if version == None or release == None:
+        print fail_message
+        sys.exit(1)
+
+  return (uname, arch, version, release)
+
 def verifyArgs(args):
+  (args.uname, args.arch, args.version, args.release) = machineArch()
   fail = False
 
   # Try to determine package type, unless provided by the user
   if args.package_type is None:
-    for package_type, arch_list in _pathetic_dict.iteritems():
-      for arch in arch_list:
-        if arch in platform.platform().upper():
+    for package_type, distro_list in _pathetic_dict.iteritems():
+      for distro in distro_list:
+        if distro in args.release.upper():
           args.package_type = package_type
   else:
     for package_type, arch_list in _pathetic_dict.iteritems():
       if package_type.__name__ == args.package_type.upper():
         args.package_type = package_type
+        break
 
   # Package type is still none?
   if args.package_type is None:
@@ -444,12 +484,10 @@ _need_symbolic_link = ['']
 ### A dictionary of class pointers corresponding to OS type
 _pathetic_dict = { RPM : ['FEDORA', 'SUSE', 'CENTOS', 'RHEL'],
                    DEB : ['UBUNTU', 'MINT', 'DEBIAN', 'KUBUNTU'],
-                   PKG : ['DARWIN']}
+                   PKG : ['OSX']}
 
 ### Conversion of OS X version to release name
-_mac_version_to_name = {'10.9'  : 'mavericks',
-                        '10.10' : 'yosemite',
-                        '10.11' : 'elcapitan',
+_mac_version_to_name = {'10.11' : 'elcapitan',
                         '10.12' : 'sierra',
                         '10.13' : 'highsierra'}
 
