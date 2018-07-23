@@ -1,6 +1,16 @@
 #!/bin/bash
 ####
 # set common functions
+
+source_intel() {
+    if [ "$WITH_INTEL" != "None" ] && [ -f "$WITH_INTEL/bin/compilervars.sh" ]; then
+        source "$WITH_INTEL/bin/compilervars.sh" intel64
+        if [ "$?" == "0" ]; then
+            INTEL_AVAILABLE=true
+        fi
+    fi
+}
+
 ccache_enable() {
     # We do not want to perform any ccache builds
     return
@@ -333,9 +343,20 @@ PROGRESS="$RELATIVE_DIR/progress"
 touch $PROGRESS
 export src_temp="$TEMP_PREFIX/$ME"
 
+if [ -n "$WITH_INTEL" ] && [ "$WITH_INTEL" != "None" ]; then source_intel; fi
+
 CONTINUE="false"
 for OPERATING_SYSTEM in ${ARCH[*]}; do
-    if [ "$OPERATING_SYSTEM" = `uname` ]; then CONTINUE="true"; fi
+    if [ "$OPERATING_SYSTEM" = `uname` ]; then
+        if [ -n "$INTEL_AVAILABLE" ]; then
+            CONTINUE="true"
+        elif [ -z "$WITH_INTEL" ]; then
+            CONTINUE="true"
+        else
+            echo "Intel specified but is not available"
+            cleanup 1
+        fi
+    fi
 done
 
 if [ "$DOWNLOAD_ONLY" = "True" ]; then

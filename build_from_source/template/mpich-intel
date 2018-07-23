@@ -1,0 +1,99 @@
+#!/bin/bash
+#############
+## Specifics
+##
+DEP=(modules gcc intel-module)
+PACKAGE="<INTEL>"
+BASE_DIR="<MPICH>"
+
+#####
+# Set the operating system allowed to build this module
+#
+ARCH=(Linux)
+
+#####
+# Setting any of these variables to 'false' effectively skips that step
+# This is useful for items like 'autojump' which requires a git clone/checkout
+DOWNLOAD='http://mooseframework.inl.gov/source_packages/<MPICH>.tar.gz'
+EXTRACT='<MPICH>.tar.gz'
+CONFIGURE='false'
+BUILD='true'
+INSTALL='true'
+
+pre_run() {
+    if [ -d "${PACKAGES_DIR}_intel/$BASE_DIR/<INTEL>" ]; then rm -rf "${PACKAGES_DIR}_intel/$BASE_DIR/<INTEL>"; fi
+    mkdir intel-opt; cd intel-opt
+    unset MODULEPATH
+    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    module load moose/.<GCC>
+    export CC=icc CXX=icpc FC=ifort F77=ifort
+    CONFIGURE="../configure --prefix=${PACKAGES_DIR}_intel/<MPICH>/<INTEL> --enable-shared --enable-sharedlibs=gcc --enable-fast=03 --enable-debuginfo --enable-totalview --enable-two-level-namespace CC=icc CXX=icpc FC=ifort F77=ifort F90='' CFLAGS='' CXXFLAGS='' FFLAGS='' FCFLAGS='' F90FLAGS='' F77FLAGS=''"
+}
+post_run() {
+    cat <<EOF > "${PACKAGES_DIR}_intel/modulefiles/<MPICH>_<INTEL>"
+#%Module1.0#####################################################################
+##
+## <MPICH> <INTEL>
+##
+set BASE_PATH   "${PACKAGES_DIR}_intel"
+
+set             MPI_PATH           "\$BASE_PATH/<MPICH>/<INTEL>"
+
+conflict moose/.<MPICH>_<GCC> moose/.<MPICH>_<CLANG> moose/.<OPENMPI>_<CLANG> moose/.<OPENMPI>_<GCC> mpich_clang openmpi_clang openmpi_gcc
+
+if { ! [ is-loaded <GCC> ] || ! [ is-loaded moose/.<GCC> ] } {
+  module load moose/.<GCC>
+}
+
+module load <INTEL>
+
+prepend-path    C_INCLUDE_PATH     "\$MPI_PATH/include"
+prepend-path    CPLUS_INCLUDE_PATH "\$MPI_PATH/include"
+prepend-path    FPATH              "\$MPI_PATH/include"
+prepend-path    MANPATH            "\$MPI_PATH/share/man"
+
+setenv CC       mpicc
+setenv CXX      mpicxx
+setenv F90      mpifort
+setenv F77      mpifort
+setenv FC       mpifort
+
+setenv          MPI_HOME          "\$MPI_PATH"
+prepend-path    PATH              "\$MPI_PATH/bin"
+EOF
+    MODULEPATH=$MODULEPATH:${PACKAGES_DIR}_intel/modulefiles
+    module load <MPICH>_<INTEL>
+    cd "$MPI_HOME/lib"
+    for sfile in `find . -type f -name "*.la"`; do
+	if [ `grep -c 'src_temp_' $sfile` -ge 1 ]; then
+	    echo 'editing file: '$sfile
+	    perl -pi -e "s/-L.\S*src_temp_\S*[^'\s+]//g" $sfile
+	fi
+    done
+}
+##
+## End Specifics
+##############
+## The following script contains all the common functions.
+## Those functions are executed in the following order:
+
+# download
+# extract
+# pre-run
+# configure
+# make
+# make install
+# post_run
+# cleanup
+
+## pre_run and post_run are the only true specifics that are different
+## with every package
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+DOWNLOAD_ONLY=<DOWNLOAD_ONLY>
+WITH_INTEL=<WITH_INTEL>
+source "$RELATIVE_DIR/functions" $@

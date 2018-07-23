@@ -1,0 +1,75 @@
+#!/bin/bash
+#############
+## Specifics
+##
+DEP=(modules gcc intel-module)
+PACKAGE="<INTEL>"
+BASE_DIR="<CPPUNIT>"
+
+#####
+# Set the operating system allowed to build this module
+#
+ARCH=(Linux)
+
+#####
+# Setting any of these variables to 'false' effectively skips that step
+# This is useful for items like 'autojump' which requires a git clone/checkout
+DOWNLOAD='http://mooseframework.inl.gov/source_packages/<CPPUNIT>.tar.gz'
+EXTRACT='<CPPUNIT>.tar.gz'
+CONFIGURE='false'
+BUILD='true'
+INSTALL='true'
+
+pre_run() {
+    if [ -d "${PACKAGES_DIR}_intel/$BASE_DIR/$PACKAGE" ]; then rm -rf "${PACKAGES_DIR}_intel/$BASE_DIR/$PACKAGE"; fi
+    CONFIGURE="./configure --prefix=${PACKAGES_DIR}_intel/$BASE_DIR/$PACKAGE"
+    unset MODULEPATH
+    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    module load moose/.<GCC>
+    export CC=icc
+    export CXX=icpc
+}
+
+post_run() {
+    cat <<EOF > "${PACKAGES_DIR}_intel/modulefiles/<CPPUNIT>_<INTEL>"
+#%Module1.0#####################################################################
+##
+## <CPPUNIT> <INTEL>
+##
+set          BASE_PATH         "${PACKAGES_DIR}_intel"
+conflict moose/.<CPPUNIT>_<CLANG> cppunit-clang moose/.<CPPUNIT>_<GCC> cppunit-gcc
+
+set          CPPUNIT_PATH      "\$BASE_PATH/<CPPUNIT>/<INTEL>"
+setenv       CPPUNIT_DIR       "\$CPPUNIT_PATH"
+
+prepend-path INCLUDE           "\$CPPUNIT_PATH/include"
+prepend-path PATH              "\$CPPUNIT_PATH/bin"
+module load <INTEL>
+EOF
+}
+##
+## End Specifics
+##############
+## The following script contains all the common functions.
+## Those functions are executed in the following order:
+
+# download
+# extract
+# pre-run
+# configure
+# make
+# make install
+# post_run
+# cleanup
+
+## pre_run and post_run are the only true specifics that are different
+## with every package
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+DOWNLOAD_ONLY=<DOWNLOAD_ONLY>
+WITH_INTEL=<WITH_INTEL>
+source "$RELATIVE_DIR/functions" $@
