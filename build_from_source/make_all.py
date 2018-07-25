@@ -264,7 +264,7 @@ if __name__ == '__main__':
                           ('KEEP_FAILED', str(args.keep_failed)),
                           ('CODESIGN_NAME', args.code_sign_name),
                           ('CODESIGN_CERT', args.code_sign_cert),
-                          ('WITH_INTEL', args.with_intel64)]
+                          ('WITH_INTEL', str(args.with_intel64))]
 
     templates = getTemplate(args)
     packages_path = alterVersions(templates, args)

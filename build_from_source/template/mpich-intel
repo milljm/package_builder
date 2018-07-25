@@ -26,6 +26,9 @@ pre_run() {
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
     module load moose/.<GCC>
+    export CPLUS_INCLUDE_PATH=/usr/include/x86_64-linux-gnu
+    export C_INCLUDE_PATH=/usr/include/x86_64-linux-gnu
+    export CPATH=/usr/include/x86_64-linux-gnu
     export CC=icc CXX=icpc FC=ifort F77=ifort
     CONFIGURE="../configure --prefix=${PACKAGES_DIR}_intel/<MPICH>/<INTEL> --enable-shared --enable-sharedlibs=gcc --enable-fast=03 --enable-debuginfo --enable-totalview --enable-two-level-namespace CC=icc CXX=icpc FC=ifort F77=ifort F90='' CFLAGS='' CXXFLAGS='' FFLAGS='' FCFLAGS='' F90FLAGS='' F77FLAGS=''"
 }

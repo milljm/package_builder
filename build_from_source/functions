@@ -3,7 +3,7 @@
 # set common functions
 
 source_intel() {
-    if [ "$WITH_INTEL" != "None" ] && [ -f "$WITH_INTEL/bin/compilervars.sh" ]; then
+    if [ `uname` == "Linux" ] && [ "$WITH_INTEL" != "None" ] && [ -f "$WITH_INTEL/bin/compilervars.sh" ]; then
         source "$WITH_INTEL/bin/compilervars.sh" intel64
         if [ "$?" == "0" ]; then
             INTEL_AVAILABLE=true
@@ -343,22 +343,29 @@ PROGRESS="$RELATIVE_DIR/progress"
 touch $PROGRESS
 export src_temp="$TEMP_PREFIX/$ME"
 
-if [ -n "$WITH_INTEL" ] && [ "$WITH_INTEL" != "None" ]; then source_intel; fi
-
 CONTINUE="false"
 for OPERATING_SYSTEM in ${ARCH[*]}; do
-    if [ "$OPERATING_SYSTEM" = `uname` ]; then
-        if [ -n "$INTEL_AVAILABLE" ]; then
-            CONTINUE="true"
-        elif [ -z "$WITH_INTEL" ]; then
-            CONTINUE="true"
+    if [ "$OPERATING_SYSTEM" == `uname` ]; then
+        if [ -n "$WITH_INTEL" ] && [ "$WITH_INTEL" != "None" ]; then
+             source_intel
+            if [ "$INTEL_AVAILABLE" == "true" ]; then
+                CONTINUE=true
+
+            # Intel module, and intel is enabled. The compiler however, is not available.
+            else
+                echo "Intel specified but not available"
+                cleanup 1
+            fi
+
+        # This is an Intel module, but intel is not enabled (skip it)
+        elif [ "$WITH_INTEL" == "None" ]; then
+             CONTINUE=false
         else
-            echo "Intel specified but is not available"
-            cleanup 1
+             CONTINUE=true
         fi
+        break
     fi
 done
-
 if [ "$DOWNLOAD_ONLY" = "True" ]; then
     if [ "$CONTINUE" = "true" ]; then
         download
