@@ -358,9 +358,13 @@ CONTINUE="false"
 for OPERATING_SYSTEM in ${ARCH[*]}; do
     if [ "$OPERATING_SYSTEM" == `uname` ]; then
         if [ -n "$WITH_INTEL" ] && [ "$WITH_INTEL" != "None" ]; then
-             source_intel
+            source_intel
             if [ "$INTEL_AVAILABLE" == "true" ]; then
                 CONTINUE=true
+
+            elif [ -z "$SUPPORTED" ]; then
+                echo "Intel not supported on this platform"
+                break
 
             # Intel module, and intel is enabled. The compiler however, is not available.
             else
