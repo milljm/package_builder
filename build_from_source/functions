@@ -4,9 +4,20 @@
 
 source_intel() {
     if [ `uname` == "Linux" ] && [ "$WITH_INTEL" != "None" ] && [ -f "$WITH_INTEL/bin/compilervars.sh" ]; then
-        source "$WITH_INTEL/bin/compilervars.sh" intel64
-        if [ "$?" == "0" ]; then
-            INTEL_AVAILABLE=true
+        # jointly supported OS's for intel compilers:
+        supported_intel_archs=('ubtuntu 16' 'opensuse' 'centos')
+        for supported_arch in ${supported_intel_archs[*]}; do
+            if [ `lsb_release -d | grep -ic "$supported_arch"` -ge 1 ]; then
+                SUPPORTED=true
+                break
+            fi
+        done
+
+        if [ -n "$SUPPORTED" ]; then
+            source "$WITH_INTEL/bin/compilervars.sh" intel64
+            if [ "$?" == "0" ]; then
+                INTEL_AVAILABLE=true
+            fi
         fi
     fi
 }

@@ -11,14 +11,6 @@ BASE_DIR="<PETSC_DEFAULT>"
 #
 ARCH=(Linux)
 
-# jointly supported OS's for intel compilers:
-supported_intel_archs=('ubtuntu 16' 'opensuse' 'centos')
-for supported_arch in ${supported_intel_archs[*]}; do
-    if [ `lsb_release -d | grep -ic "$supported_arch"` -ge 1 ]; then
-        WITH_INTEL=<WITH_INTEL>
-    fi
-done
-
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
