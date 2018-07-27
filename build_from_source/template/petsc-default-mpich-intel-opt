@@ -3,7 +3,7 @@
 ## Specifics
 ##
 DEP=(modules cmake gcc mpich-intel)
-PACKAGE="<MPICH>_intel-${INTEL_VERSION}-opt"
+PACKAGE="<MPICH>_intel-opt"
 BASE_DIR="<PETSC_DEFAULT>"
 
 #####
@@ -19,6 +19,16 @@ EXTRACT='<PETSC_DEFAULT>.tar.gz'
 CONFIGURE="false"
 BUILD='false'
 INSTALL='false'
+
+re_evaluate(){
+    pause ${FUNCNAME[0]} "Re-Evaluate variables"
+    unset MODULEPATH
+    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    export MODULEPATH="$MODULEPATH:<WITH_INTEL>/modulefiles"
+    module load intel
+    export INTEL_VERSION=${INTEL_VERSION-`icc --version | grep ICC | perl -pe 's|.* (\d+)\..*|\1|'`}
+    PACKAGE="<MPICH>_intel-${INTEL_VERSION}-opt"
+}
 
 clean_petsc() {
     clean_attempt
@@ -36,7 +46,7 @@ pre_run() {
     export MODULEPATH="$MODULEPATH:${PACKAGES_DIR}_intel/modulefiles"
     module load advanced_modules cmake <MPICH>_intel-${INTEL_VERSION}
     CONFIGURE="$PYTHON_BIN ./configure \
---prefix=${PACKAGES_DIR}_intel/<PETSC_DEFAULT>/<MPICH>_${PACKAGE} \
+--prefix=${PACKAGES_DIR}_intel/<PETSC_DEFAULT>/${PACKAGE} \
 --download-hypre=1 \
 --with-ssl=0 \
 --with-debugging=no \
@@ -71,7 +81,7 @@ post_run() {
 ##
 ##
 set         BASE_PATH        "${PACKAGES_DIR}_intel"
-setenv      PETSC_DIR        "\$BASE_PATH/<PETSC_DEFAULT>/<MPICH>_${PACKAGE}"
+setenv      PETSC_DIR        "\$BASE_PATH/<PETSC_DEFAULT>/${PACKAGE}"
 module load <MPICH>_intel-${INTEL_VERSION}
 EOF
 }

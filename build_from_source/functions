@@ -1,8 +1,8 @@
 #!/bin/bash
-####
-# set common functions
-
+###################### START FUNCTIONS ######################
+###################### START FUNCTIONS ######################
 source_intel() {
+    pause ${FUNCNAME[0]} "Source Intel Stack"
     if [ `uname` == "Linux" ] && [ "$WITH_INTEL" != "None" ] && [ -f "$WITH_INTEL/bin/compilervars.sh" ]; then
         # jointly supported OS's for intel compilers:
         supported_intel_archs=('ubtuntu 16' 'opensuse' 'centos')
@@ -12,12 +12,9 @@ source_intel() {
                 break
             fi
         done
-
         if [ -n "$SUPPORTED" ]; then
-            source "$WITH_INTEL/bin/compilervars.sh" intel64
-            if [ "$?" == "0" ]; then
+            if (source "$WITH_INTEL/bin/compilervars.sh" intel64); then
                 INTEL_AVAILABLE=true
-                export INTEL_VERSION=${INTEL_VERSION-`icc --version | grep ICC | perl -pe 's|.* (\d+)\..*|\1|'`}
             fi
         fi
     fi
@@ -70,13 +67,21 @@ try_command() {
 
 pause() {
     if [ "$DEBUG" = "True" ]; then
+        clear
         while true; do
-            message=`echo -e "\n##########\nNEXT TASK:\n\t\t$@ \n\nDo this task?\t[Y,n] or ctrl-c to exit.\n\t\t[e|E] will print function's contents> "`
+            message=`echo -e "\n##########\nNEXT TASK:\n\t$@ \n\nDo this task?\t[Y,n] or ctrl-c to exit.\n\t\t[c|C] will allow you to enter a command.\n\t\t[p|P] will print task details> "`
             read -n1 -p "$message" skip_this
             case $skip_this in
                 y|Y) echo ''; return 0;;
                 n|N) echo ''; return 1;;
-                e|E) echo '\n'; type $1; echo -e "\n-----------------------\nCurrent Environment Variables:\n\tPACKAGES_DIR:\t$PACKAGES_DIR\n\tRELATIVE_DIR:\t$RELATIVE_DIR\n\tBASE_DIR:\t$BASE_DIR\n\tPACKAGE:\t$PACKAGE\n\tsrc_temp:\t$src_temp\n-----------------------";;
+                c|C) echo -e '\n'; read -p "Enter a command: " command_string;
+                     eval "$command_string";;
+                e|E) clear;
+                     echo -e "\n#######################\n";
+                     type $1;
+                     echo -e "\n#######################\n-----------------------\nCurrent Variables:\n\tPACKAGES_DIR:\t\t$PACKAGES_DIR\n\tRELATIVE_DIR:\t\t$RELATIVE_DIR\n\tBASE_DIR:\t\t$BASE_DIR\n\tPACKAGE:\t\t$PACKAGE\n\tsrc_temp:\t\t$src_temp\n\tINTEL_AVAILABLE:\t$INTEL_AVAILABLE\n\tINTEL_VERSION:\t\t$INTEL_VERSION\n-----------------------";
+                     if [ `declare -f module > /dev/null; echo $?` ==  '0' ]; then module list; else echo -e "\nNo modules loaded"; fi;
+                     ;;
                 *) echo "Please enter 'y' or 'n'. e|E will print function's contents"
             esac
         done
@@ -141,7 +146,7 @@ download() {
         else
             echo 'file previously downloaded'
         fi
-        pause ${FUNCNAME[0]} "Download MD5\n\t curl -s -L -o $DOWNLOAD_DIR/$BASENAME.md5 $url.md5"
+        pause ${FUNCNAME[0]} "Download MD5\n\tcurl -s -L -o $DOWNLOAD_DIR/$BASENAME.md5 $url.md5"
         if [ "$?" = "1" ]; then
             if [ -d "$DOWNLOAD_DIR/.LOCKS/$BASENAME.lock" ]; then
                 echo -e "WARNING: download LOCK present. Another attempt will stall.\n\t$DOWNLOAD_DIR/.LOCKS/$BASENAME.lock"
@@ -207,13 +212,13 @@ extract() {
 }
 
 pre_run_base() {
-    pause "pre_run Perform pre_run function?"
+    pause "pre_run" "Perform pre_run function?"
     if [ "$?" = "1" ]; then return; fi
     pre_run "$@"
 }
 
 post_run_base() {
-    pause "post_run Perform post_run function?"
+    pause "post_run" "Perform post_run function?"
     if [ "$?" = "1" ]; then return; fi
     post_run "$@"
 }
@@ -295,13 +300,15 @@ clean_attempt() {
     cd "$src_temp"
 
     # Clean a possible existing --prefix directory because we are building again
+    ROOT_DIR="$PACKAGES_DIR"
+    if [ -n "$INTEL_AVAILABLE" ]; then ROOT_DIR="${PACKAGES_DIR}_intel"; fi
     if [ -n "$BASE_DIR" ] && [ -n "$PACKAGE" ]; then
-        if [ -d "$PACKAGES_DIR/$BASE_DIR/$PACKAGE" ]; then
-            rm -rf "$PACKAGES_DIR/$BASE_DIR/$PACKAGE"
+        if [ -d "$ROOT_DIR/$BASE_DIR/$PACKAGE" ]; then
+            rm -rf "$ROOT_DIR/$BASE_DIR/$PACKAGE"
         fi
     elif [ -n "$PACKAGE" ]; then
-        if [ -d "$PACKAGES_DIR/$PACKAGE" ]; then
-            rm -rf "$PACKAGES_DIR/$PACKAGE"
+        if [ -d "$ROOT_DIR/$PACKAGE" ]; then
+            rm -rf "$ROOT_DIR/$PACKAGE"
         fi
     fi
 }
@@ -324,6 +331,9 @@ cleanup() {
 function_help() {
     echo -e "Usage:\n\t-h | --help\t\tThis message\n\t-d | --debug\t\tRun in interactive mode\n\t-j | --jobs\t\tOverride jobs with specified amount\n\t-i | --ignore-deps\tIgnore dependencies"
 }
+###################### END FUNCTIONS ######################
+###################### END FUNCTIONS ######################
+
 
 for i in "$@"; do
     case $i in
@@ -362,6 +372,7 @@ for OPERATING_SYSTEM in ${ARCH[*]}; do
             source_intel
             if [ "$INTEL_AVAILABLE" == "true" ]; then
                 CONTINUE=true
+                re_evaluate
 
             elif [ -z "$SUPPORTED" ]; then
                 echo "Intel not supported on this platform"
@@ -415,7 +426,6 @@ elif [ "$CONTINUE" = "true" ]; then
         post_run_base "$src_temp"
         echo $ME >> $PROGRESS
         echo "$ME success"
-        pause "Cleanup Temporary Build\n\t$src_temp"
         if [ "$?" = "1" ]; then return; fi
         cleanup 0
     else

@@ -19,12 +19,23 @@ CONFIGURE='false'
 BUILD='false'
 INSTALL='false'
 
+re_evaluate(){
+    pause ${FUNCNAME[0]} "Re-Evaluate variables"
+    return
+}
+
 pre_run() {
-  return
+    mkdir -p ${PACKAGES_DIR}_intel/modulefiles
+    rm -f "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.intel"
+    unset MODULEPATH
+    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    export MODULEPATH="$MODULEPATH:<WITH_INTEL>/modulefiles"
+    module load intel
+    export INTEL_VERSION=${INTEL_VERSION-`icc --version | grep ICC | perl -pe 's|.* (\d+)\..*|\1|'`}
 }
 
 post_run() {
-    cat <<EOF > "${PACKAGES_DIR}_intel/modulefiles/moose/.intel"
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.intel"
 #%Module1.0#####################################################################
 ##
 ## ${PACKAGE} wrapper to system ${PACKAGE}-${INTEL_VERSION} version

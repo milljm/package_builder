@@ -20,27 +20,30 @@ CONFIGURE='false'
 BUILD='true'
 INSTALL='true'
 
-pre_run() {
-    if [ -d "${PACKAGES_DIR}_intel/$BASE_DIR/${PACKAGE}-${INTEL_VERSION}" ]; then rm -rf "${PACKAGES_DIR}_intel/$BASE_DIR/${PACKAGE}-${INTEL_VERSION}"; fi
-    mkdir intel-opt; cd intel-opt
+re_evaluate(){
+    pause ${FUNCNAME[0]} "Re-Evaluate variables"
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
-    module load moose/.<GCC>
-    export CPLUS_INCLUDE_PATH=/usr/include/x86_64-linux-gnu
-    export C_INCLUDE_PATH=/usr/include/x86_64-linux-gnu
-    export CPATH=/usr/include/x86_64-linux-gnu
+    export MODULEPATH="$MODULEPATH:<WITH_INTEL>/modulefiles"
+    module load intel
+    export INTEL_VERSION=${INTEL_VERSION-`icc --version | grep ICC | perl -pe 's|.* (\d+)\..*|\1|'`}
+    PACKAGE="intel-${INTEL_VERSION}"
+}
+
+pre_run() {
+    mkdir intel-opt; cd intel-opt
     export CC=icc CXX=icpc FC=ifort F77=ifort
-    CONFIGURE="../configure --prefix=${PACKAGES_DIR}_intel/<MPICH>/${PACKAGE}-${INTEL_VERSION} --enable-shared --enable-sharedlibs=icc --enable-fast=03 --enable-debuginfo --enable-totalview --enable-two-level-namespace CC=icc CXX=icpc FC=ifort F77=ifort F90='' CFLAGS='' CXXFLAGS='' FFLAGS='' FCFLAGS='' F90FLAGS='' F77FLAGS=''"
+    CONFIGURE="../configure --prefix=${PACKAGES_DIR}_intel/<MPICH>/${PACKAGE} --enable-shared --enable-sharedlibs=icc --enable-fast=03 --enable-debuginfo --enable-totalview --enable-two-level-namespace CC=icc CXX=icpc FC=ifort F77=ifort F90='' CFLAGS='' CXXFLAGS='' FFLAGS='' FCFLAGS='' F90FLAGS='' F77FLAGS=''"
 }
 post_run() {
-    cat <<EOF > "${PACKAGES_DIR}_intel/modulefiles/<MPICH>_${PACKAGE}-${INTEL_VERSION}"
+    cat <<EOF > "${PACKAGES_DIR}_intel/modulefiles/<MPICH>_${PACKAGE}"
 #%Module1.0#####################################################################
 ##
-## <MPICH> ${PACKAGE}-${INTEL_VERSION}
+## <MPICH> ${PACKAGE}
 ##
 set BASE_PATH   "${PACKAGES_DIR}_intel"
 
-set             MPI_PATH           "\$BASE_PATH/<MPICH>/${PACKAGE}-${INTEL_VERSION}"
+set             MPI_PATH           "\$BASE_PATH/<MPICH>/${PACKAGE}"
 
 conflict moose/.<MPICH>_<GCC> moose/.<MPICH>_<CLANG> moose/.<OPENMPI>_<CLANG> moose/.<OPENMPI>_<GCC> mpich_clang openmpi_clang openmpi_gcc
 
@@ -65,7 +68,7 @@ setenv          MPI_HOME          "\$MPI_PATH"
 prepend-path    PATH              "\$MPI_PATH/bin"
 EOF
     MODULEPATH=$MODULEPATH:${PACKAGES_DIR}_intel/modulefiles:/opt/intel/modulefiles
-    module load <MPICH>_${PACKAGE}-${INTEL_VERSION}
+    module load <MPICH>_${PACKAGE}
     cd "$MPI_HOME/lib"
     for sfile in `find . -type f -name "*.la"`; do
 	if [ `grep -c 'src_temp_' $sfile` -ge 1 ]; then
