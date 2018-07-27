@@ -1,0 +1,104 @@
+#!/bin/bash
+#############
+## Specifics
+##
+DEP=(modules cmake gcc mpich-intel)
+PACKAGE="<MPICH>_<INTEL>-opt"
+BASE_DIR="<PETSC_DEFAULT>"
+
+#####
+# Set the operating system allowed to build this module
+#
+ARCH=(Linux)
+
+#####
+# Setting any of these variables to 'false' effectively skips that step
+# This is useful for items like 'autojump' which requires a git clone/checkout
+DOWNLOAD='http://mooseframework.inl.gov/source_packages/<PETSC_DEFAULT>.tar.gz'
+EXTRACT='<PETSC_DEFAULT>.tar.gz'
+CONFIGURE="false"
+BUILD='false'
+INSTALL='false'
+
+clean_petsc() {
+    clean_attempt
+    extract
+}
+
+pre_run() {
+    if [ `uname` = "Darwin" ]; then
+        export PYTHON_BIN=python
+    else
+        export PYTHON_BIN=python2
+    fi
+    unset MODULEPATH
+    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    export MODULEPATH="$MODULEPATH:${PACKAGES_DIR}_intel/modulefiles"
+    module load advanced_modules cmake <MPICH>_<INTEL>
+    CONFIGURE="$PYTHON_BIN ./configure \
+--prefix=${PACKAGES_DIR}_intel/<PETSC_DEFAULT>/<MPICH>_<INTEL>-opt \
+--download-hypre=1 \
+--with-ssl=0 \
+--with-debugging=no \
+--with-pic=1 \
+--with-shared-libraries=1 \
+--with-cc=mpicc \
+--with-cxx=mpicxx \
+--with-fc=mpif90 \
+--download-fblaslapack=1 \
+--download-metis=1 \
+--download-parmetis=1 \
+--download-superlu_dist=1 \
+--download-mumps=1 \
+--download-scalapack=1 \
+-CC=mpicc -CXX=mpicxx -FC=mpif90 -F77=mpif77 -F90=mpif90 \
+-CFLAGS='-fPIC -fopenmp' \
+-CXXFLAGS='-fPIC -qopenmp' \
+-FFLAGS='-fPIC -qopenmp' \
+-FCFLAGS='-fPIC -qopenmp' \
+-F90FLAGS='-fPIC -qopenmp' \
+-F77FLAGS='-fPIC -qopenmp'"
+    try_command 3 "clean_petsc; configure; make MAKE_NP=$MOOSE_JOBS PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-opt all; make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-opt install"
+    CONFIGURE="false"
+}
+
+post_run() {
+    cat <<EOF > "${PACKAGES_DIR}_intel/modulefiles/<PETSC_DEFAULT>_<MPICH>_<INTEL>-opt"
+#%Module1.0#####################################################################
+##
+## <MPICH> <INTEL> <PETSC_DEFAULT> optimized superlu modulefile
+##
+##
+##
+set         BASE_PATH        "${PACKAGES_DIR}_intel"
+setenv      PETSC_DIR        "\$BASE_PATH/<PETSC_DEFAULT>/<MPICH>_<INTEL>-opt"
+module load <MPICH>_<INTEL>
+EOF
+}
+
+##
+## End Specifics
+##############
+## The following script contains all the common functions.
+## Those functions are executed in the following order:
+
+# download
+# extract
+# pre-run `pwd`
+# configure
+# make
+# make install
+# post_run `pwd`
+# cleanup
+
+## pre_run and post_run are the only true specifics that are different
+## with every package
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+DOWNLOAD_ONLY=<DOWNLOAD_ONLY>
+WITH_INTEL=<WITH_INTEL>
+source "$RELATIVE_DIR/functions" $@

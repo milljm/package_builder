@@ -161,23 +161,33 @@ def verifyArgs(args):
     if args.dryrun or args.download_only:
         return args
 
-    if args.prefix is None:
-        print 'You must specify a directory to install everything into'
+    if args.with_intel64 and not os.path.exists(args.with_intel64):
+        print 'Intel compilers do not exist at specified location: %s' % (args.with_intel64)
         sys.exit(1)
-    elif os.path.exists(args.prefix) is not True:
-        try:
-            os.makedirs(args.prefix)
-        except:
-            print 'The path specified does not exist. Please create this path, and chown it appropriately before continuing'
+
+    paths = [args.prefix]
+    if args.with_intel64:
+        print 'Opting to build supported modules with an Intel compiler... We will separate this build accordingly.'
+        paths.append(args.prefix.replace(os.path.basename(args.prefix.rstrip(os.path.sep)), os.path.basename(args.prefix.rstrip(os.path.sep) + '_intel')))
+
+    for path in paths:
+        if path is None:
+            print 'You must specify a prefix directory'
             sys.exit(1)
-    else:
-        try:
-            test_writeable = open(os.path.join(args.prefix, 'test_write'), 'a')
-            test_writeable.close()
-            os.remove(os.path.join(args.prefix, 'test_write'))
-        except:
-            print 'Unable to write to specified prefix location. Please chown this location manually before continuing'
-            sys.exit(1)
+        elif os.path.exists(path) is not True:
+            try:
+                os.makedirs(path)
+            except:
+                print 'The path specified does not exist. Please create this path, and chown it appropriately before continuing'
+                sys.exit(1)
+        else:
+            try:
+                test_writeable = open(os.path.join(path, 'test_write'), 'a')
+                test_writeable.close()
+                os.remove(os.path.join(path, 'test_write'))
+            except:
+                print 'Unable to write to specified prefix location. Please chown this location manually before continuing'
+                sys.exit(1)
 
     if args.code_sign_name and not args.code_sign_cert:
         print 'Codesign name supplied but not a path to the certificate'
@@ -197,6 +207,7 @@ def parseArguments(args=None):
     parser.add_argument('-p', '--prefix', help='Directory to install everything into')
     parser.add_argument('-j', '--cpu-count', default='4', help='Specify MAX CPU count available')
     parser.add_argument('-m', '--max-modules', default='2', help='Specify the maximum amount of modules to run simultaneously')
+    parser.add_argument('--with-intel64', nargs='?', const='/opt/intel', default=None, help='Enable Intel compilers. Specify root path to Intel compilers or leave blank to default to /opt/intel')
     parser.add_argument('--code-sign-name', help='Keychain code signing certificate name available to sign LLDB with (OS X Only)')
     parser.add_argument('--code-sign-cert', help='Path to code signing certificate to include for redistribution (for use with OS X codesign)')
     parser.add_argument('--build-only', help='Build only the necessary things up to specified package')
@@ -252,7 +263,8 @@ if __name__ == '__main__':
                           ('MOOSE_JOBS', args.cpu_count),
                           ('KEEP_FAILED', str(args.keep_failed)),
                           ('CODESIGN_NAME', args.code_sign_name),
-                          ('CODESIGN_CERT', args.code_sign_cert)]
+                          ('CODESIGN_CERT', args.code_sign_cert),
+                          ('WITH_INTEL', str(args.with_intel64))]
 
     templates = getTemplate(args)
     packages_path = alterVersions(templates, args)

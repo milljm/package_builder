@@ -1,6 +1,27 @@
 #!/bin/bash
 ####
 # set common functions
+
+source_intel() {
+    if [ `uname` == "Linux" ] && [ "$WITH_INTEL" != "None" ] && [ -f "$WITH_INTEL/bin/compilervars.sh" ]; then
+        # jointly supported OS's for intel compilers:
+        supported_intel_archs=('ubtuntu 16' 'opensuse' 'centos')
+        for supported_arch in ${supported_intel_archs[*]}; do
+            if [ `lsb_release -d | grep -ic "$supported_arch"` -ge 1 ]; then
+                SUPPORTED=true
+                break
+            fi
+        done
+
+        if [ -n "$SUPPORTED" ]; then
+            source "$WITH_INTEL/bin/compilervars.sh" intel64
+            if [ "$?" == "0" ]; then
+                INTEL_AVAILABLE=true
+            fi
+        fi
+    fi
+}
+
 ccache_enable() {
     # We do not want to perform any ccache builds
     return
@@ -335,9 +356,31 @@ export src_temp="$TEMP_PREFIX/$ME"
 
 CONTINUE="false"
 for OPERATING_SYSTEM in ${ARCH[*]}; do
-    if [ "$OPERATING_SYSTEM" = `uname` ]; then CONTINUE="true"; fi
-done
+    if [ "$OPERATING_SYSTEM" == `uname` ]; then
+        if [ -n "$WITH_INTEL" ] && [ "$WITH_INTEL" != "None" ]; then
+            source_intel
+            if [ "$INTEL_AVAILABLE" == "true" ]; then
+                CONTINUE=true
 
+            elif [ -z "$SUPPORTED" ]; then
+                echo "Intel not supported on this platform"
+                break
+
+            # Intel module, and intel is enabled. The compiler however, is not available.
+            else
+                echo "Intel specified but not available"
+                cleanup 1
+            fi
+
+        # This is an Intel module, but intel is not enabled (skip it)
+        elif [ "$WITH_INTEL" == "None" ]; then
+             CONTINUE=false
+        else
+             CONTINUE=true
+        fi
+        break
+    fi
+done
 if [ "$DOWNLOAD_ONLY" = "True" ]; then
     if [ "$CONTINUE" = "true" ]; then
         download
