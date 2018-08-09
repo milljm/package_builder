@@ -17,6 +17,7 @@ source_intel() {
             source "$WITH_INTEL/bin/compilervars.sh" intel64
             if [ "$?" == "0" ]; then
                 INTEL_AVAILABLE=true
+                export INTEL_VERSION=${INTEL_VERSION-`icc --version | grep ICC | perl -pe 's|.* (\d+)\..*|\1|'`}
             fi
         fi
     fi

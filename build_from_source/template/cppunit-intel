@@ -3,7 +3,7 @@
 ## Specifics
 ##
 DEP=(modules gcc intel-module)
-PACKAGE="<INTEL>"
+PACKAGE="intel"
 BASE_DIR="<CPPUNIT>"
 
 #####
@@ -21,8 +21,8 @@ BUILD='true'
 INSTALL='true'
 
 pre_run() {
-    if [ -d "${PACKAGES_DIR}_intel/$BASE_DIR/$PACKAGE" ]; then rm -rf "${PACKAGES_DIR}_intel/$BASE_DIR/$PACKAGE"; fi
-    CONFIGURE="./configure --prefix=${PACKAGES_DIR}_intel/$BASE_DIR/$PACKAGE"
+    if [ -d "${PACKAGES_DIR}_intel/$BASE_DIR/${PACKAGE}-${INTEL_VERSION}" ]; then rm -rf "${PACKAGES_DIR}_intel/$BASE_DIR/${PACKAGE}-${INTEL_VERSION}"; fi
+    CONFIGURE="./configure --prefix=${PACKAGES_DIR}_intel/$BASE_DIR/${PACKAGE}-${INTEL_VERSION}"
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
     module load moose/.<GCC>
@@ -34,20 +34,20 @@ pre_run() {
 }
 
 post_run() {
-    cat <<EOF > "${PACKAGES_DIR}_intel/modulefiles/<CPPUNIT>_<INTEL>"
+    cat <<EOF > "${PACKAGES_DIR}_intel/modulefiles/<CPPUNIT>_${PACKAGE}-${INTEL_VERSION}"
 #%Module1.0#####################################################################
 ##
-## <CPPUNIT> <INTEL>
+## <CPPUNIT> ${PACKAGE}-${INTEL_VERSION}
 ##
 set          BASE_PATH         "${PACKAGES_DIR}_intel"
 conflict moose/.<CPPUNIT>_<CLANG> cppunit-clang moose/.<CPPUNIT>_<GCC> cppunit-gcc
 
-set          CPPUNIT_PATH      "\$BASE_PATH/<CPPUNIT>/<INTEL>"
+set          CPPUNIT_PATH      "\$BASE_PATH/<CPPUNIT>/${PACKAGE}-${INTEL_VERSION}"
 setenv       CPPUNIT_DIR       "\$CPPUNIT_PATH"
 
 prepend-path INCLUDE           "\$CPPUNIT_PATH/include"
 prepend-path PATH              "\$CPPUNIT_PATH/bin"
-module load <INTEL>
+module load moose/.intel
 EOF
 }
 ##

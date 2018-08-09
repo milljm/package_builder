@@ -165,6 +165,13 @@ def verifyArgs(args):
         print 'Intel compilers do not exist at specified location: %s' % (args.with_intel64)
         sys.exit(1)
 
+    if args.with_intel64 and not os.path.exists(os.path.join(args.with_intel64, 'modulefiles', 'intel')):
+        print 'Unfortunately when building the Intel portion of the compiler stack, I need \nthe ability to load that environment:\n\n\tmodule load intel\n\n', \
+            'However, I am not detecting the presence of such a module:\n\n\t%s' % (os.path.join(args.with_intel64, 'modulefiles', 'intel')), \
+            '\n\nUnfortunately creating such a module automatically is beyond this scripts \ncapabilities. What you need to do, is start with a clean', \
+            'environment, then \nsource the Intel compilers and compare the difference. This difference is \nwhat needs to end up in the module.'
+        sys.exit(1)
+
     paths = [args.prefix]
     if args.with_intel64:
         print 'Opting to build supported modules with an Intel compiler... We will separate this build accordingly.'

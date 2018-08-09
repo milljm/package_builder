@@ -3,7 +3,7 @@
 ## Specifics
 ##
 DEP=(modules cmake gcc mpich-intel)
-PACKAGE="<MPICH>_<INTEL>-opt"
+PACKAGE="<MPICH>_intel-${INTEL_VERSION}-opt"
 BASE_DIR="<PETSC_DEFAULT>"
 
 #####
@@ -34,9 +34,9 @@ pre_run() {
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
     export MODULEPATH="$MODULEPATH:${PACKAGES_DIR}_intel/modulefiles"
-    module load advanced_modules cmake <MPICH>_<INTEL>
+    module load advanced_modules cmake <MPICH>_intel-${INTEL_VERSION}
     CONFIGURE="$PYTHON_BIN ./configure \
---prefix=${PACKAGES_DIR}_intel/<PETSC_DEFAULT>/<MPICH>_<INTEL>-opt \
+--prefix=${PACKAGES_DIR}_intel/<PETSC_DEFAULT>/<MPICH>_${PACKAGE} \
 --download-hypre=1 \
 --with-ssl=0 \
 --with-debugging=no \
@@ -63,16 +63,16 @@ pre_run() {
 }
 
 post_run() {
-    cat <<EOF > "${PACKAGES_DIR}_intel/modulefiles/<PETSC_DEFAULT>_<MPICH>_<INTEL>-opt"
+    cat <<EOF > "${PACKAGES_DIR}_intel/modulefiles/<PETSC_DEFAULT>_${PACKAGE}"
 #%Module1.0#####################################################################
 ##
-## <MPICH> <INTEL> <PETSC_DEFAULT> optimized superlu modulefile
+## <MPICH> intel-${INTEL_VERSION} <PETSC_DEFAULT> optimized superlu modulefile
 ##
 ##
 ##
 set         BASE_PATH        "${PACKAGES_DIR}_intel"
-setenv      PETSC_DIR        "\$BASE_PATH/<PETSC_DEFAULT>/<MPICH>_<INTEL>-opt"
-module load <MPICH>_<INTEL>
+setenv      PETSC_DIR        "\$BASE_PATH/<PETSC_DEFAULT>/<MPICH>_${PACKAGE}"
+module load <MPICH>_intel-${INTEL_VERSION}
 EOF
 }
 

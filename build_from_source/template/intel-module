@@ -3,7 +3,7 @@
 ## Specifics
 ##
 DEP=(modules gcc ccache miniconda)
-PACKAGE="<INTEL>"
+PACKAGE="intel"
 
 #####
 # Set the operating system allowed to build this module
@@ -24,63 +24,25 @@ pre_run() {
 }
 
 post_run() {
-    cat <<EOF > "${PACKAGES_DIR}_intel/modulefiles/<INTEL>"
+    cat <<EOF > "${PACKAGES_DIR}_intel/modulefiles/moose/.intel"
 #%Module1.0#####################################################################
 ##
-## Intel 2018 miodulefile
+## ${PACKAGE} wrapper to system ${PACKAGE}-${INTEL_VERSION} version
+## (at the time of this discovery)
 ##
-##
-##
-
-set          BASE_PATH          <WITH_INTEL>
-set          COMPILER_VER       compilers_and_libraries_2018.1.163
-
-setenv       MKLROOT            \$BASE_PATH/\$COMPILER_VER/mkl
-setenv       INTEL_LICENSE_FILE \$BASE_PATH/licenses
-setenv       IPPROOT            \$BASE_PATH/\$COMPILER_VER/ipp
-setenv       FPATH              \$BASE_PATH/\$COMPILER_VER/mkl/include
-
-setenv       CPATH              \$BASE_PATH/\$COMPILER_VER/linux/ipp/include:\$BASE_PATH/\$COMPILER_VER/linux/mkl/include:\$BASE_PATH/\$COMPILER_VER/linux/pstl/include:\$BASE_PATH/\$COMPILER_VER/linux/tbb/include:\$BASE_PATH/\$COMPILER_VER/linux/daal/include
-setenv       GDBSERVER_MIC      \$BASE_PATH/debugger_2018/gdb/targets/intel64/x200/bin/gdbserver
-
-setenv       LIBRARY_PATH       \$BASE_PATH/\$COMPILER_VER/linux/ipp/lib/intel64:\$BASE_PATH/\$COMPILER_VER/linux/compiler/lib/intel64_lin:\$BASE_PATH/\$COMPILER_VER/linux/mkl/lib/intel64_lin:\$BASE_PATH/\$COMPILER_VER/linux/tbb/lib/intel64/gcc4.7:\$BASE_PATH/\$COMPILER_VER/linux/daal/lib/intel64_lin:\$BASE_PATH/\$COMPILER_VER/linux/daal/../tbb/lib/intel64_lin/gcc4.4
-
-setenv       LD_LIBRARY_PATH    \$BASE_PATH/\$COMPILER_VER/linux/compiler/lib/intel64:\$BASE_PATH/\$COMPILER_VER/linux/compiler/lib/intel64_lin:\$BASE_PATH/\$COMPILER_VER/linux/mpi/intel64/lib:\$BASE_PATH/\$COMPILER_VER/linux/mpi/mic/lib:\$BASE_PATH/\$COMPILER_VER/linux/ipp/lib/intel64:\$BASE_PATH/\$COMPILER_VER/linux/mkl/lib/intel64_lin:\$BASE_PATH/\$COMPILER_VER/linux/tbb/lib/intel64/gcc4.7:\$BASE_PATH/debugger_2018/iga/lib:\$BASE_PATH/debugger_2018/libipt/intel64/lib:\$BASE_PATH/\$COMPILER_VER/linux/daal/lib/intel64_lin:\$BASE_PATH/\$COMPILER_VER/linux/daal/../tbb/lib/intel64_lin/gcc4.4
-
-setenv       PSTLROOT           \$BASE_PATH/\$COMPILER_VER/linux/pstl
-setenv       NLSPATH            \$BASE_PATH/\$COMPILER_VER/linux/compiler/lib/intel64/locale/%l_%t/%N:\$BASE_PATH/\$COMPILER_VER/linux/mkl/lib/intel64_lin/locale/%l_%t/%N:\$BASE_PATH/debugger_2018/gdb/intel64/share/locale/%l_%t/%N
-
-prepend-path PATH               \$BASE_PATH/\$COMPILER_VER/linux/bin/intel64:\$BASE_PATH/\$COMPILER_VER/linux/mpi/intel64/bin
-setenv       TBBROOT            \$BASE_PATH/\$COMPILER_VER/linux/tbb
-setenv       GDBCROSS           \$BASE_PATH/debugger_2018/gdb/intel64/bin/gdb-ia
-setenv       DAALROOT           \$BASE_PATH/\$COMPILER_VER/linux/daal
-setenv       MPM_LAUNCHER       \$BASE_PATH/debugger_2018/mpm/mic/bin/start_mpm.sh
-setenv       INTEL_PYTHONHOME   \$BASE_PATH/debugger_2018/python/intel64/
-setenv       CLASSPATH          \$BASE_PATH/\$COMPILER_VER/linux/mpi/intel64/lib/mpi.jar:\$BASE_PATH/\$COMPILER_VER/linux/daal/lib/daal.jar
-prepend-path PKG_CONFIG_PATH    \$BASE_PATH/\$COMPILER_VER/linux/mkl/bin/pkgconfig
-setenv       INFOPATH           \$BASE_PATH/\$COMPILER_VER/en/debugger/gdb-ia/info/:\$BASE_PATH/\$COMPILER_VER/en/debugger/gdb-igfx/info/
-setenv       I_MPI_ROOT         \$BASE_PATH/\$COMPILER_VER/linux/mpi
-
-
-# Intel indeed uses what ever GCC is within PATH
-module load moose/.<GCC>
-
-# We need these paths included so sys/cdefs is available
-prepend-path CPLUS_INCLUDE_PATH   /usr/include/x86_64-linux-gnu
-prepend-path C_INCLUDE_PATH       /usr/include/x86_64-linux-gnu
-prepend-path CPATH                /usr/include/x86_64-linux-gnu
+module load intel
 EOF
 
     cat <<EOF > "${PACKAGES_DIR}_intel/modulefiles/moose-dev-intel"
 #%Module1.0#####################################################################
 ##
 ## <PETSC_DEFAULT>
-## <INTEL>
+## ${PACKAGE}-${INTEL_VERSION}
 ## <MPICH>
 ##
-module load <MPICH>_<INTEL>
-module load <PETSC_DEFAULT>_<MPICH>_<INTEL>-opt
-module load <CPPUNIT>_<INTEL>
+module load <MPICH>_${PACKAGE}-${INTEL_VERSION}
+module load <PETSC_DEFAULT>_<MPICH>_${PACKAGE}-${INTEL_VERSION}-opt
+module load <CPPUNIT>_${PACKAGE}-${INTEL_VERSION}
 module load ccache
 module load moose-tools
 
