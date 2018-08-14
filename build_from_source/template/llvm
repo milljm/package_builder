@@ -57,7 +57,7 @@ pre_run() {
 
     # If dawrwin, build a clang bootstrapper. This is necessary for building
     # a functional LLDB
-    if [ `uname` == "Darwin" ]; then
+    if [ `uname` = "Darwin" ]; then
         mkdir "$1/boot"; cd "$1/boot"
         LLVM_PACKAGES=(llvm cfe libcxx libcxxabi)
         for LLVM_PACKAGE in ${LLVM_PACKAGES[*]}; do
@@ -132,7 +132,7 @@ pre_run() {
 ../llvm
     else
       # check if we are code signing LLDB
-      if [ "$CODESIGN_NAME" == "None" ]; then
+      if [ "$CODESIGN_NAME" = "None" ]; then
         CODESIGN_NAME=''
       else
         mkdir -p "$PACKAGES_DIR/$PACKAGE/codesign"
@@ -199,7 +199,7 @@ post_run() {
     cd "$PACKAGES_DIR/$PACKAGE/lib"
 
     # Link to miniconda's python
-    if [ `uname` == "Darwin" ]; then
+    if [ `uname` = "Darwin" ]; then
         cd "$PACKAGES_DIR/$PACKAGE/lib"
         install_name_tool -change @rpath/libpython2.7.dylib "$PACKAGES_DIR/miniconda/lib/libpython2.7.dylib" liblldb.5.0.1.dylib
     fi

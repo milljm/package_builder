@@ -48,12 +48,13 @@ post_run() {
 set          BASE_PATH         "${PACKAGES_DIR}_intel"
 conflict moose/.<CPPUNIT>_<CLANG> cppunit-clang moose/.<CPPUNIT>_<GCC> cppunit-gcc
 
+module load intel
+
 set          CPPUNIT_PATH      "\$BASE_PATH/<CPPUNIT>/${PACKAGE}"
 setenv       CPPUNIT_DIR       "\$CPPUNIT_PATH"
 
 prepend-path INCLUDE           "\$CPPUNIT_PATH/include"
 prepend-path PATH              "\$CPPUNIT_PATH/bin"
-module load moose/.intel
 EOF
 }
 ##

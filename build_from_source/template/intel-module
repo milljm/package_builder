@@ -35,15 +35,6 @@ pre_run() {
 }
 
 post_run() {
-    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.intel"
-#%Module1.0#####################################################################
-##
-## ${PACKAGE} wrapper to system ${PACKAGE}-${INTEL_VERSION} version
-## (at the time of this discovery)
-##
-module load intel
-EOF
-
     cat <<EOF > "${PACKAGES_DIR}_intel/modulefiles/moose-dev-intel"
 #%Module1.0#####################################################################
 ##
@@ -51,11 +42,15 @@ EOF
 ## ${PACKAGE}-${INTEL_VERSION}
 ## <MPICH>
 ##
+module load intel
 module load <MPICH>_${PACKAGE}-${INTEL_VERSION}
 module load <PETSC_DEFAULT>_<MPICH>_${PACKAGE}-${INTEL_VERSION}-opt
 module load <CPPUNIT>_${PACKAGE}-${INTEL_VERSION}
 module load ccache
 module load moose-tools
+
+setenv CC  "ccache icc"
+setenv CXX "ccache icpc"
 
 EOF
 }

@@ -44,12 +44,6 @@ if {[is-loaded moose/.<CLANG>] || [is-loaded <CLANG>]} {
   setenv           CXX                "ccache clang++"
 }
 
-# Civet specific support for Intel compiler
-if {[is-loaded moose/.intel] || [is-loaded intel]} {
-  setenv           CC                 "ccache icc"
-  setenv           CXX                "ccache icpc"
-}
-
 setenv           CCACHE_SLOPPINESS  "time_macros" 
 EOF
 }

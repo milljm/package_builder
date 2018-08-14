@@ -3,10 +3,9 @@
 ###################### START FUNCTIONS ######################
 source_intel() {
     pause ${FUNCNAME[0]} "Source Intel Stack"
-    if [ `uname` == "Linux" ] && [ "$WITH_INTEL" != "None" ] && [ -f "$WITH_INTEL/bin/compilervars.sh" ]; then
+    if [ `uname` = "Linux" ] && [ "$WITH_INTEL" != "None" ] && [ -f "$WITH_INTEL/bin/compilervars.sh" ]; then
         # jointly supported OS's for intel compilers:
-        supported_intel_archs=('ubtuntu 16' 'opensuse' 'centos')
-        for supported_arch in ${supported_intel_archs[*]}; do
+        for supported_arch in 'ubuntu 16'; do
             if [ `lsb_release -d | grep -ic "$supported_arch"` -ge 1 ]; then
                 SUPPORTED=true
                 break
@@ -69,7 +68,7 @@ pause() {
     if [ "$DEBUG" = "True" ]; then
         clear
         while true; do
-            message=`echo -e "\n##########\nNEXT TASK:\n\t$@ \n\nDo this task?\t[Y,n] or ctrl-c to exit.\n\t\t[c|C] will allow you to enter a command.\n\t\t[p|P] will print task details> "`
+            message=`echo -e "\n##########\nNEXT TASK:\n\t$@ \n\nDo this task?\t[Y,n] or ctrl-c to exit.\n\t\t[c|C] will allow you to enter a command.\n\t\t[e|E] will print task details> "`
             read -n1 -p "$message" skip_this
             case $skip_this in
                 y|Y) echo ''; return 0;;
@@ -80,9 +79,9 @@ pause() {
                      echo -e "\n#######################\n";
                      type $1;
                      echo -e "\n#######################\n-----------------------\nCurrent Variables:\n\tPACKAGES_DIR:\t\t$PACKAGES_DIR\n\tRELATIVE_DIR:\t\t$RELATIVE_DIR\n\tBASE_DIR:\t\t$BASE_DIR\n\tPACKAGE:\t\t$PACKAGE\n\tsrc_temp:\t\t$src_temp\n\tINTEL_AVAILABLE:\t$INTEL_AVAILABLE\n\tINTEL_VERSION:\t\t$INTEL_VERSION\n-----------------------";
-                     if [ `declare -f module > /dev/null; echo $?` ==  '0' ]; then module list; else echo -e "\nNo modules loaded"; fi;
+                     if [ `declare -f module > /dev/null; echo $?` = '0' ]; then module list; else echo -e "\nNo modules loaded"; fi;
                      ;;
-                *) echo "Please enter 'y' or 'n'. e|E will print function's contents"
+                *) echo "Please enter 'y' or 'n'. e|E will print function's contents. c|C will allow you to enter a command."
             esac
         done
     fi
@@ -367,10 +366,10 @@ export src_temp="$TEMP_PREFIX/$ME"
 
 CONTINUE="false"
 for OPERATING_SYSTEM in ${ARCH[*]}; do
-    if [ "$OPERATING_SYSTEM" == `uname` ]; then
+    if [ "$OPERATING_SYSTEM" = `uname` ]; then
         if [ -n "$WITH_INTEL" ] && [ "$WITH_INTEL" != "None" ]; then
             source_intel
-            if [ "$INTEL_AVAILABLE" == "true" ]; then
+            if [ "$INTEL_AVAILABLE" = "true" ]; then
                 CONTINUE=true
                 re_evaluate
 
@@ -385,7 +384,7 @@ for OPERATING_SYSTEM in ${ARCH[*]}; do
             fi
 
         # This is an Intel module, but intel is not enabled (skip it)
-        elif [ "$WITH_INTEL" == "None" ]; then
+        elif [ "$WITH_INTEL" = "None" ]; then
              CONTINUE=false
         else
              CONTINUE=true
