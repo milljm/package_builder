@@ -55,45 +55,37 @@ pre_run() {
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
     module load advanced_modules cmake miniconda
 
-    if [ `uname` != "Darwin" ]; then
-      module load moose/.<GCC>
-      export CC=gcc CXX=g++
+    # If dawrwin, build a clang bootstrapper. This is necessary for building
+    # a functional LLDB
+    if [ `uname` = "Darwin" ]; then
+        mkdir "$1/boot"; cd "$1/boot"
+        LLVM_PACKAGES=(llvm cfe libcxx libcxxabi)
+        for LLVM_PACKAGE in ${LLVM_PACKAGES[*]}; do
+            tar -xf "$DOWNLOAD_DIR/$LLVM_PACKAGE-<LLVM>.src.tar.xz" -C .
+            if [ $? -ne 0 ]; then echo 'Failed to extract '$LLVM_PACKAGE; cleanup 1; fi
+            if [ $LLVM_PACKAGE = 'cfe' ]; then
+                mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/clang
+            elif [ $LLVM_PACKAGE = 'llvm' ]; then
+                mv $LLVM_PACKAGE-<LLVM>.src $LLVM_PACKAGE
+            else
+                mv $LLVM_PACKAGE-<LLVM>.src llvm/projects/$LLVM_PACKAGE
+            fi
+        done
+        mkdir "$1/boot/build"; cd "$1/boot/build"
+        cmake -DCMAKE_BUILD_TYPE="Release" -DLLVM_TARGETS_TO_BUILD="X86" -DBUILD_SHARED_LIBS="on" -Wno-dev ../llvm
+        if [ $? -ne 0 ]; then echo 'Failed to configure llvm/clang bootstrap'; cleanup 1; fi
+        make -j $MOOSE_JOBS
+        if [ $? -ne 0 ]; then echo 'Failed to build llvm/clang bootstrap'; cleanup 1; fi
+
+        # We need to convert all those RPATH links to ABS path ones
+        cd "$1/boot/build/lib"
+        change_links
+
+        export PATH="$1/boot/build/bin":$PATH
+        export CC=clang CXX=clang++
+
     fi
 
-    # Build the bootstrapper. We need to build the entire project using the same compiler
-    # we ultimately want to build. Sounds strange, but we do this to streamline the process
-    # so we can build LLDB, along side the rest of the 'projects' (compiler-rt, openmp, etc)
-    mkdir "$1/boot"; cd "$1/boot"
-    LLVM_PACKAGES=(llvm cfe libcxx libcxxabi)
-    for LLVM_PACKAGE in ${LLVM_PACKAGES[*]}; do
-      tar -xf "$DOWNLOAD_DIR/$LLVM_PACKAGE-<LLVM>.src.tar.xz" -C .
-      if [ $? -ne 0 ]; then echo 'Failed to extract '$LLVM_PACKAGE; cleanup 1; fi
-      if [ $LLVM_PACKAGE = 'cfe' ]; then
-          mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/clang
-      elif [ $LLVM_PACKAGE = 'llvm' ]; then
-          mv $LLVM_PACKAGE-<LLVM>.src $LLVM_PACKAGE
-      else
-          mv $LLVM_PACKAGE-<LLVM>.src llvm/projects/$LLVM_PACKAGE
-      fi
-    done
-    mkdir "$1/boot/build"; cd "$1/boot/build"
-    cmake -DCMAKE_BUILD_TYPE="Release" -DLLVM_TARGETS_TO_BUILD="X86" -DBUILD_SHARED_LIBS="on" -Wno-dev ../llvm
-    if [ $? -ne 0 ]; then echo 'Failed to configure llvm/clang bootstrap'; cleanup 1; fi
-    make -j $MOOSE_JOBS
-    if [ $? -ne 0 ]; then echo 'Failed to build llvm/clang bootstrap'; cleanup 1; fi
-
-    # We need to convert all those RPATH links to ABS path ones
-    cd "$1/boot/build/lib"
-    change_links
-
-    # Source the bootstrapper
-    if [ `uname` != "Darwin" ]; then
-      module unload moose/.<GCC>
-    fi
-    export PATH="$1/boot/build/bin":$PATH
-    export CC=clang CXX=clang++
-
-    # Our Clang bootstrapper has been built, lets build the real thing.
     # Extract/Move LLVM, Clang, LLDB, Clang-Extras, compiler-rt, libcxx/abi, openmp
     # !!! NOTE: Order is important !!!
     cd "$1"
@@ -140,7 +132,7 @@ pre_run() {
 ../llvm
     else
       # check if we are code signing LLDB
-      if [ "$CODESIGN_NAME" == "None" ]; then
+      if [ "$CODESIGN_NAME" = "None" ]; then
         CODESIGN_NAME=''
       else
         mkdir -p "$PACKAGES_DIR/$PACKAGE/codesign"
@@ -207,7 +199,7 @@ post_run() {
     cd "$PACKAGES_DIR/$PACKAGE/lib"
 
     # Link to miniconda's python
-    if [ `uname` == "Darwin" ]; then
+    if [ `uname` = "Darwin" ]; then
         cd "$PACKAGES_DIR/$PACKAGE/lib"
         install_name_tool -change @rpath/libpython2.7.dylib "$PACKAGES_DIR/miniconda/lib/libpython2.7.dylib" liblldb.5.0.1.dylib
     fi
