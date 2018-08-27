@@ -31,25 +31,9 @@ Base class for building packages
 
   # Method for maintaining the package version based on package class (pkg, rpm, deb)
   def _get_build_version(self):
-    if not os.path.exists(os.path.join(args.meta_dir, self.__class__.__name__.lower(), self.args.release + '-' + self.args.version + '_build')):
-      if not os.path.exists(os.path.join(args.meta_dir, self.__class__.__name__.lower())):
-        try:
-          os.makedirs(os.path.join(args.meta_dir, self.__class__.__name__.lower()))
-        except OSError:
-          print 'Failed to create versioning meta directory:', args.meta_dir
-          sys.exit(1)
-      with open(os.path.join(args.meta_dir, self.__class__.__name__.lower(), self.args.release + '-' + self.args.version + '_build'), 'w') as version_file:
-        version_file.write('1')
-      new_version = 1
-    else:
-      with open(os.path.join(args.meta_dir, self.__class__.__name__.lower(), self.args.release + '-' + self.args.version + '_build'), 'r+') as version_file:
-        new_version = int(version_file.read()) + 1
-        version_file.truncate(0)
-        version_file.seek(0)
-        version_file.write(str(new_version))
-    with open(os.path.join(args.packages_dir, 'build'), 'w') as release_file:
-      release_file.write('Package version: ' + str(new_version))
-    return new_version
+    with open(os.path.join(args.packages_dir, 'build'), 'r') as build_file:
+      build_date = re.findall(r'BUILD_DATE:(\d+)', build_file.read())[0]
+    return build_date
 
   def clean_up(self):
     shutil.rmtree(self.temp_dir)

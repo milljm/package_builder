@@ -265,6 +265,15 @@ def notEnough(prefix):
                                             str(available)[suffixes[index][1]]]), suffixes[index][0]
         return True
 
+def getDateAndHash():
+    git_hash = subprocess.Popen(["git", "rev-parse", "HEAD"], stdout=subprocess.PIPE)
+    date_time = datetime.datetime.now().strftime("%Y%m%d")
+    hash_version = git_hash.communicate()[0]
+    if git_hash.poll() != 0:
+        print 'Failed to identify hash of package_builder repository'
+        sys.exit(1)
+    return (date_time, hash_version)
+
 if __name__ == '__main__':
     # Pre-requirements that we are aware of that on some linux machines is not sometimes available by default:
     prereqs = ['bison', 'flex', 'git', 'curl', 'make', 'patch', 'bzip2', 'uniq']
@@ -304,6 +313,8 @@ if __name__ == '__main__':
 
     if args.download_only:
         print 'Downloads will be saved to:', os.path.join(args.temp_dir, 'moose_package_download_temp')
+    else:
+        (build_date, build_hash) = getDateAndHash()
 
     packages_dag = buildDAG(packages_path, args)
 
@@ -320,5 +331,8 @@ if __name__ == '__main__':
 
     if args.download_only:
         print '\nDownloads saved to: %s' %(os.path.join(args.temp_dir, 'moose_package_download_temp'))
+    else:
+        with open(os.path.join(args.prefix, 'build'), 'w') as build_file:
+            build_file.write("BUILD_DATE:%s\nREPO_HASH:%s" % (build_date, build_hash))
 
     print 'Total Time:', str(datetime.timedelta(seconds=int(time.time()) - int(start_time)))
