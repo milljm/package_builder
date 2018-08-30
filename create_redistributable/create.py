@@ -451,7 +451,6 @@ def parseArguments(args=None):
   parser.add_argument('-p', '--packages-dir', help='Directory where you installed everything to (/opt/moose)')
   parser.add_argument('--package-type', help='Specify type of package to build. Valid values: deb rpm pkg')
   parser.add_argument('--force', action='store_const', const=True, default=False, help='Force building package even if script could not determine OS release version')
-  parser.add_argument('--meta-dir', default=os.path.join(os.environ['HOME'], 'package_versioning'), help='Absolute path location to store versioning information')
   parser.add_argument('--sign', help='Sign the package (Macintosh Only) with the specified key')
   parser.add_argument('-k', '--keep-temporary-files', action='store_const', const=True, default=False, help='Keep temporary directory after package is created (default False')
   return verifyArgs(parser.parse_args(args))
