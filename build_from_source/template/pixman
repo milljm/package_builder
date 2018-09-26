@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules libpng)
+DEP=(modules miniconda gcc libpng)
 PACKAGE="<PIXMAN>"
 
 #####
@@ -22,7 +22,7 @@ INSTALL='true'
 pre_run() {
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
-    module load moose-tools
+    module load advanced_modules gcc moose-tools
 }
 
 post_run() {

@@ -21,8 +21,8 @@ BUILD='true'
 INSTALL='true'
 
 pre_run() {
-    if [ `uname` = "Darwin" ] && [ `uname -r | grep -c ^17.` -ge 1 ]; then
-        echo "$PACKAGE not supported on High Sierra..."
+    if [ `uname` = "Darwin" ] && [ `uname -r | cut -d. -f1` -gt 16 ]; then
+        echo "$PACKAGE supported on Sierra or earlier..."
         cleanup 0
     fi
     cat << 'EOF' > darwin.patch

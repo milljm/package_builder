@@ -475,7 +475,8 @@ _pathetic_dict = { RPM : ['FEDORA', 'SUSE', 'CENTOS', 'RHEL'],
 ### Conversion of OS X version to release name
 _mac_version_to_name = {'10.11' : 'elcapitan',
                         '10.12' : 'sierra',
-                        '10.13' : 'highsierra'}
+                        '10.13' : 'highsierra',
+                        '10.14' : 'mojave'}
 
 if __name__ == '__main__':
   args = parseArguments()
