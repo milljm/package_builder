@@ -54,12 +54,10 @@ pre_run() {
     # sed -i -e 's/wget/curl -O/g' contrib/download_prerequisites
     # ./contrib/download_prerequisites
 
-    if [ `uname` != "Darwin" ]; then
-        CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --disable-multilib --enable-languages=c,c++,fortran,jit --enable-checking=release --enable-host-shared --with-pic"
-    elif [ `uname` = 'Darwin' ] && [ `uname -r | cut -d. -f 1` = '18' ]; then
+    if [ `uname` = 'Darwin' ] && [ `uname -r | cut -d. -f 1` = '18' ]; then
         CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --disable-multilib --enable-languages=c,c++,fortran,jit --enable-checking=release --enable-host-shared --with-pic --with-system-zlib --disable-nls --with-native-system-header-dir=/usr/include --with-sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
     else
-        CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --enable-languages=c,c++,fortran,jit --enable-checking=release --enable-host-shared --with-pic"
+        CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --disable-multilib --enable-languages=c,c++,fortran,jit --enable-checking=release --enable-host-shared --with-pic"
     fi
     patch_jit
     mkdir ../gcc_build; cd ../gcc_build
