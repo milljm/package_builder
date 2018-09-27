@@ -25,20 +25,20 @@ patch_jit()
     if [ `uname` != 'Darwin' ]; then return; fi
     # Patch Darwin gcc for JIT linking issue: https://gcc.gnu.org/ml/jit/2015-q3/msg00147.html
     cat << 'EOF' > darwin-jit.patch
---- a/gcc-7.3.1/gcc/jit/Make-lang.in    2018-09-27 08:37:11.000000000 -0600
-+++ b/gcc-7.3.1/gcc/jit/Make-lang.in    2018-09-27 08:38:03.000000000 -0600
+--- a/gcc/jit/Make-lang.in	2018-09-27 10:38:46.000000000 -0600
++++ b/gcc/jit/Make-lang.in	2018-09-27 10:39:39.000000000 -0600
 @@ -85,8 +85,7 @@
-             $(jit_OBJS) libbackend.a libcommon-target.a libcommon.a \
-             $(CPPLIB) $(LIBDECNUMBER) $(LIBS) $(BACKENDLIBS) \
-             $(EXTRA_GCC_OBJS) \
--            -Wl,--version-script=$(srcdir)/jit/libgccjit.map \
--            -Wl,-soname,$(LIBGCCJIT_SONAME)
-+             -Wl,-install_name,$(LIBGCCJIT_SONAME)
+ 	     $(jit_OBJS) libbackend.a libcommon-target.a libcommon.a \
+ 	     $(CPPLIB) $(LIBDECNUMBER) $(LIBS) $(BACKENDLIBS) \
+ 	     $(EXTRA_GCC_OBJS) \
+-	     -Wl,--version-script=$(srcdir)/jit/libgccjit.map \
+-	     -Wl,-soname,$(LIBGCCJIT_SONAME)
++	     -Wl,-install_name,$(LIBGCCJIT_SONAME)
  
  $(LIBGCCJIT_SONAME_SYMLINK): $(LIBGCCJIT_FILENAME)
-        ln -sf $(LIBGCCJIT_FILENAME) $(LIBGCCJIT_SONAME_SYMLINK)
+ 	ln -sf $(LIBGCCJIT_FILENAME) $(LIBGCCJIT_SONAME_SYMLINK)
 EOF
-    patch -p2 < darwin-jit.patch
+    patch -p1 < darwin-jit.patch
 }
 
 pre_run() {
