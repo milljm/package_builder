@@ -35,8 +35,11 @@ pre_run() {
 
     if [ `uname` != "Darwin" ]; then
         CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --disable-multilib --enable-languages=c,c++,fortran,jit --enable-checking=release --enable-host-shared --with-pic"
-    else
+    elif [ `uname` = 'Darwin' ] && [ `uname -r | cut -d. -f 1` = '18' ]; then
         CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --disable-multilib --enable-languages=c,c++,fortran,jit --enable-checking=release --enable-host-shared --with-pic --with-system-zlib --disable-nls --with-native-system-header-dir=/usr/include --with-sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+    else
+        CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --enable-languages=c,c++,fortran,jit --enable-checking=release --enable-host-shared --with-pic"
+    fi
 
         # Patch Darwin gcc for JIT linking issue: https://gcc.gnu.org/ml/jit/2015-q3/msg00147.html
         cat << 'EOF' > darwin-jit.patch
