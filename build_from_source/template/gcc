@@ -36,7 +36,7 @@ pre_run() {
     if [ `uname` != "Darwin" ]; then
         CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --disable-multilib --enable-languages=c,c++,fortran,jit --enable-checking=release --enable-host-shared --with-pic"
     else
-        CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --enable-languages=c,c++,fortran --enable-checking=release --enable-host-shared --with-pic"
+        CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --disable-multilib --enable-languages=c,c++,fortran,jit --enable-checking=release --enable-host-shared --with-pic --with-system-zlib --disable-nls --with-native-system-header-dir=/usr/include --with-sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
     fi
     mkdir ../gcc_build; cd ../gcc_build
 
