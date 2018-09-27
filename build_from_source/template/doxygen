@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules cmake)
+DEP=(modules cmake llvm)
 PACKAGE="<DOXYGEN>"
 
 #####
