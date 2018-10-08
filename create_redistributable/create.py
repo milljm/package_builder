@@ -32,7 +32,7 @@ Base class for building packages
   # Method for maintaining the package version based on package class (pkg, rpm, deb)
   def _get_build_version(self):
     with open(os.path.join(args.packages_dir, 'build'), 'r') as build_file:
-      build_date = re.findall(r'BUILD_DATE:(\d+)', build_file.read())[0]
+      build_date = re.findall(r'BUILD_DATE=(\d+)', build_file.read())[0]
     return build_date
 
   def clean_up(self):
