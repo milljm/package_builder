@@ -8,6 +8,12 @@ import threading
 # Strange behavior, see Job class's run method
 global_lock = threading.Lock()
 
+### Conversion of OS X version to release name
+_mac_version_to_name = {'10.11' : 'elcapitan',
+                        '10.12' : 'sierra',
+                        '10.13' : 'highsierra',
+                        '10.14' : 'mojave'}
+
 class Job(object):
     def __init__(self, args, package_file=None, name=None):
         self.args = args
@@ -266,13 +272,94 @@ def notEnough(prefix):
         return True
 
 def getDateAndHash():
-    git_hash = subprocess.Popen(["git", "rev-parse", "HEAD"], stdout=subprocess.PIPE)
     date_time = datetime.datetime.now().strftime("%Y%m%d")
-    hash_version = git_hash.communicate()[0]
-    if git_hash.poll() != 0:
-        print 'Failed to identify hash of package_builder repository'
+    (uname, arch, version, release, version_num) = machineArch()
+
+    if os.getenv('CIVET_PR_NUM'):
+        hash_version = 'https://github.com/idaholab/package_builder/pull/%s' % (os.environ['CIVET_PR_NUM'])
+    else:
+        git_hash = subprocess.Popen(["git", "rev-parse", "HEAD"], stdout=subprocess.PIPE)
+        hash_version = git_hash.communicate()[0]
+        if git_hash.poll() != 0:
+            print 'Failed to identify hash of package_builder repository'
+            sys.exit(1)
+
+    return (date_time, hash_version, version, release)
+
+def machineArch():
+  try:
+    uname_process = subprocess.Popen(['uname', '-sm'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  except:
+    print 'Error invoking: uname -sm'
+
+  uname_stdout = uname_process.communicate()
+  if uname_stdout[1]:
+    print uname_stdout[1]
+    sys.exit(1)
+  else:
+    try:
+      uname, arch = re.findall(r'(\S+)', uname_stdout[0])
+    except ValueError:
+      print 'uname -sm returned information I did not understand:\n%s' % (uname_stdout[0])
+      sys.exit(1)
+
+  # Darwin Specific
+  if uname == 'Darwin':
+    release = 'osx'
+    try:
+      sw_ver_process = subprocess.Popen(['sw_vers'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except:
+      print 'Error invoking: sw_vers'
+      sys.exit(1)
+
+    sw_ver_stdout = sw_ver_process.communicate()
+    if sw_ver_stdout[1]:
+      print sw_ver_stdout[1]
+      sys.exit(1)
+    else:
+      try:
+        mac_version = re.findall(r'ProductVersion:\W+(\S+)', sw_ver_stdout[0])[0]
+      except IndexError:
+        print 'sw_vers returned information I did not understand:\n%s' % (sw_ver_stdout[0])
         sys.exit(1)
-    return (date_time, hash_version)
+
+      version = None
+      for osx_version, version_name in _mac_version_to_name.iteritems():
+        if mac_version.find(osx_version) != -1:
+          version = _mac_version_to_name[osx_version]
+          version_num = osx_version
+          break
+
+      if version == None:
+        print 'Unable to determine OS X friendly name'
+        sys.exit(1)
+
+  # Linux Specific
+  else:
+    version_num = None
+    try:
+      lsb_release_process = subprocess.Popen(['lsb_release', '-a'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except:
+      print 'Error invoking: lsb_release -a'
+      sys.exit(1)
+
+    lsb_stdout = lsb_release_process.communicate()
+    if lsb_stdout[1]:
+      print lsb_stdout[1]
+      sys.exit(1)
+    else:
+      fail_message = 'lsb_release -a returned information I did not understand:\n%s' % (lsb_stdout[0])
+      try:
+        version = re.findall(r'Release:\W+(\S+)', lsb_stdout[0])[0]
+        release = re.findall(r'Distributor ID:\W+(\S+)', lsb_stdout[0])[0]
+      except IndexError:
+        print fail_message
+        sys.exit(1)
+      if version == None or release == None:
+        print fail_message
+        sys.exit(1)
+
+  return (uname, arch, version, release, version_num)
 
 if __name__ == '__main__':
     # Pre-requirements that we are aware of that on some linux machines is not sometimes available by default:
@@ -314,7 +401,7 @@ if __name__ == '__main__':
     if args.download_only:
         print 'Downloads will be saved to:', os.path.join(args.temp_dir, 'moose_package_download_temp')
     else:
-        (build_date, build_hash) = getDateAndHash()
+        (build_date, build_hash, version, release) = getDateAndHash()
 
     packages_dag = buildDAG(packages_path, args)
 
@@ -333,6 +420,6 @@ if __name__ == '__main__':
         print '\nDownloads saved to: %s' %(os.path.join(args.temp_dir, 'moose_package_download_temp'))
     else:
         with open(os.path.join(args.prefix, 'build'), 'w') as build_file:
-            build_file.write("BUILD_DATE:%s\nPACKAGE_BUILDER_HASH:%s" % (build_date, build_hash))
+            build_file.write("ARCH=%s-%s\nBUILD_DATE=%s\nPR_VERSION=%s" % (release, version, build_date, build_hash))
 
     print 'Total Time:', str(datetime.timedelta(seconds=int(time.time()) - int(start_time)))
