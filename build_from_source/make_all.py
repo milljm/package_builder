@@ -418,6 +418,8 @@ if __name__ == '__main__':
 
     if args.download_only:
         print '\nDownloads saved to: %s' %(os.path.join(args.temp_dir, 'moose_package_download_temp'))
+    elif args.dryrun:
+        pass
     else:
         with open(os.path.join(args.prefix, 'build'), 'w') as build_file:
             build_file.write("ARCH=%s-%s\nBUILD_DATE=%s\nPR_VERSION=%s" % (release, version, build_date, build_hash))
