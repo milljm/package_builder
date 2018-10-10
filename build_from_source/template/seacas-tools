@@ -32,9 +32,8 @@ pre_run() {
     # Working commit at time of writing
     git checkout 58efc0488988f0fff1dcc5200a35e9ffc1447707
 
-    # Apply Darwin patch (Macintosh machines do not have wget)
-    if [ `uname` = 'Darwin' ]; then
-        cat <<"EOF" > darwin.patch
+    # Apply curl patch (all machines have curl...)
+    cat <<"EOF" > curl.patch
 --- a/install-tpl.sh	2018-10-09 10:01:54.000000000 -0600
 +++ b/install-tpl.sh	2018-10-09 09:21:18.000000000 -0600
 @@ -107,7 +107,7 @@
@@ -77,8 +76,7 @@ pre_run() {
              rm -rf parallel-latest.tar.bz2
          fi
 EOF
-        patch -p1 < darwin.patch
-    fi
+    patch -p1 < curl.patch
     if [ $? -ne 0 ]; then echo "Failure in preparation of Seacas repository, or applying patch failure."; cleanup 1; fi
 
     # Run dependency installer
