@@ -35,6 +35,7 @@ post_run() {
 ##
 set BASE_PATH       "$PACKAGES_DIR"
 prepend-path        PATH       "\$BASE_PATH/$BASE_DIR/<AUTOCONF>/bin"
+prepend-path        MANPATH    "\$BASE_PATH/$BASE_DIR/<AUTOCONF>/share/man"
 EOF
 }
 ##

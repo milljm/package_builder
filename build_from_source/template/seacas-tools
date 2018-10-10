@@ -22,7 +22,7 @@ INSTALL='false'
 pre_run() {
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
-    module load advanced_modules cmake gcc
+    module load advanced_modules autotools cmake gcc
 
     if [ -d "$PACKAGES_DIR/$PACKAGE" ]; then rm -rf "$PACKAGES_DIR/$PACKAGE"; fi
     cd $PACKAGES_DIR

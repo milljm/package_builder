@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules automake autoconf)
+DEP=(modules automake autoconf libtool)
 PACKAGE="<GCC>"
 NO_CCACHE='true'
 
