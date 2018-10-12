@@ -1,0 +1,136 @@
+#!/bin/bash
+#############
+## Specifics
+##
+DEP=(modules cmake gcc)
+PACKAGE="seacas"
+
+#####
+# Set the operating system allowed to build this module
+#
+ARCH=(Darwin Linux)
+
+#####
+# Setting any of these variables to 'false' effectively skips that step
+# This is useful for items like 'autojump' which requires a git clone/checkout
+DOWNLOAD='false'
+EXTRACT='false'
+CONFIGURE='false'
+BUILD='false'
+INSTALL='false'
+
+pre_run() {
+    unset MODULEPATH
+    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    module load advanced_modules autotools cmake gcc
+
+    if [ -d "$PACKAGES_DIR/$PACKAGE" ]; then rm -rf "$PACKAGES_DIR/$PACKAGE"; fi
+    cd $PACKAGES_DIR
+    git clone https://github.com/gsjaardema/seacas.git $PACKAGE
+    cd $PACKAGE; export ACCESS=`pwd`
+
+    # Working commit at time of writing
+    git checkout 58efc0488988f0fff1dcc5200a35e9ffc1447707
+
+    # Apply curl patch (all machines have curl...)
+    cat <<"EOF" > curl.patch
+--- a/install-tpl.sh	2018-10-09 10:01:54.000000000 -0600
++++ b/install-tpl.sh	2018-10-09 09:21:18.000000000 -0600
+@@ -107,7 +107,7 @@
+ 	    echo "${txtgrn}+++ Downloading...${txtrst}"
+             rm -rf zlib-${zlib_version}
+             rm -rf zlib-${zlib_version}.tar.gz
+-            wget --no-check-certificate https://zlib.net/zlib-${zlib_version}.tar.gz
++            curl -k -L -O https://zlib.net/zlib-${zlib_version}.tar.gz
+             tar -xzf zlib-${zlib_version}.tar.gz
+             rm -rf zlib-${zlib_version}.tar.gz
+ 	fi
+@@ -160,9 +160,9 @@
+         rm -f hdf5-${hdf_version}.tar.bz2
+ 	if [ "${H5VERSION}" == "V18" ]
+ 	then
+-	    wget --no-check-certificate https://support.hdfgroup.org/ftp/HDF5/current18/src/hdf5-${hdf_version}.tar.bz2
++	    curl -k -L -O https://support.hdfgroup.org/ftp/HDF5/current18/src/hdf5-${hdf_version}.tar.bz2
+ 	else
+-	    wget --no-check-certificate https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-${hdf_version}/src/hdf5-${hdf_version}.tar.bz2
++	    curl -k -L -O https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-${hdf_version}/src/hdf5-${hdf_version}.tar.bz2
+ 	fi
+         tar -jxf hdf5-${hdf_version}.tar.bz2
+         rm -f hdf5-${hdf_version}.tar.bz2
+@@ -204,7 +204,7 @@
+ 	    echo "${txtgrn}+++ Downloading...${txtrst}"
+             rm -rf parallel-netcdf-${pnet_version}
+             rm -f parallel-netcdf-${pnet_version}.tar.gz
+-            wget http://cucis.ece.northwestern.edu/projects/PnetCDF/Release/parallel-netcdf-${pnet_version}.tar.gz
++            curl -k -L -O http://cucis.ece.northwestern.edu/projects/PnetCDF/Release/parallel-netcdf-${pnet_version}.tar.gz
+             tar -xzf parallel-netcdf-${pnet_version}.tar.gz
+             rm -f parallel-netcdf-${pnet_version}.tar.gz
+         fi
+@@ -372,7 +372,7 @@
+         then
+ 	    echo "${txtgrn}+++ Downloading...${txtrst}"
+             rm -rf parallel-*
+-            wget --no-check-certificate ftp://ftp.gnu.org/gnu/parallel/parallel-latest.tar.bz2
++            curl -k -L -O http://ftp.gnu.org/gnu/parallel/parallel-latest.tar.bz2
+             tar -jxf parallel-latest.tar.bz2
+             rm -rf parallel-latest.tar.bz2
+         fi
+EOF
+    patch -p1 < curl.patch
+    if [ $? -ne 0 ]; then echo "Failure in preparation of Seacas repository, or applying patch failure."; cleanup 1; fi
+
+    # Run dependency installer
+    ./install-tpl.sh
+    if [ $? -ne 0 ]; then echo "Failure while running installer-tpl.sh"; cleanup 1; fi
+
+    # Build seacas-tools
+    mkdir "$ACCESS/build"; cd "$ACCESS/build"
+    ../cmake-config
+    if [ $? -ne 0 ]; then echo "Failure while running cmake config for seacas-tools"; cleanup 1; fi
+    make -j $MOOSE_JOBS
+    if [ $? -ne 0 ]; then echo "Failure while building seacas-tools"; cleanup 1; fi
+    make install
+    if [ $? -ne 0 ]; then echo "Failure while installing seacas-tools"; cleanup 1; fi
+}
+post_run() {
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/adv_modules/seacas-tools"
+#%Module1.0#####################################################################
+##
+## Seacas Tools
+##
+set BASE_PATH   "$PACKAGES_DIR"
+
+# SEACAS (insternally used)
+if { [uname sysname] != "Darwin" } {
+  prepend-path  LD_LIBRARY_PATH  "\$BASE_PATH/seacas/lib"
+}
+prepend-path    PATH            "\$BASE_PATH/seacas/bin"
+prepend-path    MANPATH         "\$BASE_PATH/seacas/share/man"
+setenv          ACCESS          "\$BASE_PATH/seacas"
+EOF
+}
+##
+## End Specifics
+##############
+## The following script contains all the common functions.
+## Those functions are executed in the following order:
+
+# download
+# extract
+# pre-run
+# configure
+# make
+# make install
+# post_run
+# cleanup
+
+## pre_run and post_run are the only true specifics that are different
+## with every package
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+DOWNLOAD_ONLY=<DOWNLOAD_ONLY>
+source "$RELATIVE_DIR/functions" $@

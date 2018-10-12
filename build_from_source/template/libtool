@@ -2,8 +2,8 @@
 #############
 ## Specifics
 ##
-DEP=(modules autoconf)
-PACKAGE="<AUTOMAKE>"
+DEP=(modules autoconf automake)
+PACKAGE="<LIBTOOL>"
 BASE_DIR='autotools'
 
 #####
@@ -14,8 +14,8 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='http://mooseframework.inl.gov/source_packages/<AUTOMAKE>.tar.gz'
-EXTRACT='<AUTOMAKE>.tar.gz'
+DOWNLOAD='http://mooseframework.inl.gov/source_packages/<LIBTOOL>.tar.gz'
+EXTRACT='<LIBTOOL>.tar.gz'
 CONFIGURE="true"
 BUILD='true'
 INSTALL='true'
@@ -26,9 +26,14 @@ pre_run() {
     module load advanced_modules autotools
 }
 post_run() {
+    if [ `uname` = "Darwin" ]; then
+        cd "$PACKAGES_DIR/$BASE_DIR/<LIBTOOL>/bin"
+        ln -s libtoolize glibtoolize
+        if [ "$?" != "0" ]; then echo "Failed creating symbolic link"; cleanup 1; fi
+    fi
     cat <<EOF >> "$PACKAGES_DIR/Modules/<MODULES>/adv_modules/autotools"
-prepend-path        PATH       "\$BASE_PATH/$BASE_DIR/<AUTOMAKE>/bin"
-prepend-path        MANPATH    "\$BASE_PATH/$BASE_DIR/<AUTOMAKE>/share/man"
+prepend-path        PATH       "\$BASE_PATH/$BASE_DIR/<LIBTOOL>/bin"
+prepend-path        MANPATH    "\$BASE_PATH/$BASE_DIR/<LIBTOOL>/share/man"
 EOF
 }
 
