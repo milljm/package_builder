@@ -240,17 +240,24 @@ post_run() {
     fi
     ln -s ../modulefiles/moose/.<CLANG> clang
     cd "$PACKAGES_DIR/$PACKAGE/lib"
-
-    # Link to miniconda's python
-    if [ `uname` = "Darwin" ]; then
-        cd "$PACKAGES_DIR/$PACKAGE/lib"
-        install_name_tool -change @rpath/libpython2.7.dylib "$PACKAGES_DIR/miniconda/lib/libpython2.7.dylib" liblldb.5.0.1.dylib
-        if [ "$CODESIGN_NAME" != "None" ]; then
-            codsign -f -s "$CODESIGN_NAME" "$PACKAGES_DIR/$PACKAGE/bin/debugserver"
-        fi
-    fi
     change_links
     cp -R "$1/llvm/tools/clang/bindings" "$PACKAGES_DIR/$PACKAGE/"
+
+    # We have to fix serveral things either Cmake or LLDB is doing wrong when building on Darwin machines
+    if [ `uname` = "Darwin" ]; then
+        # This is not the python we originally found during cmake configure. So change it back!
+        install_name_tool -change "$PACKAGES_DIR/$PACKAGE/lib/libpython2.7.dylib" "$PACKAGES_DIR/miniconda/lib/libpython2.7.dylib" liblldb.<LLVM>.dylib
+        if [ "$?" != "0" ]; then echo "Failed to fix libpython link in liblldb.dylib"; cleanup 1; fi
+
+        # The default entitlement being applied to the `debugserver` causes the binary to simply die "-9" when executed (on Mojave).
+        if [ "$CODESIGN_NAME" = "" ]; then
+            codesign -f -s - "$PACKAGES_DIR/$PACKAGE/bin/debugserver"
+        else
+            codesign -f -s "$CODESIGN_NAME" "$PACKAGES_DIR/$PACKAGE/bin/debugserver"
+        fi
+        if [ "$?" != "0" ]; then echo "Failed to remove Entitlements from debugserver"; cleanup 1; fi
+    fi
+
 }
 ##
 ## End Specifics
