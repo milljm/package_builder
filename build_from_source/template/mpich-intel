@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules gcc intel-module)
+DEP=(modules intel-gcc)
 PACKAGE="intel"
 BASE_DIR="<MPICH>"
 
@@ -32,6 +32,7 @@ re_evaluate(){
 
 pre_run() {
     mkdir intel-opt; cd intel-opt
+    module load intel-gcc
     export CC=icc CXX=icpc FC=ifort F77=ifort
     CONFIGURE="../configure --prefix=${PACKAGES_DIR}_intel/<MPICH>/${PACKAGE} --enable-shared --enable-sharedlibs=icc --enable-fast=03 --enable-debuginfo --enable-totalview --enable-two-level-namespace CC=icc CXX=icpc FC=ifort F77=ifort F90='' CFLAGS='' CXXFLAGS='' FFLAGS='' FCFLAGS='' F90FLAGS='' F77FLAGS=''"
 }
@@ -48,6 +49,7 @@ set             MPI_PATH           "\$BASE_PATH/<MPICH>/${PACKAGE}"
 conflict moose/.<MPICH>_<GCC> moose/.<MPICH>_<CLANG> moose/.<OPENMPI>_<CLANG> moose/.<OPENMPI>_<GCC> mpich_clang openmpi_clang openmpi_gcc
 
 module load intel
+module load intel-gcc
 
 prepend-path    C_INCLUDE_PATH     "\$MPI_PATH/include"
 prepend-path    CPLUS_INCLUDE_PATH "\$MPI_PATH/include"
@@ -62,6 +64,7 @@ setenv FC       mpifort
 
 setenv          MPI_HOME          "\$MPI_PATH"
 prepend-path    PATH              "\$MPI_PATH/bin"
+
 EOF
     MODULEPATH=$MODULEPATH:${PACKAGES_DIR}_intel/modulefiles:/opt/intel/modulefiles
     module load <MPICH>_${PACKAGE}

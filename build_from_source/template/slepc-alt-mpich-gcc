@@ -28,9 +28,9 @@ pre_run() {
 }
 
 post_run() {
-    make SLEPC_DIR=`pwd` PETSC_DIR="$PETSC_DIR"
+    make PETSC_DIR="$PETSC_DIR"
     if [ $? -ne 0 ]; then echo 'Failed to make '$ME; cleanup 1; fi
-    make SLEPC_DIR=`pwd` PETSC_DIR="$PETSC_DIR" install
+    make PETSC_DIR="$PETSC_DIR" install
     if [ $? -ne 0 ]; then echo 'Failed to make install '$ME; cleanup 1; fi
     make SLEPC_DIR="$PACKAGES_DIR/$BASE_DIR/$PACKAGE" PETSC_DIR="$PETSC_DIR" PETSC_ARCH="" test
     if [ $? -ne 0 ]; then echo 'Failed to make test '$ME; cleanup 1; fi
@@ -44,6 +44,7 @@ post_run() {
 ##
 set         BASE_PATH        "$PACKAGES_DIR"
 setenv      SLEPC_DIR        "\$BASE_PATH/<SLEPC_ALT>/<MPICH>_<GCC>"
+
 EOF
 
     cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/civet/mpich-gcc-petsc_alt-slepc"

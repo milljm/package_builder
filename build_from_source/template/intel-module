@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules gcc ccache miniconda)
+DEP=(modules miniconda ccache cppunit-intel petsc-default-mpich-intel-opt)
 PACKAGE="intel"
 
 #####
@@ -35,6 +35,7 @@ pre_run() {
 }
 
 post_run() {
+    mkdir -p "${PACKAGES_DIR}_intel/modulefiles"
     cat <<EOF > "${PACKAGES_DIR}_intel/modulefiles/moose-dev-intel"
 #%Module1.0#####################################################################
 ##
@@ -42,15 +43,16 @@ post_run() {
 ## ${PACKAGE}-${INTEL_VERSION}
 ## <MPICH>
 ##
-module load intel
 module load <MPICH>_${PACKAGE}-${INTEL_VERSION}
 module load <PETSC_DEFAULT>_<MPICH>_${PACKAGE}-${INTEL_VERSION}-opt
 module load <CPPUNIT>_${PACKAGE}-${INTEL_VERSION}
 module load ccache
 module load moose-tools
 
-setenv CC  "ccache icc"
-setenv CXX "ccache icpc"
+# Allow intra-process communication when using singularity
+if { [ info exists ::env(SINGULARITY_CONTAINER) ] } {
+  setenv I_MPI_SHM_LMT shm
+}
 
 EOF
 }

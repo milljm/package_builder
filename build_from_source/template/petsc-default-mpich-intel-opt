@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules cmake gcc mpich-intel)
+DEP=(modules cmake mpich-intel)
 PACKAGE="<MPICH>_intel-opt"
 BASE_DIR="<PETSC_DEFAULT>"
 
@@ -27,6 +27,8 @@ re_evaluate(){
     export MODULEPATH="$MODULEPATH:<WITH_INTEL>/modulefiles"
     module load intel
     export INTEL_VERSION=${INTEL_VERSION-`icc --version | grep ICC | perl -pe 's|.* (\d+)\..*|\1|'`}
+    # Check that Intel blas/lapack is properly available
+    if ! [ -f "$MKLROOT/lib/intel64/libmkl_intel_lp64.a" ]; then echo "\$MKLROOT/lib/intel64 path not properly set according to PETSc configure (we would have failed)"; cleanup 1; fi
     PACKAGE="<MPICH>_intel-${INTEL_VERSION}-opt"
 }
 
@@ -55,19 +57,19 @@ pre_run() {
 --with-cc=mpicc \
 --with-cxx=mpicxx \
 --with-fc=mpif90 \
---download-fblaslapack=1 \
 --download-metis=1 \
 --download-parmetis=1 \
 --download-superlu_dist=1 \
 --download-mumps=1 \
 --download-scalapack=1 \
--CC=mpicc -CXX=mpicxx -FC=mpif90 -F77=mpif77 -F90=mpif90 \
--CFLAGS='-fPIC -qopenmp' \
--CXXFLAGS='-fPIC -qopenmp' \
--FFLAGS='-fPIC -qopenmp' \
--FCFLAGS='-fPIC -qopenmp' \
--F90FLAGS='-fPIC -qopenmp' \
--F77FLAGS='-fPIC -qopenmp'"
+--with-blas-lapack-lib=\"$MKLROOT/lib/intel64/libmkl_intel_lp64.a $MKLROOT/lib/intel64/libmkl_sequential.a $MKLROOT/lib/intel64/libmkl_core.a\" \
+--CC=mpicc --CXX=mpicxx --FC=mpif90 --F77=mpif77 --F90=mpif90 \
+--CFLAGS='-fPIC -qopenmp' \
+--CXXFLAGS='-fPIC -qopenmp' \
+--FFLAGS='-fPIC -qopenmp' \
+--FCFLAGS='-fPIC -qopenmp' \
+--F90FLAGS='-fPIC -qopenmp' \
+--F77FLAGS='-fPIC -qopenmp'"
     try_command 3 "clean_petsc; configure; make MAKE_NP=$MOOSE_JOBS PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-opt all; make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-opt install"
     CONFIGURE="false"
 }
