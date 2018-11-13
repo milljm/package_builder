@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules gcc intel-module)
+DEP=(modules intel-gcc)
 PACKAGE="intel"
 BASE_DIR="<CPPUNIT>"
 
@@ -49,6 +49,7 @@ set          BASE_PATH         "${PACKAGES_DIR}_intel"
 conflict moose/.<CPPUNIT>_<CLANG> cppunit-clang moose/.<CPPUNIT>_<GCC> cppunit-gcc
 
 module load intel
+module load intel-gcc
 
 set          CPPUNIT_PATH      "\$BASE_PATH/<CPPUNIT>/${PACKAGE}"
 setenv       CPPUNIT_DIR       "\$CPPUNIT_PATH"
