@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules intel-gcc intel-module)
+DEP=(modules intel-gcc)
 PACKAGE="intel"
 BASE_DIR="<CPPUNIT>"
 
