@@ -1,6 +1,6 @@
 from copy import copy, deepcopy
 from collections import deque
-import uuid
+import uuid, sys
 
 try:
     from collections import OrderedDict
@@ -79,8 +79,8 @@ class DAG(object):
         graph[ind_node].add(dep_node)
         is_valid, message = self.validate(graph)
         if not is_valid:
-            self.delete_edge(ind_node, dep_node)
-            raise DAGValidationError()
+            print 'ERROR: Cyclic Dependency in modules %s <----> %s\n' % (dep_node.name, ind_node.name)
+            sys.exit(1)
 
     def delete_edge(self, ind_node, dep_node, graph=None):
         """ Delete an edge from the graph. """
