@@ -2,7 +2,8 @@
 #############
 ## Specifics
 ##
-DEP=(modules miniconda)
+DEP=(libunwind)
+PACKAGE="<GPERFTOOLS>"
 
 #####
 # Set the operating system allowed to build this module
@@ -12,31 +13,38 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='false'
-EXTRACT='false'
+DOWNLOAD='http://mooseframework.inl.gov/source_packages/<GPERFTOOLS>.tar.gz'
+EXTRACT='<GPERFTOOLS>.tar.gz'
 CONFIGURE='false'
-BUILD='false'
-INSTALL='false'
+BUILD='true'
+INSTALL='true'
 
 pre_run() {
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
-    module load miniconda
-    try_command 5 "PATH=$PACKAGES_DIR/miniconda/bin:$PATH conda install boost gmp mpfr --yes"
-    rm -rf "$PACKAGES_DIR/miniconda/pkgs/"*
+    if [ `uname` = "Darwin" ]; then
+        module load advanced_modules autotools clang
+    else
+        module load advanced_modules autotools gcc
+    fi
+    CPPFLAGS="-I$PACKAGES_DIR/<LIBUNWIND>/include" CFLAGS="-I$PACKAGES_DIR/<LIBUNWIND>/include" LDFLAGS="-L$PACKAGES_DIR/<LIBUNWIND>/lib" ./configure --prefix="$PACKAGES_DIR/$PACKAGE" --enable-libunwind
 }
-
 post_run() {
-    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/adv_modules/boost"
+    cat <<EOF >> "$PACKAGES_DIR/Modules/<MODULES>/adv_modules/gperf-tools"
 #%Module1.0#####################################################################
 ##
-## boost Module file
+## gperf-tools modulefile
 ##
 ##
 ##
-set BASE_PATH       "$PACKAGES_DIR"
-prepend-path        PATH       "\$BASE_PATH/miniconda/bin"
-setenv              BOOST_DIR  "\$BASE_PATH/miniconda"
+set          BASE_PATH         "$PACKAGES_DIR"
+prepend-path PATH              "\$BASE_PATH/$PACKAGE/bin"
+prepend-path MANPATH           "\$BASE_PATH/$PACKAGE/share/man"
+
+if { [uname sysname] != "Darwin" } {
+  prepend-path LD_LIBRARY_PATH "\$BASE_PATH/$PACKAGE/lib"
+}
+
 EOF
 }
 ##

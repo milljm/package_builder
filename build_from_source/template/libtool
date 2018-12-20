@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules autoconf automake)
+DEP=(modules automake)
 PACKAGE="<LIBTOOL>"
 BASE_DIR='autotools'
 

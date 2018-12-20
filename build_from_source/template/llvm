@@ -258,6 +258,8 @@ post_run() {
         if [ "$?" != "0" ]; then echo "Failed to remove Entitlements from debugserver"; cleanup 1; fi
     fi
 
+    # Create link to clang-format lisp
+    cd "$PACKAGES_DIR"; ln -s "$PACKAGES_DIR/$PACKAGE/share/clang/clang-format.el" .
 }
 ##
 ## End Specifics

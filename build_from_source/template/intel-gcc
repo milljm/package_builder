@@ -36,13 +36,13 @@ post_run() {
 ## Internal Intel <INTEL_GCC> modulefile
 ## Not to be used by itself
 ##
-set          BASE_PATH          "$PACKAGES_DIR"
+set          BASE_PATH          "${PACKAGES_DIR}_intel"
 set          INTEL_GCC_PATH     "\$BASE_PATH/<INTEL_GCC>"
 prepend-path LD_LIBRARY_PATH    "\$INTEL_GCC_PATH/lib64:\$INTEL_GCC_PATH/lib/gcc/x86_64-unknown-linux-gnu/<INTEL_GCC_VERSION>:\$INTEL_GCC_PATH/libexec/gcc/x86_64-unknown-linux-gnu/<INTEL_GCC_VERSION>"
 prepend-path PATH               "\$INTEL_GCC_PATH/bin"
 
 EOF
-    cd "$PACKAGES_DIR/<INTEL_GCC>"
+    cd "${PACKAGES_DIR}_intel/<INTEL_GCC>"
     for sfile in `find . -type f -name "*.la"`; do
         if [ `grep -c "$src_temp" $sfile` -ge 1 ]; then
             echo 'editing file: '$sfile
