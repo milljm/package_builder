@@ -32,6 +32,7 @@ pre_run() {
 	bash "$DOWNLOAD_DIR/<MINICONDA>-Linux-x86_64.sh" -b -p "$PACKAGES_DIR/$PACKAGE"
 	if [ $? -ne 0 ]; then echo "Failed to install $PACKAGE"; cleanup 1; fi
     fi
+
     export CONDARC="$PACKAGES_DIR/$PACKAGE/.condarc"
     PATH="$PACKAGES_DIR/$PACKAGE/bin:$PATH" conda config --set ssl_verify false
     try_command 5 "PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda update conda --yes"
