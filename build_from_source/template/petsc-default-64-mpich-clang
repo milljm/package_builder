@@ -88,7 +88,7 @@ EOF
 ## <MPICH>
 ##
 module load moose/.<MPICH>_<CLANG>
-module load moose/.<PETSC_DEFAULT>_<MPICH_<CLANG>-64
+module load moose/.<PETSC_DEFAULT>_<MPICH>_<CLANG>-64
 module load moose/.<TBB>
 module load moose/.<CPPUNIT>_<CLANG>
 module load ccache

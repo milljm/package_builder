@@ -2,42 +2,32 @@
 #############
 ## Specifics
 ##
-DEP=(modules miniconda)
+DEP=(gcc)
+PACKAGE="<LIBUNWIND>"
 
 #####
 # Set the operating system allowed to build this module
 #
-ARCH=(Darwin Linux)
+ARCH=(Linux)
 
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='false'
-EXTRACT='false'
-CONFIGURE='false'
-BUILD='false'
-INSTALL='false'
+DOWNLOAD='http://mooseframework.inl.gov/source_packages/<LIBUNWIND>.tar.gz'
+EXTRACT='<LIBUNWIND>.tar.gz'
+CONFIGURE="./configure --prefix=<PACKAGES_DIR>/$PACKAGE --enable-ptrace --enable-coredump --enable-minidebuginfo"
+BUILD='true'
+INSTALL='true'
 
 pre_run() {
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
-    module load miniconda
-    try_command 5 "PATH=$PACKAGES_DIR/miniconda/bin:$PATH conda install boost gmp mpfr --yes"
-    rm -rf "$PACKAGES_DIR/miniconda/pkgs/"*
+    module load advanced_modules gcc
+    CC=gcc CXX=g++
 }
 
 post_run() {
-    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/adv_modules/boost"
-#%Module1.0#####################################################################
-##
-## boost Module file
-##
-##
-##
-set BASE_PATH       "$PACKAGES_DIR"
-prepend-path        PATH       "\$BASE_PATH/miniconda/bin"
-setenv              BOOST_DIR  "\$BASE_PATH/miniconda"
-EOF
+    return
 }
 ##
 ## End Specifics
@@ -64,3 +54,4 @@ MOOSE_JOBS=<MOOSE_JOBS>
 KEEP_FAILED=<KEEP_FAILED>
 DOWNLOAD_ONLY=<DOWNLOAD_ONLY>
 source "$RELATIVE_DIR/functions" $@
+
