@@ -91,7 +91,6 @@ EOF
 module load moose/.<MPICH>_<CLANG>
 module load moose/.<PETSC_DEFAULT>_<MPICH>_<CLANG>-opt
 module load moose/.<TBB>
-module load moose/.<CPPUNIT>_<CLANG>
 module load ccache
 module load moose-tools
 

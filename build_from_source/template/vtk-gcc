@@ -61,7 +61,6 @@ module load moose/.<MPICH>_<GCC>
 module load moose/.<PETSC_DEFAULT>_<MPICH>_<GCC>-opt
 module load moose/.<VTK>_<GCC>
 module load moose/.<TBB>
-module load moose/.<CPPUNIT>_<GCC>
 module load ccache
 module load moose-tools
 
@@ -80,7 +79,6 @@ module load moose/.<MPICH>_<GCC>
 module load moose/.<PETSC_ALT>_<MPICH>_<GCC>-opt
 module load moose/.<VTK>_<GCC>
 module load moose/.<TBB>
-module load moose/.<CPPUNIT>_<GCC>
 module load ccache
 module load moose-tools
 

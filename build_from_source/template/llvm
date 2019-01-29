@@ -14,7 +14,7 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD=(http://mooseframework.inl.gov/source_packages/llvm-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/cfe-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/clang-tools-extra-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/compiler-rt-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/libcxx-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/libcxxabi-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/openmp-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/lldb-<LLVM>.src.tar.xz)
+DOWNLOAD=(http://mooseframework.inl.gov/source_packages/llvm-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/cfe-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/clang-tools-extra-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/compiler-rt-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/lld-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/libcxx-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/libcxxabi-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/openmp-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/lldb-<LLVM>.src.tar.xz)
 EXTRACT="false"
 CONFIGURE="false"
 BUILD='true'
@@ -57,6 +57,8 @@ custom_extract()
       if [ $? -ne 0 ]; then echo 'Failed to extract '$LLVM_PACKAGE; cleanup 1; fi
       if [ $LLVM_PACKAGE = 'cfe' ]; then
           mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/clang
+      elif [ $LLVM_PACKAGE = 'lld' ]; then
+          mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/lld
       elif [ $LLVM_PACKAGE = 'lldb' ]; then
           mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/lldb
       elif [ $LLVM_PACKAGE = 'clang-tools-extra' ]; then
@@ -146,7 +148,7 @@ pre_run() {
     # !!! NOTE: Order is important !!!
     # Extract/Move LLVM, Clang, LLDB, Clang-Extras, compiler-rt, libcxx/abi, openmp
     cd "$1"
-    LLVM_PACKAGES=(llvm cfe lldb clang-tools-extra compiler-rt libcxx libcxxabi openmp)
+    LLVM_PACKAGES=(llvm cfe lld lldb clang-tools-extra compiler-rt libcxx libcxxabi openmp)
     custom_extract
 
     module load miniconda
@@ -260,6 +262,9 @@ post_run() {
 
     # Create link to clang-format lisp
     cd "$PACKAGES_DIR"; ln -s "$PACKAGES_DIR/$PACKAGE/share/clang/clang-format.el" .
+
+    # Create link to drop-in replacement lld
+    cd "$PACKAGES_DIR/$PACKAGE/bin"; ln -s lld ld
 }
 ##
 ## End Specifics

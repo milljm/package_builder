@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules miniconda ccache cppunit-intel petsc-default-mpich-intel-opt)
+DEP=(modules miniconda ccache petsc-default-mpich-intel-opt)
 PACKAGE="intel"
 
 #####
@@ -45,7 +45,6 @@ post_run() {
 ##
 module load <MPICH>_${PACKAGE}-${INTEL_VERSION}
 module load <PETSC_DEFAULT>_<MPICH>_${PACKAGE}-${INTEL_VERSION}-opt
-module load <CPPUNIT>_${PACKAGE}-${INTEL_VERSION}
 module load ccache
 module load moose-tools
 

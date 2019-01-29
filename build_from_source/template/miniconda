@@ -58,6 +58,7 @@ setenv          MPLBACKEND       qt5Agg
 EOF
     PATH="$PACKAGES_DIR/$PACKAGE/bin:$PATH" conda clean --lock --tarballs --index-cache --packages --source-cache --yes
     rm -rf "$PACKAGES_DIR/$PACKAGE/pkgs/"*
+    touch "$PACKAGES_DIR/$PACKAGE/pkgs/urls.txt"
 }
 ##
 ## End Specifics
