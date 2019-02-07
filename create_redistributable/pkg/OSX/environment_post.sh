@@ -49,7 +49,7 @@ function detectAndCreateProfile()
     if [ -f """$use_this_profile""" ] && [ "$(grep -i "environments/moose_profile" """$use_this_profile""")x" != "x" ]; then
         return
     fi
-    cat >> """$use_this_profile""" << EOF
+    cat <<EOF >"""$use_this_profile"""
 # Uncomment to enable pretty prompt:
 # export MOOSE_PROMPT=true
 
