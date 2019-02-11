@@ -182,7 +182,6 @@ pre_run() {
         fi
         CC=clang CXX=clang++ cmake -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
           -DLLVM_BUILD_EXTERNAL_COMPILER_RT="ON" \
-          -DLLDB_CODESIGN_IDENTITY=$CODESIGN_NAME \
           -DLLVM_ENABLE_CXX1Y="ON" \
           -DCLANG_DEFAULT_CXX_STDLIB="libc++" \
           -DLIBCXXABI_USE_COMPILER_RT="ON" \
