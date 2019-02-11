@@ -190,6 +190,13 @@ if { [ info exists ::env(MOOSE_DIR) ] } {
     prepend-path PYTHONPATH "\$MOOSE_DIR/python"
   }
 }
+
+# On Darwin machines, moose-dev-gcc requires python without clang-only flags
+if { [uname sysname] == "Darwin" } {
+  if { ! [ is-loaded miniconda ] } {
+    module load miniconda
+  }
+}
 EOF
     cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-dev-clang-alt"
 #%Module1.0#####################################################################
@@ -228,6 +235,12 @@ if { [ info exists ::env(MOOSE_DIR) ] } {
   eval set [ array get env MOOSE_DIR ]
   if [ file isdirectory "\$MOOSE_DIR/python" ] {
     prepend-path PYTHONPATH "\$MOOSE_DIR/python"
+  }
+}
+# On Darwin machines, moose-dev-gcc requires python without clang-only flags
+if { [uname sysname] == "Darwin" } {
+  if { ! [ is-loaded miniconda ] } {
+    module load miniconda
   }
 }
 EOF
