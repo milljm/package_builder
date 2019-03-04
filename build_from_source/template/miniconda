@@ -59,6 +59,12 @@ EOF
     PATH="$PACKAGES_DIR/$PACKAGE/bin:$PATH" conda clean --lock --tarballs --index-cache --packages --source-cache --yes
     rm -rf "$PACKAGES_DIR/$PACKAGE/pkgs/"*
     touch "$PACKAGES_DIR/$PACKAGE/pkgs/urls.txt"
+
+    # Fix swig3.0 being detected outside miniconda's path (Debian stretch causes LLVM to fail due to using system swig3.0 over swig)
+    if [ "`PATH="$PACKAGES_DIR/$PACKAGE/bin:$PATH" which swig3.0`" != "$PACKAGES_DIR/$PACKAGE/bin/swig3.0" ] && [ -f "$PACKAGES_DIR/$PACKAGE/bin/swig" ]; then
+        cd "$PACKAGES_DIR/$PACKAGE/bin"
+        ln -s swig swig3.0
+    fi
 }
 ##
 ## End Specifics
