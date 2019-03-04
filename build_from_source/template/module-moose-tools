@@ -1,0 +1,101 @@
+#!/bin/bash
+#############
+## Specifics
+##
+DEP=(modules pkg-config doxygen glib graphviz lcov gnuplot)
+PACKAGE="moose-tools"
+
+#####
+# Set the operating system allowed to build this module
+#
+ARCH=(Darwin Linux)
+
+#####
+# Setting any of these variables to 'false' effectively skips that step
+# This is useful for items like 'autojump' which requires a git clone/checkout
+DOWNLOAD='false'
+EXTRACT='false'
+CONFIGURE='false'
+BUILD='false'
+INSTALL='false'
+
+pre_run() {
+    # Remove previous module file
+    rm -f "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
+}
+
+post_run() {
+    if [ `uname` = "Darwin" ]; then
+        cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
+#%Module1.0#####################################################################
+##
+## MOOSE Tools Module
+##
+##
+##
+set             BASE_PATH       "$PACKAGES_DIR"
+
+# Binary PATH for supporting binaries
+prepend-path    PKG_CONFIG_PATH "\$BASE_PATH/<PKG_CONFIG>/pkgconfig"
+prepend-path    PATH            "\$BASE_PATH/<PKG_CONFIG>/bin"
+prepend-path    PATH            "\$BASE_PATH/<GLIB>/bin"
+prepend-path    PATH            "\$BASE_PATH/<DOXYGEN>/bin"
+prepend-path    PATH            "\$BASE_PATH/<GRAPHVIZ>/bin"
+prepend-path    PATH            "\$BASE_PATH/<LCOV>/usr/bin"
+prepend-path    PATH            "\$BASE_PATH/<GNUPLOT>/bin"
+
+# MAN Pages for Doxygen / Graphviz / Lcov / GNUPlot
+prepend-path    MANPATH         "\$BASE_PATH/<DOXYGEN>/man"
+prepend-path    MANPATH         "\$BASE_PATH/<GRAPHVIZ>/share/man"
+prepend-path    MANPATH         "\$BASE_PATH/<LCOV>/usr/share/man"
+prepend-path    MANPATH         "\$BASE_PATH/<GNUPLOT>/share/man"
+EOF
+    else
+        cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
+#%Module1.0#####################################################################
+##
+## MOOSE Tools Module
+##
+##
+##
+set             BASE_PATH       "$PACKAGES_DIR"
+
+# Binary PATH for supporting binaries
+prepend-path    PATH            "\$BASE_PATH/<DOXYGEN>/bin"
+prepend-path    PATH            "\$BASE_PATH/<GRAPHVIZ>/bin"
+prepend-path    PATH            "\$BASE_PATH/<LCOV>/usr/bin"
+prepend-path    PATH            "\$BASE_PATH/<GNUPLOT>/bin"
+
+# MAN Pages for Doxygen / Graphviz / Lcov / GNUPlot
+prepend-path    MANPATH         "\$BASE_PATH/<DOXYGEN>/man"
+prepend-path    MANPATH         "\$BASE_PATH/<GRAPHVIZ>/share/man"
+prepend-path    MANPATH         "\$BASE_PATH/<LCOV>/usr/share/man"
+prepend-path    MANPATH         "\$BASE_PATH/<GNUPLOT>/share/man"
+EOF
+    fi
+}
+##
+## End Specifics
+##############
+## The following script contains all the common functions.
+## Those functions are executed in the following order:
+
+# download
+# extract
+# pre-run
+# configure
+# make
+# make install
+# post_run
+# cleanup
+
+## pre_run and post_run are the only true specifics that are different
+## with every package
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+DOWNLOAD_ONLY=<DOWNLOAD_ONLY>
+source "$RELATIVE_DIR/functions" $@

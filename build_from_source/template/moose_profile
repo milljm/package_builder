@@ -50,10 +50,8 @@ fi
 # Set MOOSE_JOBS and Load appropiate modules for Arch
 if [ \`uname -s\` == 'Darwin' ]; then
   export MOOSE_JOBS=\`/usr/sbin/sysctl -n hw.ncpu\`
-  module load moose-dev-clang moose-tools
 else
   export MOOSE_JOBS=\`cat /proc/cpuinfo | grep processor | wc -l\`
-  module load moose-dev-gcc moose-tools
 fi
 
 # Load custom MOOSE command bash autocomplete rules

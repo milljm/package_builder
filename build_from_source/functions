@@ -399,10 +399,10 @@ if [ "$DOWNLOAD_ONLY" = "True" ]; then
     exit 0
 elif [ "$CONTINUE" = "true" ]; then
     touch $PROGRESS
-    if [ `grep -c ^$ME $PROGRESS` -eq 0 ] || [ "$DEBUG" = "True" ]; then
+    if [ `grep -c "^$ME\$" $PROGRESS` -eq 0 ] || [ "$DEBUG" = "True" ]; then
         error=""
         for dependency in ${DEP[*]}; do
-            if [ `grep -ci ^$dependency $PROGRESS` -eq 0 ]; then
+            if [ `grep -ci "^$dependency\$" $PROGRESS` -eq 0 ]; then
                 error+=$dependency' '
             fi
         done
