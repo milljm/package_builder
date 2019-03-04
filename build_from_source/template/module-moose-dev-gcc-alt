@@ -4,6 +4,7 @@
 ##
 DEP=(modules miniconda tbb petsc-alt-mpich-gcc-opt)
 PACKAGE="module-moose-dev-gcc-alt"
+SERIAL=True
 
 #####
 # Set the operating system allowed to build this module

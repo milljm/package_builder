@@ -23,7 +23,15 @@ pre_run() {
     return
 }
 post_run() {
-    return
+    # Remove previous module section
+    sed -i'' -e '/#GNUPLOT/,/#ENDGNUPLOT/d' "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
+    # Append new paths to moose-tools module
+    cat <<EOF >> "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
+#GNUPLOT
+prepend-path    PATH            "\$BASE_PATH/<GNUPLOT>/bin"
+prepend-path    MANPATH         "\$BASE_PATH/<GNUPLOT>/share/man"
+#ENDGNUPLOT
+EOF
 }
 ##
 ## End Specifics

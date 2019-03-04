@@ -95,6 +95,16 @@ if { [ info exists ::env(HOME) ] } {
   }
 }
 EOF
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
+#%Module1.0#####################################################################
+##
+## MOOSE Tools Module
+##
+##
+##
+set             BASE_PATH       "$PACKAGES_DIR"
+EOF
+
     # Create .intel module so ccache works
     cd "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose"
     ln -s ../null .intel

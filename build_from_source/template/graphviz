@@ -26,7 +26,15 @@ pre_run() {
     CONFIGURE="CCPFLAGS='-I/opt/X11/include' ./configure --prefix=$PACKAGES_DIR/<GRAPHVIZ> --without-x --without-qt --disable-tcl --enable-swig=no"
 }
 post_run() {
-    return
+    # Remove previous module section
+    sed -i'' -e '/#GRAPHVIZ/,/#ENDGRAPHVIZ/d' "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
+    # Append new paths to moose-tools module
+    cat <<EOF >> "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
+#GRAPHVIZ
+prepend-path    PATH            "\$BASE_PATH/<GRAPHVIZ>/bin"
+prepend-path    MANPATH         "\$BASE_PATH/<GRAPHVIZ>/share/man"
+#ENDGRAPHVIZ
+EOF
 }
 ##
 ## End Specifics
