@@ -155,7 +155,7 @@ pre_run() {
 
     mkdir "$1/build"; cd "$1/build"
     if [ `uname` != "Darwin" ]; then
-        export CC=gcc; export CXX=g++
+        export CC=gcc CXX=g++
         cmake -DCMAKE_C_COMPILER="$PACKAGES_DIR/<GCC>/bin/gcc" \
           -DCMAKE_CXX_COMPILER="$PACKAGES_DIR/<GCC>/bin/g++" \
           -DGCC_INSTALL_PREFIX="$PACKAGES_DIR/<GCC>" \

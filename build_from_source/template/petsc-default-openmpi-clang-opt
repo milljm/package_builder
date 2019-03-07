@@ -92,7 +92,7 @@ module load moose/.<OPENMPI>_<CLANG>
 module load moose/.<PETSC_DEFAULT>_<OPENMPI>_<CLANG>-opt
 module load moose/.<TBB>
 module load ccache
-module load moose-tools
+module load miniconda moose-tools
 
 EOF
 

@@ -50,7 +50,6 @@ post_run() {
 ##
 ##
 set             BASE_PATH        "$PACKAGES_DIR"
-conflict miniconda
 
 # Miniconda/Peacock
 prepend-path    PATH             "\$BASE_PATH/$PACKAGE/bin"

@@ -37,7 +37,7 @@ conflict moose-dev-gcc moose-dev-clang moose-dev-clang-alt
 module load moose/.<MPICH>_<GCC>
 module load moose/.<PETSC_ALT>_<MPICH>_<GCC>-opt
 module load moose/.<TBB>
-module load miniconda
+module load miniconda moose-tools
 
 # If MOOSE_DIR is set, help the user out by prepending the moose/python path
 if { [ info exists ::env(MOOSE_DIR) ] } {
