@@ -73,7 +73,7 @@ module load moose/.<PETSC_ALT>_<MPICH>_<CLANG>-opt
 module load moose/.<VTK>_<CLANG>
 module load moose/.<TBB>
 module load ccache
-module load moose-tools
+module load miniconda moose-tools
 
 EOF
 
@@ -91,7 +91,7 @@ module load moose/.<PETSC_DEFAULT>_<MPICH>_<CLANG>-opt
 module load moose/.<VTK>_<CLANG>
 module load moose/.<TBB>
 module load ccache
-module load moose-tools
+module load miniconda moose-tools
 
 EOF
 
