@@ -47,12 +47,8 @@ pre_run() {
     module load advanced_modules autotools
 
     #### NOTE: We no longer allow the build system to run ./contrib/download_prerequisites
-    # as it is prone to failure. The gcc-6.2.0.tar.gz will now contain all the
+    # as it is prone to failure. The gcc-x.x.x.tar.gz will now contain all the
     # neccessary pre-requisites.
-
-    # (switch to curl because Darwin machines do not have wget)
-    # sed -i -e 's/wget/curl -O/g' contrib/download_prerequisites
-    # ./contrib/download_prerequisites
 
     if [ `uname` = 'Darwin' ] && [ `uname -r | cut -d. -f 1` = '18' ]; then
         CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --disable-multilib --enable-languages=c,c++,fortran,jit --enable-checking=release --enable-host-shared --with-pic --with-system-zlib --disable-nls --with-native-system-header-dir=/usr/include --with-sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"

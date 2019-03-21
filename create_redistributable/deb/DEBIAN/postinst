@@ -8,7 +8,7 @@ exp_cm=('export MODULEPATH=' 'export MODULEPATH=' 'export MODULEPATH=' 'setenv M
 index=0
 # Loop through each supported shell, and generate a profile for it
 for a_shell in ${shells[@]}; do
-    if [ `which ${a_shell}` ]; then
+    if [ `which ${a_shell} 2>/dev/null` ]; then
         # bash and sh use the same profile. Do once.
         if [ ${a_shell} = 'sh' ] && [ -d /etc/profile.d ] && [ -z "$DO_BASH_ONCE" ]; then
             DO_BASH_ONCE=true
@@ -92,7 +92,7 @@ Upon doing so, the module system which controls the library stack will become
 available for use. The default modules used for MOOSE development on linux can
 be loaded as follows:
 
-     \`module load moose-dev-gcc moose-tools\`
+     \`module load moose-dev-gcc\`
 
 There are many other modules available (such as a different PETSc version, or
 compiler). You can peruse these other modules by running a combination of
