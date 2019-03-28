@@ -47,13 +47,22 @@ if [ -n "\$MOOSE_PROMPT" ]; then
   PS1="\[\033[1;34m\][\u]\[\033[1;32m\][\w]\[\033[0m\]> "
 fi
 
-# Set MOOSE_JOBS and Load appropiate modules for Arch
+# Set helpful environment variables and functions
 if [ \`uname -s\` == 'Darwin' ]; then
   export MOOSE_JOBS=\`/usr/sbin/sysctl -n hw.ncpu\`
-  module load moose-dev-clang moose-tools
+
+  #### ICECREAM Control
+  if [ -f /Library/LaunchDaemons/com.moose.icecream.plist ]; then
+    function icecream() {
+      if [ "\$1" = "start" ]; then
+        sudo launchctl load /Library/LaunchDaemons/com.moose.icecream.plist
+      elif [ "\$1" = "stop" ]; then
+        sudo launchctl unload /Library/LaunchDaemons/com.moose.icecream.plist
+      fi
+    }
+  fi
 else
   export MOOSE_JOBS=\`cat /proc/cpuinfo | grep processor | wc -l\`
-  module load moose-dev-gcc moose-tools
 fi
 
 # Load custom MOOSE command bash autocomplete rules

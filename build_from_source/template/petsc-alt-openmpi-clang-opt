@@ -91,9 +91,8 @@ EOF
 module load moose/.<OPENMPI>_<CLANG>
 module load moose/.<PETSC_ALT>_<OPENMPI>_<CLANG>-opt
 module load moose/.<TBB>
-module load moose/.<CPPUNIT>_<CLANG>
 module load ccache
-module load moose-tools
+module load miniconda moose-tools
 
 EOF
 

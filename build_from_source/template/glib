@@ -28,6 +28,18 @@ pre_run() {
 
 post_run() {
     cp "$PACKAGES_DIR/<GLIB>/lib/pkgconfig/"* "$PKG_CONFIG_PATH/"
+    # Remove previous module section
+    if [ `uname` = 'Darwin' ]; then
+        sed -i '' -e '/#GLIB/,/#ENDGLIB/d' "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
+    else
+        sed -i'' -e '/#GLIB/,/#ENDGLIB/d' "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
+    fi
+    # Append new paths to moose-tools module
+    cat <<EOF >> "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
+#GLIB
+prepend-path    PATH            "\$BASE_PATH/<GLIB>/bin"
+#ENDGLIB
+EOF
 }
 ##
 ## End Specifics

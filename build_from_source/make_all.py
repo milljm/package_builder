@@ -344,7 +344,7 @@ def machineArch():
       sys.exit(1)
 
     lsb_stdout = lsb_release_process.communicate()
-    if lsb_stdout[1]:
+    if lsb_release_process.poll():
       print lsb_stdout[1]
       sys.exit(1)
     else:

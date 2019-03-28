@@ -6,10 +6,13 @@ verifyItWorkes()
             break
         fi
     done
+    unset MOOSE_JOBS
     source """$profile"""
     if [ -z "$MOOSE_JOBS" ]; then
-        error_message="""Installer script wrote changes to\n\n\t$use_this_profile\n\nbut was unable to determine the presence of key MOOSE environment vairables in a new terminal session.\n\nBash loads the first readable profile it finds in the following order:\n\n\t~/.bash_profile\n\t~/.bash_login\n\t~/.profile\n\nYou will need to investigate these files and figure out why\n\n\t$use_this_profile\n\nis not being loaded."""
+        error_message="""Installer script wrote changes to\n\n\t$use_this_profile\n\nbut was unable to determine the presence of key MOOSE environment variables in a new terminal session.\n\nBash loads the first readable profile it finds and then exits, in the following order:\n\n\t~/.bash_profile\n\t~/.bash_login\n\t~/.profile\n\nYou will need to investigate these files and figure out why\n\n\t$use_this_profile\n\nis not being loaded."""
         response=`osascript -e 'display alert "'"$error_message"'"' 2>/dev/null`
+    else
+        explainNewTerminal
     fi
 }
 
@@ -23,7 +26,6 @@ function findCorrectProfile()
 
     # No profile exists
     if [ "${reverse_priority_array}x" = "x" ]; then
-        # touch """${profiles[${#profiles[@]}-1]}"""
         reverse_priority_array=("""${profiles[${#profiles[@]}-1]}""")
     fi
 
@@ -61,6 +63,7 @@ if [ -f <PACKAGES_DIR>/environments/moose_profile ]; then
         . <PACKAGES_DIR>/environments/moose_profile
 fi
 EOF
+    chown """$USER:staff""" """$use_this_profile"""
 }
 
 function explainProfile()
@@ -73,6 +76,12 @@ function explainProfile()
         verifyItWorkes
     fi
 }
+function explainNewTerminal()
+{
+    message="""Your bash profile has been updated.\n\nRemember to close any opened terminal windows and re-open them to gain access to the moose-environment you just installed."""
+    response=`osascript -e 'display alert "'"$message"'"' 2>/dev/null`
+}
+
 # Bash will search and load the first readable profile it finds in the following order
 # ~/.bash_profile ~/.bash_login ~/.profile
 profiles=("""$HOME/.bash_profile""" """$HOME/.bash_login""" """$HOME/.profile""")

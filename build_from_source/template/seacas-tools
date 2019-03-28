@@ -33,51 +33,11 @@ pre_run() {
     git checkout 58efc0488988f0fff1dcc5200a35e9ffc1447707
 
     # Apply curl patch (all machines have curl...)
-    cat <<"EOF" > curl.patch
---- a/install-tpl.sh	2018-10-09 10:01:54.000000000 -0600
-+++ b/install-tpl.sh	2018-10-09 09:21:18.000000000 -0600
-@@ -107,7 +107,7 @@
- 	    echo "${txtgrn}+++ Downloading...${txtrst}"
-             rm -rf zlib-${zlib_version}
-             rm -rf zlib-${zlib_version}.tar.gz
--            wget --no-check-certificate https://zlib.net/zlib-${zlib_version}.tar.gz
-+            curl -k -L -O https://zlib.net/zlib-${zlib_version}.tar.gz
-             tar -xzf zlib-${zlib_version}.tar.gz
-             rm -rf zlib-${zlib_version}.tar.gz
- 	fi
-@@ -160,9 +160,9 @@
-         rm -f hdf5-${hdf_version}.tar.bz2
- 	if [ "${H5VERSION}" == "V18" ]
- 	then
--	    wget --no-check-certificate https://support.hdfgroup.org/ftp/HDF5/current18/src/hdf5-${hdf_version}.tar.bz2
-+	    curl -k -L -O https://support.hdfgroup.org/ftp/HDF5/current18/src/hdf5-${hdf_version}.tar.bz2
- 	else
--	    wget --no-check-certificate https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-${hdf_version}/src/hdf5-${hdf_version}.tar.bz2
-+	    curl -k -L -O https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-${hdf_version}/src/hdf5-${hdf_version}.tar.bz2
- 	fi
-         tar -jxf hdf5-${hdf_version}.tar.bz2
-         rm -f hdf5-${hdf_version}.tar.bz2
-@@ -204,7 +204,7 @@
- 	    echo "${txtgrn}+++ Downloading...${txtrst}"
-             rm -rf parallel-netcdf-${pnet_version}
-             rm -f parallel-netcdf-${pnet_version}.tar.gz
--            wget http://cucis.ece.northwestern.edu/projects/PnetCDF/Release/parallel-netcdf-${pnet_version}.tar.gz
-+            curl -k -L -O http://cucis.ece.northwestern.edu/projects/PnetCDF/Release/parallel-netcdf-${pnet_version}.tar.gz
-             tar -xzf parallel-netcdf-${pnet_version}.tar.gz
-             rm -f parallel-netcdf-${pnet_version}.tar.gz
-         fi
-@@ -372,7 +372,7 @@
-         then
- 	    echo "${txtgrn}+++ Downloading...${txtrst}"
-             rm -rf parallel-*
--            wget --no-check-certificate ftp://ftp.gnu.org/gnu/parallel/parallel-latest.tar.bz2
-+            curl -k -L -O http://ftp.gnu.org/gnu/parallel/parallel-latest.tar.bz2
-             tar -jxf parallel-latest.tar.bz2
-             rm -rf parallel-latest.tar.bz2
-         fi
-EOF
-    patch -p1 < curl.patch
-    if [ $? -ne 0 ]; then echo "Failure in preparation of Seacas repository, or applying patch failure."; cleanup 1; fi
+    git remote add temp_ https://github.com/milljm/seacas.git
+    git fetch temp_
+    if [ $? -ne 0 ]; then echo "Failure in fetching patch information."; cleanup 1; fi
+    git merge temp_/use_our_server
+    if [ $? -ne 0 ]; then echo "Failure to merge patching branch."; cleanup 1; fi
 
     # Run dependency installer
     ./install-tpl.sh

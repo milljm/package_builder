@@ -14,7 +14,7 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD=(http://mooseframework.inl.gov/source_packages/llvm-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/cfe-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/clang-tools-extra-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/compiler-rt-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/libcxx-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/libcxxabi-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/openmp-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/lldb-<LLVM>.src.tar.xz)
+DOWNLOAD=(http://mooseframework.inl.gov/source_packages/llvm-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/cfe-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/clang-tools-extra-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/compiler-rt-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/lld-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/libcxx-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/libcxxabi-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/openmp-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/lldb-<LLVM>.src.tar.xz)
 EXTRACT="false"
 CONFIGURE="false"
 BUILD='true'
@@ -57,6 +57,8 @@ custom_extract()
       if [ $? -ne 0 ]; then echo 'Failed to extract '$LLVM_PACKAGE; cleanup 1; fi
       if [ $LLVM_PACKAGE = 'cfe' ]; then
           mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/clang
+      elif [ $LLVM_PACKAGE = 'lld' ]; then
+          mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/lld
       elif [ $LLVM_PACKAGE = 'lldb' ]; then
           mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/lldb
       elif [ $LLVM_PACKAGE = 'clang-tools-extra' ]; then
@@ -146,14 +148,14 @@ pre_run() {
     # !!! NOTE: Order is important !!!
     # Extract/Move LLVM, Clang, LLDB, Clang-Extras, compiler-rt, libcxx/abi, openmp
     cd "$1"
-    LLVM_PACKAGES=(llvm cfe lldb clang-tools-extra compiler-rt libcxx libcxxabi openmp)
+    LLVM_PACKAGES=(llvm cfe lld lldb clang-tools-extra compiler-rt libcxx libcxxabi openmp)
     custom_extract
 
     module load miniconda
 
     mkdir "$1/build"; cd "$1/build"
     if [ `uname` != "Darwin" ]; then
-        export CC=gcc; export CXX=g++
+        export CC=gcc CXX=g++
         cmake -DCMAKE_C_COMPILER="$PACKAGES_DIR/<GCC>/bin/gcc" \
           -DCMAKE_CXX_COMPILER="$PACKAGES_DIR/<GCC>/bin/g++" \
           -DGCC_INSTALL_PREFIX="$PACKAGES_DIR/<GCC>" \
@@ -256,10 +258,15 @@ post_run() {
             codesign -f -s "$CODESIGN_NAME" "$PACKAGES_DIR/$PACKAGE/bin/debugserver"
         fi
         if [ "$?" != "0" ]; then echo "Failed to remove Entitlements from debugserver"; cleanup 1; fi
+
+    else
+        # Create link to drop-in replacement lld (does not yet work on Darwin machines)
+        cd "$PACKAGES_DIR/$PACKAGE/bin"; ln -s lld ld
     fi
 
     # Create link to clang-format lisp
     cd "$PACKAGES_DIR"; ln -s "$PACKAGES_DIR/$PACKAGE/share/clang/clang-format.el" .
+
 }
 ##
 ## End Specifics

@@ -10,7 +10,7 @@ SERIAL=True
 #####
 # Set the operating system allowed to build this module
 #
-ARCH=(Darwin Linux)
+ARCH=(Darwin)
 
 #####
 # Setting any of these variables to 'false' effectively skips that step
@@ -59,7 +59,6 @@ module load moose/.<MPICH>_<GCC>
 module load moose/.<PETSC_ALT>_<MPICH>_<GCC>-opt
 module load moose/.<SLEPC_ALT>_<MPICH>_<GCC>
 module load moose/.<TBB>
-module load moose/.<CPPUNIT>_<GCC>
 module load ccache
 module load moose-tools
 

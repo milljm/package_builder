@@ -2,8 +2,9 @@
 #############
 ## Specifics
 ##
-DEP=(miniconda)
-PACKAGE='pip-installs'
+DEP=(modules miniconda tbb petsc-default-mpich-gcc-opt)
+PACKAGE="module-moose-dev-gcc"
+SERIAL=True
 
 #####
 # Set the operating system allowed to build this module
@@ -15,23 +16,37 @@ ARCH=(Darwin Linux)
 # This is useful for items like 'autojump' which requires a git clone/checkout
 DOWNLOAD='false'
 EXTRACT='false'
-CONFIGURE="false"
+CONFIGURE='false'
 BUILD='false'
 INSTALL='false'
 
 pre_run() {
-    cd $1
-    unset MODULEPATH
-    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
-    for which_conda in ${DEP[*]}; do
-	module purge
-	module load advanced_modules $which_conda
-	pip install --no-cache-dir pybtex livereload==2.5.1 daemonlite pylint==1.6.5 lxml pylatexenc anytree==2.4.3
-	if [ $? -ne 0 ]; then echo "Failed to install dependency packages for $PACKAGE"; cleanup 1; fi
-    done
+    # Remove previous module file
+    rm -f "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-dev-gcc"
 }
+
 post_run() {
-    return
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-dev-gcc"
+#%Module1.0#####################################################################
+##
+## GCC MOOSE DEV Module
+##
+##
+##
+conflict moose-dev-gcc-alt moose-dev-clang moose-dev-clang-alt
+module load moose/.<MPICH>_<GCC>
+module load moose/.<PETSC_DEFAULT>_<MPICH>_<GCC>-opt
+module load moose/.<TBB>
+module load miniconda moose-tools
+
+# If MOOSE_DIR is set, help the user out by prepending the moose/python path
+if { [ info exists ::env(MOOSE_DIR) ] } {
+  eval set [ array get env MOOSE_DIR ]
+  if [ file isdirectory "\$MOOSE_DIR/python" ] {
+    prepend-path PYTHONPATH "\$MOOSE_DIR/python"
+  }
+}
+EOF
 }
 ##
 ## End Specifics

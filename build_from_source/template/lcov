@@ -25,13 +25,30 @@ pre_run() {
 }
 post_run() {
     cd bin
-    sed -i '' -e 's/install -p -D/install/g' install.sh
+    if [ `uname` = 'Darwin' ]; then
+        sed -i '' -e 's/install -p -D/install/g' install.sh
+    else
+        sed -i'' -e 's/install -p -D/install/g' install.sh
+    fi
     mkdir -p "$PACKAGES_DIR/<LCOV>/usr/bin"
     mkdir -p "$PACKAGES_DIR/<LCOV>/etc"
     mkdir -p "$PACKAGES_DIR/<LCOV>/usr/share/man/man1"
     mkdir -p "$PACKAGES_DIR/<LCOV>/usr/share/man/man5"
     cd ../
     PREFIX="$PACKAGES_DIR/<LCOV>" make install
+    # Remove previous module section
+    if [ `uname` = 'Darwin' ]; then
+        sed -i '' -e '/#LCOV/,/#ENDLCOV/d' "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
+    else
+        sed -i'' -e '/#LCOV/,/#ENDLCOV/d' "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
+    fi
+    # Append new paths to moose-tools module
+    cat <<EOF >> "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
+#LCOV
+prepend-path    PATH            "\$BASE_PATH/<LCOV>/usr/bin"
+prepend-path    MANPATH         "\$BASE_PATH/<LCOV>/usr/share/man"
+#ENDLCOV
+EOF
 }
 ##
 ## End Specifics

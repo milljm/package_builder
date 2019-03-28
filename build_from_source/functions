@@ -48,20 +48,24 @@ try_command() {
     allowed_count=$1
     command_string="$2"
     try_count=0
+    IFS=';' read -r -a command_array <<< "$command_string"
     while [ "$try_count" -lt "$allowed_count" ]; do
         let try_count=try_count+1
-        eval "$command_string"
-        retcode=$?
-        if [ "$retcode" != "0" ] && [ $try_count = $allowed_count ]; then
-            echo "Failed $1 times, trying to execute: $command_string"
-            cleanup 1
-        elif [ "$retcode" != "0" ]; then
-            sleep 30
-        else
-            break
+        error_count=0
+        for command in "${command_array[@]}"; do
+            eval $command
+            let error_count+=$?
+        done
+        if test $error_count -eq 0; then
+            TRYING="FALSE"
+            return
         fi
+        # There was an error. Rest a moment before trying again
+        sleep 10
     done
     TRYING="FALSE"
+    echo -e "\n\n\n#############\nFailed $allowed_count times, trying to execute: $command_string"
+    cleanup 1
 }
 
 pause() {
@@ -399,10 +403,10 @@ if [ "$DOWNLOAD_ONLY" = "True" ]; then
     exit 0
 elif [ "$CONTINUE" = "true" ]; then
     touch $PROGRESS
-    if [ `grep -c ^$ME $PROGRESS` -eq 0 ] || [ "$DEBUG" = "True" ]; then
+    if [ `grep -c "^$ME\$" $PROGRESS` -eq 0 ] || [ "$DEBUG" = "True" ]; then
         error=""
         for dependency in ${DEP[*]}; do
-            if [ `grep -ci ^$dependency $PROGRESS` -eq 0 ]; then
+            if [ `grep -ci "^$dependency\$" $PROGRESS` -eq 0 ]; then
                 error+=$dependency' '
             fi
         done

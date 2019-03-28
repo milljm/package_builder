@@ -25,7 +25,7 @@ pre_run() {
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
     module load moose/.<GCC>
-    CONFIGURE="../configure --prefix=$PACKAGES_DIR/<MPICH>/<GCC> --enable-shared --enable-sharedlibs=gcc --enable-fast=03 --enable-debuginfo --enable-totalview --enable-two-level-namespace CC=gcc CXX=g++ FC=gfortran F77=gfortran F90='' CFLAGS='' CXXFLAGS='' FFLAGS='' FCFLAGS='' F90FLAGS='' F77FLAGS=''"
+    CONFIGURE="../configure --prefix=$PACKAGES_DIR/<MPICH>/<GCC> --enable-shared --enable-sharedlibs=gcc --enable-fast=O3 --enable-debuginfo --enable-totalview --enable-two-level-namespace CC=gcc CXX=g++ FC=gfortran F77=gfortran F90='' CFLAGS='' CXXFLAGS='' FFLAGS='' FCFLAGS='' F90FLAGS='' F77FLAGS=''"
 }
 post_run() {
     cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<MPICH>_<GCC>"

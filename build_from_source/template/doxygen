@@ -49,7 +49,20 @@ EOF
     CONFIGURE="cmake -DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/<DOXYGEN> -Wno-dev .."
 }
 post_run() {
-    return
+    # Remove previous module section
+    if [ `uname` = 'Darwin' ]; then
+        sed -i '' -e '/#DOXYGEN/,/#ENDDOXYGEN/d' "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
+    else
+        sed -i'' -e '/#DOXYGEN/,/#ENDDOXYGEN/d' "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
+    fi
+
+    # Append new paths to moose-tools module
+    cat <<EOF >> "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
+#DOXYGEN
+prepend-path    PATH            "\$BASE_PATH/<DOXYGEN>/bin"
+prepend-path    MANPATH         "\$BASE_PATH/<DOXYGEN>/man"
+#ENDDOXYGEN
+EOF
 }
 ##
 ## End Specifics

@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=()
+DEP=(modules)
 PACKAGE="<PKG_CONFIG>"
 
 #####
@@ -25,6 +25,20 @@ pre_run() {
 
 post_run() {
     mkdir -p "$PACKAGES_DIR/<PKG_CONFIG>/pkgconfig"
+
+    # Remove previous module section
+    if [ `uname` = 'Darwin' ]; then
+        sed -i '' -e '/#PKGCONFIG/,/#ENDPKGCONFIG/d' "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
+    else
+        sed -i'' -e '/#PKGCONFIG/,/#ENDPKGCONFIG/d' "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
+    fi
+    # Append new paths to moose-tools module
+    cat <<EOF >> "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
+#PKGCONFIG
+prepend-path    PKG_CONFIG_PATH "\$BASE_PATH/<PKG_CONFIG>/pkgconfig"
+prepend-path    PATH            "\$BASE_PATH/<PKG_CONFIG>/bin"
+#ENDPKGCONFIG
+EOF
 }
 ##
 ## End Specifics

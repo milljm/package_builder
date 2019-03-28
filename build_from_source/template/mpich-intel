@@ -34,7 +34,7 @@ pre_run() {
     mkdir intel-opt; cd intel-opt
     module load intel-gcc
     export CC=icc CXX=icpc FC=ifort F77=ifort
-    CONFIGURE="../configure --prefix=${PACKAGES_DIR}_intel/<MPICH>/${PACKAGE} --enable-shared --enable-sharedlibs=icc --enable-fast=03 --enable-debuginfo --enable-totalview --enable-two-level-namespace CC=icc CXX=icpc FC=ifort F77=ifort F90='' CFLAGS='' CXXFLAGS='' FFLAGS='' FCFLAGS='' F90FLAGS='' F77FLAGS=''"
+    CONFIGURE="../configure --prefix=${PACKAGES_DIR}_intel/<MPICH>/${PACKAGE} --enable-shared --enable-sharedlibs=icc --enable-fast=O2 --enable-debuginfo --enable-totalview --enable-two-level-namespace CC=icc CXX=icpc FC=ifort F77=ifort F90='' CFLAGS='' CXXFLAGS='' FFLAGS='' FCFLAGS='' F90FLAGS='' F77FLAGS=''"
 }
 post_run() {
     cat <<EOF > "${PACKAGES_DIR}_intel/modulefiles/<MPICH>_${PACKAGE}"
