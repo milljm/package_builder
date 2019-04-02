@@ -84,6 +84,11 @@ EOF
     let index=$index+1
 done
 
+# Make sure urls.txt is present
+if [ -d "<PACKAGES_DIR>/miniconda/pkgs" ]; then
+  touch "<PACKAGES_DIR>/miniconda/pkgs/urls.txt"
+fi
+
 echo -e """
 MOOSE Environment Install Complete.
 In order to utilize the MOOSE environment, YOU MUST OPEN A NEW TERMINAL WINDOW.

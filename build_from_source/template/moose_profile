@@ -30,7 +30,7 @@ post_run() {
 #!/bin/bash
 # Modules Source
 if [ -n "\$MODULEPATH" ]; then
-  export MODULEPATH="$PACKAGES_DIR/Modules/<MODULES>/modulefiles"
+  export MODULEPATH="$PACKAGES_DIR/Modules/<MODULES>/modulefiles:\$MODULEPATH"
 fi
 source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
 

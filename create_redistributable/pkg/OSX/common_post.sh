@@ -13,4 +13,10 @@ fi
 # file is created via script based on --package-dir argument
 # meaning: the intended target could be anywhere
 tar -xf /private/tmp/MOOSE_installer-tmp/payload.tar.gz -C /
+
+# Make sure urls.txt is present
+if [ -d "<PACKAGES_DIR>/miniconda/pkgs" ]; then
+  touch "<PACKAGES_DIR>/miniconda/pkgs/urls.txt"
+fi
+
 chown -R root:wheel <PACKAGES_DIR>
