@@ -26,11 +26,11 @@ INSTALL='false'
 
 pre_run() {
     if [ `uname` = "Darwin" ]; then
-	bash "$DOWNLOAD_DIR/<MINICONDA>-MacOSX-x86_64.sh" -b -p "$PACKAGES_DIR/$PACKAGE"
-	if [ $? -ne 0 ]; then echo "Failed to install $PACKAGE"; cleanup 1; fi
+        bash "$DOWNLOAD_DIR/<MINICONDA>-MacOSX-x86_64.sh" -b -p "$PACKAGES_DIR/$PACKAGE"
+        if [ $? -ne 0 ]; then echo "Failed to install $PACKAGE"; cleanup 1; fi
     else
-	bash "$DOWNLOAD_DIR/<MINICONDA>-Linux-x86_64.sh" -b -p "$PACKAGES_DIR/$PACKAGE"
-	if [ $? -ne 0 ]; then echo "Failed to install $PACKAGE"; cleanup 1; fi
+        bash "$DOWNLOAD_DIR/<MINICONDA>-Linux-x86_64.sh" -b -p "$PACKAGES_DIR/$PACKAGE"
+        if [ $? -ne 0 ]; then echo "Failed to install $PACKAGE"; cleanup 1; fi
     fi
 
     export CONDARC="$PACKAGES_DIR/$PACKAGE/.condarc"
@@ -68,6 +68,19 @@ EOF
         cd "$PACKAGES_DIR/$PACKAGE/bin"
         ln -s swig swig3.0
     fi
+
+    # Fix Qt5 linking issues
+    cd "$PACKAGES_DIR/$PACKAGE/lib"
+    la_files=(libQt5Gui.la libQt5Core.la libQt5PrintSupport.la libQt5Widgets.la)
+    for la_file in ${la_files[@]}; do
+        if [ `uname` = 'Darwin' ]; then
+            sed -i '' -e 's| -framework [a-zA-Z]*||g' $la_file
+            sed -i '' -e 's|-L=|-L|g' $la_file
+        else
+            sed -i'' -e 's| -framework [a-zA-Z]*||g' $la_file
+            sed -i'' -e 's|-L=|-L|g' $la_file
+        fi
+    done
 }
 ##
 ## End Specifics

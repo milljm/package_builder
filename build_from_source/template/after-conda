@@ -1,0 +1,57 @@
+#!/bin/bash
+#############
+## Specifics
+##
+DEP=(miniconda)
+PACKAGE='after-conda'
+SERIAL=True
+
+#####
+# Set the operating system allowed to build this module
+#
+ARCH=(Darwin Linux)
+
+#####
+# Setting any of these variables to 'false' effectively skips that step
+# This is useful for items like 'autojump' which requires a git clone/checkout
+DOWNLOAD='false'
+EXTRACT='false'
+CONFIGURE="false"
+BUILD='false'
+INSTALL='false'
+
+pre_run() {
+    # Trying to knock out why the urls.txt file disappears
+    if ! [ -f "$PACKAGES_DIR/miniconda/pkgs/urls.txt" ]; then
+        echo "URLS.TXT file is missing."
+        cleanup 1
+    fi
+}
+post_run() {
+    return
+}
+##
+## End Specifics
+##############
+## The following script contains all the common functions.
+## Those functions are executed in the following order:
+
+# download
+# extract
+# pre-run
+# configure
+# make
+# make install
+# post_run
+# cleanup 0|1  (exit return code)
+
+## pre_run and post_run are the only true specifics that are different
+## with every package
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+DOWNLOAD_ONLY=<DOWNLOAD_ONLY>
+source "$RELATIVE_DIR/functions" $@
