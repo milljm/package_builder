@@ -2,8 +2,9 @@
 #############
 ## Specifics
 ##
-DEP=(miniconda)
-PACKAGE='after-conda'
+# DO LAST (or at least when we know we are done installing miniconda modules)
+DEP=(miniconda module-moose-dev-gcc module-moose-dev-clang)
+PACKAGE='clean-conda'
 SERIAL=True
 
 #####
@@ -21,11 +22,9 @@ BUILD='false'
 INSTALL='false'
 
 pre_run() {
-    # Trying to knock out why the urls.txt file disappears
-    if ! [ -f "$PACKAGES_DIR/miniconda/pkgs/urls.txt" ]; then
-        echo "URLS.TXT file is missing."
-        cleanup 1
-    fi
+    PATH="$PACKAGES_DIR/miniconda/bin:$PATH" conda clean --lock --tarballs --index-cache --packages --source-cache --yes
+    rm -rf "$PACKAGES_DIR/miniconda/pkgs/"*
+    touch "$PACKAGES_DIR/miniconda/pkgs/urls.txt"
 }
 post_run() {
     return

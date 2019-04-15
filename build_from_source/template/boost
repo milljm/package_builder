@@ -23,7 +23,6 @@ pre_run() {
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
     module load miniconda
     try_command 5 "PATH=$PACKAGES_DIR/miniconda/bin:$PATH conda install boost gmp mpfr --yes"
-    rm -rf "$PACKAGES_DIR/miniconda/pkgs/"*
 }
 
 post_run() {
