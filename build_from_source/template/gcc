@@ -94,7 +94,7 @@ setenv       GCC_LIB                     "\$GCC_LIB_PATHS"
 setenv       GCC_MAN                     "\$GCC_PATH/share/man"
 
 # Allow clang-formatting binary to be available even when not using clang
-prepend-path    PATH    "$PACKAGES_DIR/llvm-<LLVM>/bin"
+append-path    PATH    "$PACKAGES_DIR/llvm-<LLVM>/bin"
 
 EOF
     cd "$PACKAGES_DIR/Modules/<MODULES>/adv_modules"
