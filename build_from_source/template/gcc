@@ -20,27 +20,6 @@ CONFIGURE="false"
 BUILD='true'
 INSTALL='true'
 
-patch_jit()
-{
-    if [ `uname` != 'Darwin' ]; then return; fi
-    # Patch Darwin gcc for JIT linking issue: https://gcc.gnu.org/ml/jit/2015-q3/msg00147.html
-    cat << 'EOF' > darwin-jit.patch
---- a/gcc/jit/Make-lang.in	2018-09-27 10:38:46.000000000 -0600
-+++ b/gcc/jit/Make-lang.in	2018-09-27 10:39:39.000000000 -0600
-@@ -85,8 +85,7 @@
- 	     $(jit_OBJS) libbackend.a libcommon-target.a libcommon.a \
- 	     $(CPPLIB) $(LIBDECNUMBER) $(LIBS) $(BACKENDLIBS) \
- 	     $(EXTRA_GCC_OBJS) \
--	     -Wl,--version-script=$(srcdir)/jit/libgccjit.map \
--	     -Wl,-soname,$(LIBGCCJIT_SONAME)
-+	     -Wl,-install_name,$(LIBGCCJIT_SONAME)
- 
- $(LIBGCCJIT_SONAME_SYMLINK): $(LIBGCCJIT_FILENAME)
- 	ln -sf $(LIBGCCJIT_FILENAME) $(LIBGCCJIT_SONAME_SYMLINK)
-EOF
-    patch -p1 < darwin-jit.patch
-    if [ $? -ne 0 ]; then echo 'Failed to patch jit compiler'; cleanup 1; fi
-}
 patch_atomic() {
     if [ `uname` != 'Darwin' ]; then return; fi
     # Patch Darwin for XCode 10.2 __Atomic bug
@@ -167,7 +146,6 @@ pre_run() {
     else
         CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --disable-multilib --enable-languages=c,c++,fortran,jit --enable-checking=release --enable-host-shared --with-pic"
     fi
-    patch_jit
     patch_atomic
     mkdir ../gcc_build; cd ../gcc_build
 
