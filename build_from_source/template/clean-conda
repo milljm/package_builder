@@ -2,7 +2,10 @@
 #############
 ## Specifics
 ##
-DEP=(modules miniconda)
+# DO LAST (or at least when we know we are done installing miniconda modules)
+DEP=(miniconda module-moose-dev-gcc module-moose-dev-clang)
+PACKAGE='clean-conda'
+SERIAL=True
 
 #####
 # Set the operating system allowed to build this module
@@ -14,29 +17,17 @@ ARCH=(Darwin Linux)
 # This is useful for items like 'autojump' which requires a git clone/checkout
 DOWNLOAD='false'
 EXTRACT='false'
-CONFIGURE='false'
+CONFIGURE="false"
 BUILD='false'
 INSTALL='false'
 
 pre_run() {
-    unset MODULEPATH
-    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
-    module load miniconda
-    try_command 5 "PATH=$PACKAGES_DIR/miniconda/bin:$PATH conda install boost gmp mpfr --yes"
+    PATH="$PACKAGES_DIR/miniconda/bin:$PATH" conda clean --lock --tarballs --index-cache --packages --source-cache --yes
+    rm -rf "$PACKAGES_DIR/miniconda/pkgs/"*
+    touch "$PACKAGES_DIR/miniconda/pkgs/urls.txt"
 }
-
 post_run() {
-    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/adv_modules/boost"
-#%Module1.0#####################################################################
-##
-## boost Module file
-##
-##
-##
-set BASE_PATH       "$PACKAGES_DIR"
-prepend-path        PATH       "\$BASE_PATH/miniconda/bin"
-setenv              BOOST_DIR  "\$BASE_PATH/miniconda"
-EOF
+    return
 }
 ##
 ## End Specifics
@@ -51,7 +42,7 @@ EOF
 # make
 # make install
 # post_run
-# cleanup
+# cleanup 0|1  (exit return code)
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package

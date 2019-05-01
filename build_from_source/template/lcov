@@ -18,35 +18,27 @@ DOWNLOAD='http://mooseframework.inl.gov/source_packages/<LCOV>.tar.gz'
 EXTRACT='<LCOV>.tar.gz'
 CONFIGURE='false'
 BUILD='false'
-INSTALL='false'
+INSTALL='true'
 
 pre_run() {
-    return
-}
-post_run() {
-    cd bin
     if [ `uname` = 'Darwin' ]; then
-        sed -i '' -e 's/install -p -D/install/g' install.sh
+        sed -i '' -e 's|/usr/local|<PACKAGES_DIR>/<LCOV>|g' Makefile
     else
-        sed -i'' -e 's/install -p -D/install/g' install.sh
+        sed -i'' -e 's|/usr/local|<PACKAGES_DIR>/<LCOV>|g' Makefile
     fi
-    mkdir -p "$PACKAGES_DIR/<LCOV>/usr/bin"
-    mkdir -p "$PACKAGES_DIR/<LCOV>/etc"
-    mkdir -p "$PACKAGES_DIR/<LCOV>/usr/share/man/man1"
-    mkdir -p "$PACKAGES_DIR/<LCOV>/usr/share/man/man5"
-    cd ../
-    PREFIX="$PACKAGES_DIR/<LCOV>" make install
     # Remove previous module section
     if [ `uname` = 'Darwin' ]; then
         sed -i '' -e '/#LCOV/,/#ENDLCOV/d' "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
     else
         sed -i'' -e '/#LCOV/,/#ENDLCOV/d' "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
     fi
+}
+post_run() {
     # Append new paths to moose-tools module
     cat <<EOF >> "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
 #LCOV
-prepend-path    PATH            "\$BASE_PATH/<LCOV>/usr/bin"
-prepend-path    MANPATH         "\$BASE_PATH/<LCOV>/usr/share/man"
+prepend-path    PATH            "\$BASE_PATH/<LCOV>/bin"
+prepend-path    MANPATH         "\$BASE_PATH/<LCOV>/share/man"
 #ENDLCOV
 EOF
 }
