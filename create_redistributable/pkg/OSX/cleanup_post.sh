@@ -47,11 +47,18 @@ function detectAndCreateProfile()
     if [ -z "$use_this_profile" ]; then
         findCorrectProfile
     fi
-    # First, make sure we are not already loading a MOOSE profile (perhaps they are simply updating their package)
-    if [ -f """$use_this_profile""" ] && [ "$(grep -i "environments/moose_profile" """$use_this_profile""")x" != "x" ]; then
-        return
+
+    # Fix previous versions of the bash_profile (add header/footer to our sourcing profile to make it easier to remove/alter)
+    if [ `grep -c "#MOOSE_ENVIRONMENT" """$use_this_profile"""` -eq 0 ]; then
+      sed -i '' -e $'s/# Uncomment to enable pretty prompt:/#MOOSE_ENVIRONMENT\\\n# Uncomment to enable pretty prompt:/g' """$use_this_profile"""
+      sed -i '' -e $'/environments\/moose_profile$/{n;s/^fi/fi\\\n#ENDMOOSE_ENVIRONMENT/;}' """$use_this_profile"""
     fi
+
+    # Remove source section, so we can add changes
+    sed -i '' -e '/#MOOSE_ENVIRONMENT/,/#ENDMOOSE_ENVIRONMENT/d' """$use_this_profile"""
+
     cat >> """$use_this_profile""" << EOF
+#MOOSE_ENVIRONMENT
 # Uncomment to enable pretty prompt:
 # export MOOSE_PROMPT=true
 
@@ -61,7 +68,15 @@ function detectAndCreateProfile()
 # Source MOOSE profile
 if [ -f <PACKAGES_DIR>/environments/moose_profile ]; then
         . <PACKAGES_DIR>/environments/moose_profile
+
+        # Make the moose compiler stack available.
+        # Note: if you have any additional package managers installed
+        # (Homebrew, Macports, Fink, etc) know that you must perform
+        # the following command _after_ the source commands for the
+        # afore mentioned package managers.
+        module load moose-dev-clang
 fi
+#ENDMOOSE_ENVIRONMENT
 EOF
     chown """$USER:staff""" """$use_this_profile"""
 }
@@ -82,9 +97,8 @@ function explainNewTerminal()
     response=`osascript -e 'display alert "'"$message"'"' 2>/dev/null`
 }
 
-# Bash will search and load the first readable profile it finds in the following order
-# ~/.bash_profile ~/.bash_login ~/.profile
-profiles=("""$HOME/.bash_profile""" """$HOME/.bash_login""" """$HOME/.profile""")
+# Use bash_profile by default.
+profiles=("""$HOME/.bash_profile""")
 
 findCorrectProfile
 if ! [ -f """$use_this_profile""" ]; then
