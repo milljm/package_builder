@@ -27,6 +27,23 @@ if [ -d <PACKAGES_DIR>/Modules/3.2.10 ]; then
     fi
   fi
 fi
+# set MOOSE Specific Variables
+export MOOSE_PPS_WIDTH=180
+export MOOSE_JOBS=\`cat /proc/cpuinfo | grep processor | wc -l\`
+EOF
+            # Support non-interactive login shells
+            # Remove previous initailization section
+            if [ -f /etc/bashrc ] && [ `cat /etc/bashrc | grep -c "START-INITIALIZE-MOOSE"` -ne 0 ]; then
+                # Remove previous initialization section
+                sed -i'' -e '/#START-INITIALIZE-MOOSE/,/#END-INITIALIZE-MOOSE/d' /etc/bashrc
+            fi
+            cat <<EOF >> /etc/bashrc
+#START-INITIALIZE-MOOSE
+# Source moose-environment if not already done so
+if [ -z "\$MOOSE_JOBS" ] && [ -f /etc/profile.d/moose-environment.${a_shell} ]; then
+  source /etc/profile.d/moose-environment.${a_shell}
+fi
+#END-INITIALIZE-MOOSE
 EOF
         # csh and tcsh use the same profile. Do once.
         elif [ ${a_shell} = 'csh' ] || [ ${a_shell} = 'tcsh' ] && [ -d /etc/csh/login.d ] && [ -z "$DO_CSH_ONCE" ]; then
@@ -42,6 +59,9 @@ if (-d <PACKAGES_DIR>/Modules/3.2.10) then
     setenv MODULEPATH "\${MODULEPATH}:<PACKAGES_DIR>/Modules/3.2.10/modulefiles"
   endif
 endif
+# set MOOSE Specific Variables
+setenv MOOSE_PPS_WIDTH=180
+setenv MOOSE_JOBS=\`cat /proc/cpuinfo | grep processor | wc -l\`
 EOF
         elif [ ${a_shell} = 'zsh' ] && [ -f /etc/zsh/zshenv ]; then
             if [ `cat /etc/zsh/zshenv | grep -c "START-INITIALIZE-MOOSE"` -ne 0 ]; then
@@ -59,6 +79,9 @@ then
     source "<PACKAGES_DIR>/Modules/3.2.10/init/zsh"
   fi
 fi
+# set MOOSE Specific Variables
+export MOOSE_PPS_WIDTH=180
+export MOOSE_JOBS=\`cat /proc/cpuinfo | grep processor | wc -l\`
 #END-INITIALIZE-MOOSE
 EOF
         elif [ ${a_shell} = 'ksh' ] && [ -f /etc/profile ]; then
@@ -77,6 +100,9 @@ if [ "\$(cat /proc/\$\$/comm 2>/dev/null)" = "${a_shell}" ]; then
     fi
   fi
 fi
+# set MOOSE Specific Variables
+export MOOSE_PPS_WIDTH=180
+export MOOSE_JOBS=\`cat /proc/cpuinfo | grep processor | wc -l\`
 #END-INITIALIZE-MOOSE
 EOF
         fi
