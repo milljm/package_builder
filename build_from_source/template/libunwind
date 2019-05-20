@@ -15,15 +15,15 @@ ARCH=(Linux)
 # This is useful for items like 'autojump' which requires a git clone/checkout
 DOWNLOAD='http://mooseframework.inl.gov/source_packages/<LIBUNWIND>.tar.gz'
 EXTRACT='<LIBUNWIND>.tar.gz'
-CONFIGURE="./configure --prefix=<PACKAGES_DIR>/$PACKAGE --enable-ptrace --enable-coredump --enable-minidebuginfo"
+CONFIGURE="./configure --prefix=<PACKAGES_DIR>/$PACKAGE"
 BUILD='true'
 INSTALL='true'
 
 pre_run() {
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
-    module load advanced_modules gcc
-    CC=gcc CXX=g++
+    module load advanced_modules autotools gcc moose-tools
+    export CC=gcc CXX=g++
 }
 
 post_run() {
@@ -54,4 +54,3 @@ MOOSE_JOBS=<MOOSE_JOBS>
 KEEP_FAILED=<KEEP_FAILED>
 DOWNLOAD_ONLY=<DOWNLOAD_ONLY>
 source "$RELATIVE_DIR/functions" $@
-
