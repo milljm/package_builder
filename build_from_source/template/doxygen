@@ -25,10 +25,10 @@ pre_run() {
     module load advanced_modules cmake
 
     # Apply Mojave patch (Xcode 10 deprecated -mmacosx-version-min=10.5)
-    # (should probably just do this for all Darwin targets)
+    # Mojave is having issues building Doxygen (can not find <string> include)
     if [ `uname` = 'Darwin' ] && [ `uname -r | cut -d. -f 1` = '18' ]; then
-        module load clang
-        export CC=clang CXX=clang++
+        module load gcc
+        export CC=gcc CXX=g++
         cat << EOF > mojave.patch
 --- a/CMakeLists.txt    2017-12-25 09:26:10.000000000 -0700
 +++ b/CMakeLists.txt    2018-09-26 07:18:18.000000000 -0600
@@ -43,6 +43,7 @@ pre_run() {
          find_package(LLVM CONFIG REQUIRED)
 EOF
         patch -p1 < mojave.patch
+        if [ "$?" != "0" ]; then echo "failed to patch doxygen"; cleanup 1; fi
     fi
 
     mkdir build; cd build
