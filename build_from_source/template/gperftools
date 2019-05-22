@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(libunwind)
+DEP=(modules gcc libunwind graphviz)
 PACKAGE="<GPERFTOOLS>"
 
 #####
@@ -23,14 +23,27 @@ pre_run() {
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
     if [ `uname` = "Darwin" ]; then
-        module load advanced_modules autotools clang
+        module load advanced_modules autotools clang moose-tools
+        ./configure --prefix="$PACKAGES_DIR/$PACKAGE" --enable-libunwind
     else
-        module load advanced_modules autotools gcc
+        module load advanced_modules autotools gcc moose-tools
+        PATH="$PACKAGES_DIR/<LIBUNWIND>/bin:$PATH" LIBRARY_PATH="$PACKAGES_DIR/<LIBUNWIND>/lib:$LIBRARY_PATH" LD_LIBRARY_PATH="$PACKAGES_DIR/<LIBUNWIND>/lib:$LD_LIBRARY_PATH" CPATH="$PACKAGES_DIR/<LIBUNWIND>/include" CPPFLAGS="-I$PACKAGES_DIR/<LIBUNWIND>/include" CFLAGS="-I$PACKAGES_DIR/<LIBUNWIND>/include" LDFLAGS="-L$PACKAGES_DIR/<LIBUNWIND>/lib" ./configure --prefix="$PACKAGES_DIR/$PACKAGE" --enable-libunwind
     fi
-    CPPFLAGS="-I$PACKAGES_DIR/<LIBUNWIND>/include" CFLAGS="-I$PACKAGES_DIR/<LIBUNWIND>/include" LDFLAGS="-L$PACKAGES_DIR/<LIBUNWIND>/lib" ./configure --prefix="$PACKAGES_DIR/$PACKAGE" --enable-libunwind
 }
+
 post_run() {
-    cat <<EOF >> "$PACKAGES_DIR/Modules/<MODULES>/adv_modules/gperf-tools"
+    cd "$1"
+    ### Build the better pprof tool from google/pprof ###
+    if ! [ -f /usr/local/go/bin/go ]; then echo "go not installed"; cleanup 1; fi
+    export PATH=/usr/local/go/bin:$PATH
+    export GOPATH="$PACKAGES_DIR/<GPERFTOOLS>"
+    # Remove unwanted pprof
+    mv "$GOPATH/bin/pprof" "$GOPATH/bin/original_pprof"
+    # Build/Install pprof from google
+    go get -u github.com/google/pprof
+    if [ "$?" != "0" ]; then echo "failed to build pprof"; cleanup 1; fi
+
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/adv_modules/gperf-tools"
 #%Module1.0#####################################################################
 ##
 ## gperf-tools modulefile
@@ -40,9 +53,19 @@ post_run() {
 set          BASE_PATH         "$PACKAGES_DIR"
 prepend-path PATH              "\$BASE_PATH/$PACKAGE/bin"
 prepend-path MANPATH           "\$BASE_PATH/$PACKAGE/share/man"
+prepend-path LIBRARY_PATH      "\$BASE_PATH/$PACKAGE/lib"
+prepend-path CPATH             "\$BASE_PATH/$PACKAGE/include"
+prepend-path PKG_CONFIG_PATH   "\$BASE_PATH/<GPERFTOOLS>/lib/pkgconfig"
 
 if { [uname sysname] != "Darwin" } {
-  prepend-path LD_LIBRARY_PATH "\$BASE_PATH/$PACKAGE/lib"
+  prepend-path LD_LIBRARY_PATH   "\$BASE_PATH/$PACKAGE/lib:\$BASE_PATH/<LIBUNWIND>/lib"
+  prepend-path MANPATH           "\$BASE_PATH/<LIBUNWIND>/share/man"
+  prepend-path LIBRARY_PATH      "\$BASE_PATH/<LIBUNWIND>/lib"
+  prepend-path CPATH             "\$BASE_PATH/<LIBUNWIND>/include"
+  prepend-path PKG_CONFIG_PATH   "\$BASE_PATH/<LIBUNWIND>/lib/pkgconfig"
+} else {
+  # obtain pkg-config
+  module load moose-tools
 }
 
 EOF
