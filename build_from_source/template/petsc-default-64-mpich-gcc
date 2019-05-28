@@ -50,7 +50,6 @@ pre_run() {
 --download-ptscotch=1 \
 --download-fblaslapack=1 \
 --download-superlu_dist=1 \
---download-strumpack=1 \
 --download-scalapack=1 \
 --with-cxx-dialect=C++11 \
 -CC=mpicc -CXX=mpicxx -FC=mpif90 -F77=mpif77 -F90=mpif90 \
