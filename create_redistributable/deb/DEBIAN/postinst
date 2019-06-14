@@ -16,7 +16,7 @@ for a_shell in ${shells[@]}; do
             cat <<EOF > /etc/profile.d/moose-environment.${a_shell}
 # initialize moose-environment modulecmd if available
 if [ -d <PACKAGES_DIR>/Modules/3.2.10 ]; then
-  if [ -n "\$MODULESHOME" ] && [ \$(echo \$MODULEPATH | grep -c <PACKAGES_DIR>) -ge 1 ]; then
+  if [ -n "\$MODULESHOME" ] && [ \$(echo \$MODULEPATH | grep -c <PACKAGES_DIR>) -le 0 ]; then
     ${exp_cm[$index]}"\$MODULEPATH:<PACKAGES_DIR>/Modules/3.2.10/modulefiles"
   else
     MY_SHELL=\`cat /proc/\$\$/comm 2>/dev/null\`
@@ -36,7 +36,7 @@ EOF
                 cat <<EOF >> /etc/bash.bashrc
 #START-INITIALIZE-MOOSE
 if [ -d <PACKAGES_DIR>/Modules/3.2.10 ]; then
-  if [ -n "\$MODULESHOME" ] && [ \$(echo \$MODULEPATH | grep -c <PACKAGES_DIR>) -ge 1 ]; then
+  if [ -n "\$MODULESHOME" ] && [ \$(echo \$MODULEPATH | grep -c <PACKAGES_DIR>) -le 0 ]; then
     ${exp_cm[$index]}"\$MODULEPATH:<PACKAGES_DIR>/Modules/3.2.10/modulefiles"
   else
     MY_SHELL=\`cat /proc/\$\$/comm 2>/dev/null\`
