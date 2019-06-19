@@ -69,18 +69,22 @@ for a_shell in ${shells[@]}; do
             cat <<EOF > /etc/profile.d/moose-environment.${a_shell}
 # initialize moose-environment modulecmd if available
 if [ -d <PACKAGES_DIR>/Modules/3.2.10 ]; then
-  if [ -n "\$MODULESHOME" ]; then
-    ${exp_cm[$index]}"\$MODULEPATH:<PACKAGES_DIR>/Modules/3.2.10/modulefiles"
-  else
-    MY_SHELL=\`cat /proc/\$\$/comm 2>/dev/null\`
-    if [ "\${MY_SHELL}" = "bash" ]; then
-      source <PACKAGES_DIR>/Modules/3.2.10/init/bash
-    elif [ "\${MY_SHELL}" = "sh" ]; then
-      . <PACKAGES_DIR>/Modules/3.2.10/init/sh
-    fi
-  fi
+  . <PACKAGES_DIR>/environments/moose_profile
 fi
 EOF
+            if [ -f /etc/bash.bashrc ]; then
+                if [ `cat /etc/bash.bashrc | grep -c "START-INITIALIZE-MOOSE"` -ne 0 ]; then
+                    # Remove previous initialization section
+                    sed -i'' -e '/#START-INITIALIZE-MOOSE/,/#END-INITIALIZE-MOOSE/d' /etc/bash.bashrc
+                fi
+                cat <<EOF >> /etc/bash.bashrc
+#START-INITIALIZE-MOOSE
+if [ -d <PACKAGES_DIR>/Modules/3.2.10 ]; then
+  . <PACKAGES_DIR>/environments/moose_profile
+fi
+#END-INITIALIZE-MOOSE
+EOF
+            fi
         # csh and tcsh use the same profile. Do once.
         elif [ ${a_shell} = 'csh' ] || [ ${a_shell} = 'tcsh' ] && [ -d /etc/csh/login.d ] && [ -z "$DO_CSH_ONCE" ]; then
             DO_CSH_ONCE=true
@@ -88,6 +92,8 @@ EOF
             cat <<EOF > /etc/csh/login.d/moose-environment.csh
 # initialize moose-environment modulecmd if available
 if (-d <PACKAGES_DIR>/Modules/3.2.10) then
+  setenv MOOSE_JOB \`cat /proc/cpuinfo | grep processor | wc -l\`
+  setenv MOOSE_PPS_WIDTH 180
   if (! \$?MODULEPATH ) then
     set MY_SHELL=\`cat /proc/\$\$/comm\`
     source "<PACKAGES_DIR>/Modules/3.2.10/init/\${MY_SHELL}"
@@ -105,6 +111,8 @@ EOF
 #START-INITIALIZE-MOOSE
 if [[ ( -d <PACKAGES_DIR>/Modules/3.2.10 ) ]]
 then
+  export MOOSE_JOBS=\`cat /proc/cpuinfo | grep processor | wc -l\`
+  export MOOSE_PPS_WIDTH=180
   if [[ -n \${MODULESHOME} ]]
   then
     export MODULEPATH="\$MODULEPATH:<PACKAGES_DIR>/Modules/3.2.10/modulefiles"
@@ -123,6 +131,8 @@ EOF
 #START-INITIALIZE-MOOSE
 if [ "\$(cat /proc/\$\$/comm 2>/dev/null)" = "${a_shell}" ]; then
   if [ -d <PACKAGES_DIR>/Modules/3.2.10 ]; then
+    export MOOSE_JOBS=\`cat /proc/cpuinfo | grep processor | wc -l\`
+    export MOOSE_PPS_WIDTH=180
     if [ -n "\$MODULESHOME" ]; then
       ${exp_cm[$index]}"\$MODULEPATH:<PACKAGES_DIR>/Modules/3.2.10/modulefiles"
     else
