@@ -2,7 +2,7 @@
 #############
 ## Specifics
 ##
-DEP=(modules gcc libunwind graphviz)
+DEP=(modules gcc llvm libunwind graphviz golang)
 PACKAGE="<GPERFTOOLS>"
 
 #####
@@ -23,10 +23,10 @@ pre_run() {
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
     if [ `uname` = "Darwin" ]; then
-        module load advanced_modules autotools clang moose-tools
+        module load advanced_modules autotools clang moose-tools golang
         ./configure --prefix="$PACKAGES_DIR/$PACKAGE" --enable-libunwind
     else
-        module load advanced_modules autotools gcc moose-tools
+        module load advanced_modules autotools gcc moose-tools golang
         PATH="$PACKAGES_DIR/<LIBUNWIND>/bin:$PATH" LIBRARY_PATH="$PACKAGES_DIR/<LIBUNWIND>/lib:$LIBRARY_PATH" LD_LIBRARY_PATH="$PACKAGES_DIR/<LIBUNWIND>/lib:$LD_LIBRARY_PATH" CPATH="$PACKAGES_DIR/<LIBUNWIND>/include" CPPFLAGS="-I$PACKAGES_DIR/<LIBUNWIND>/include" CFLAGS="-I$PACKAGES_DIR/<LIBUNWIND>/include" LDFLAGS="-L$PACKAGES_DIR/<LIBUNWIND>/lib" ./configure --prefix="$PACKAGES_DIR/$PACKAGE" --enable-libunwind
     fi
 }
@@ -34,8 +34,6 @@ pre_run() {
 post_run() {
     cd "$1"
     ### Build the better pprof tool from google/pprof ###
-    if ! [ -f /usr/local/go/bin/go ]; then echo "go not installed"; cleanup 1; fi
-    export PATH=/usr/local/go/bin:$PATH
     export GOPATH="$PACKAGES_DIR/<GPERFTOOLS>"
     # Remove unwanted pprof
     mv "$GOPATH/bin/pprof" "$GOPATH/bin/original_pprof"
