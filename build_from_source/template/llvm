@@ -17,8 +17,30 @@ ARCH=(Darwin Linux)
 DOWNLOAD=(http://mooseframework.inl.gov/source_packages/llvm-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/cfe-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/clang-tools-extra-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/compiler-rt-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/lld-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/libcxx-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/libcxxabi-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/openmp-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/lldb-<LLVM>.src.tar.xz)
 EXTRACT="false"
 CONFIGURE="false"
-BUILD='false'
-INSTALL='false'
+BUILD='true'
+INSTALL='true'
+
+patch_llvm() {
+    # Using GCC, clang_tools_extra fails to build the XPC component on Macs
+    if [ `uname` = "Darwin" ]; then
+        cat << "EOF" > "$1/llvm/tools/clang/tools/extra/darwin_xpc.patch"
+--- a/CMakeLists.txt 2019-01-15 17:24:22.000000000 -0700
++++ b/CMakeLists.txt 2019-06-20 14:18:06.000000000 -0600
+@@ -1,7 +1,4 @@
+ option(CLANGD_BUILD_XPC "Build XPC Support For Clangd." OFF)
+-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+-  set(CLANGD_BUILD_XPC ON CACHE BOOL "" FORCE)
+-endif ()
+ 
+ add_subdirectory(clang-apply-replacements)
+ add_subdirectory(clang-reorder-fields)
+EOF
+        cd "$1/llvm/tools/clang/tools/extra"
+        patch -p1 < darwin_xpc.patch
+        if [ "$?" != "0" ]; then echo "Failed to patch LLVM"; cleanup 1; fi
+    fi
+    cd "$1"
+}
 
 custom_extract()
 {
@@ -45,23 +67,26 @@ pre_run() {
     if [ -d "$PACKAGES_DIR/$PACKAGE" ]; then rm -rf "$PACKAGES_DIR/$PACKAGE"; fi
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
-    module load advanced_modules miniconda cmake gcc
+    module load advanced_modules miniconda cmake
+    if [ `uname` != "Darwin" ]; then
+        module load gcc
+    fi
 
     # !!! NOTE: Order is important !!!
     # Extract/Move LLVM, Clang, LLDB, Clang-Extras, compiler-rt, libcxx/abi, openmp
     cd "$1"
     LLVM_PACKAGES=(llvm cfe lld clang-tools-extra compiler-rt libcxx libcxxabi openmp)
     custom_extract
+    patch_llvm "$1"
 
     mkdir "$1/llvm-build"; cd "$1/llvm-build"
-    if [ `uname` != "Darwin" ]; then
-        CC=gcc CXX=g++ cmake -DCMAKE_C_COMPILER="$PACKAGES_DIR/<GCC>/bin/gcc" \
-          -DCMAKE_CXX_COMPILER="$PACKAGES_DIR/<GCC>/bin/g++" \
-          -DGCC_INSTALL_PREFIX="$PACKAGES_DIR/<GCC>" \
-          -DCMAKE_CXX_LINK_FLAGS="-L$PACKAGES_DIR/<GCC>/lib64 -Wl,-rpath,$PACKAGES_DIR/<GCC>/lib64" \
-          -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
+    if [ `uname` = "Darwin" ]; then
+        CC=clang CXX=clang++ cmake -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
           -DCMAKE_INSTALL_RPATH:STRING="$PACKAGES_DIR/$PACKAGE/lib" \
           -DCMAKE_BUILD_WITH_INSTALL_RPATH=1 \
+          -DLLVM_BUILD_EXTERNAL_COMPILER_RT=ON \
+          -DCOMPILER_RT_ENABLE_IOS=OFF \
+          -DCLANGD_BUILD_XPC=OFF \
           -DLLVM_ENABLE_ASSERTIONS=ON \
           -DLLVM_ENABLE_RTTI=ON \
           -DCMAKE_BUILD_TYPE="Release" \
@@ -70,12 +95,17 @@ pre_run() {
           -Wno-dev \
           ../llvm
     else
-        CC=clang CXX=clang++ cmake -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
+        CC=gcc CXX=g++ cmake -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
           -DCMAKE_INSTALL_RPATH:STRING="$PACKAGES_DIR/$PACKAGE/lib" \
-          -DCMAKE_INSTALL_NAME_DIR:STRING="$PACKAGES_DIR/$PACKAGE/lib" \
-          -DCMAKE_MACOSX_RPATH:BOOL=ON \
-          -DCLANG_DEFAULT_OPENMP_RUNTIME=libomp \
+          -DCMAKE_C_COMPILER="$PACKAGES_DIR/<GCC>/bin/gcc" \
+          -DCMAKE_CXX_COMPILER="$PACKAGES_DIR/<GCC>/bin/g++" \
+          -DGCC_INSTALL_PREFIX="$PACKAGES_DIR/<GCC>" \
+          -DCMAKE_CXX_LINK_FLAGS="-L$PACKAGES_DIR/<GCC>/lib64 -Wl,-rpath,$PACKAGES_DIR/<GCC>/lib64" \
+          -DCMAKE_BUILD_WITH_INSTALL_RPATH=1 \
           -DLLVM_BUILD_EXTERNAL_COMPILER_RT=ON \
+          -DCOMPILER_RT_ENABLE_IOS=OFF \
+          -DCLANGD_BUILD_XPC=OFF \
+          -DLLVM_ENABLE_ASSERTIONS=ON \
           -DLLVM_ENABLE_RTTI=ON \
           -DCMAKE_BUILD_TYPE="Release" \
           -DPYTHON_EXECUTABLE=`which python2.7` \
@@ -84,10 +114,9 @@ pre_run() {
           ../llvm
     fi
     if [ "$?" != "0" ]; then echo "Failed to configure LLVM"; cleanup 1; fi
-    make -j $MOOSE_JOBS
-    if [ "$?" != "0" ]; then echo "Failed to build LLVM"; cleanup 1; fi
-    make install
-    if [ "$?" != "0" ]; then echo "Failed to install LLVM"; cleanup 1; fi
+}
+
+post_run() {
     cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<CLANG>"
 #%Module1.0#####################################################################
 ##
@@ -131,15 +160,13 @@ EOF
     fi
     ln -s ../modulefiles/moose/.<CLANG> clang
     cp -R "$1/llvm/tools/clang/bindings" "$PACKAGES_DIR/$PACKAGE/"
-}
 
-post_run() {
     ##### BUILD LLVM Debugger #####
     ## With LLVM built, we can now properly build LLDB
     module purge
     module load advanced_modules miniconda cmake clang
     # check if we are code signing LLDB
-    if [ "$CODESIGN_NAME" = "None" ]; then
+    if [ "$CODESIGN_NAME" = "" ]; then
         CODESIGN_NAME=''
     else
         mkdir -p "$PACKAGES_DIR/$PACKAGE/codesign"
@@ -158,7 +185,7 @@ post_run() {
     # Build the LLVM Debugger
     if [ `uname` = "Darwin" ]; then
         CC=clang CXX=clang++ cmake -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
-          -DLLDB_CODESIGN_IDENTITY=$CODESIGN_NAME \
+          -DLLDB_CODESIGN_IDENTITY="$CODESIGN_NAME" \
           -DPYTHON_EXECUTABLE=`which python2.7` \
           -Wno-dev \
           ../lldb
@@ -177,7 +204,7 @@ post_run() {
     # We have to fix serveral things either Cmake or LLDB is doing wrong when building on Darwin machines
     if [ `uname` = "Darwin" ]; then
         # This is not the python we originally found during cmake configure. So change it back!
-        install_name_tool -change "$PACKAGES_DIR/$PACKAGE/lib/libpython2.7.dylib" "$PACKAGES_DIR/miniconda/lib/libpython2.7.dylib" "$PACKAGES_DIR/$PACKAGE/lib/liblldb.<LLVM>.dylib"
+        install_name_tool -change "@rpath/libpython2.7.dylib" "$PACKAGES_DIR/miniconda/lib/libpython2.7.dylib" "$PACKAGES_DIR/$PACKAGE/lib/liblldb.<LLVM>.dylib"
         if [ "$?" != "0" ]; then echo "Failed to fix libpython link in liblldb.dylib"; cleanup 1; fi
 
     else
