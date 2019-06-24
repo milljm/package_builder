@@ -32,13 +32,12 @@ post_run() {
 if [ -n "\$MODULESHOME" ] && [ \$(echo \$MODULEPATH | grep -c <PACKAGES_DIR>) -le 0 ]; then
   ${exp_cm[$index]}"\$MODULEPATH:<PACKAGES_DIR>/Modules/3.2.10/modulefiles"
 else
-  MY_SHELL=\`cat /proc/\$\$/comm 2>/dev/null\`
-    if [ "\${MY_SHELL}" = "bash" ]; then
-      source <PACKAGES_DIR>/Modules/3.2.10/init/bash
-      source <PACKAGES_DIR>/Modules/3.2.10/init/bash_completion
-    elif [ "\${MY_SHELL}" = "sh" ]; then
-      . <PACKAGES_DIR>/Modules/3.2.10/init/sh
-    fi
+  MY_SHELL=\`ps -o comm= \$\$ | sed -e 's/-//'\`
+  if [ "\${MY_SHELL}" = "bash" ]; then
+    source <PACKAGES_DIR>/Modules/3.2.10/init/bash
+    source <PACKAGES_DIR>/Modules/3.2.10/init/bash_completion
+  elif [ "\${MY_SHELL}" = "sh" ]; then
+    . <PACKAGES_DIR>/Modules/3.2.10/init/sh
   fi
 fi
 
@@ -47,7 +46,7 @@ export MOOSE_PPS_WIDTH=180
 
 # Source the autojump profile if requested:
 if [ -n "\$MOOSE_JUMP" ]; then
-  source "$PACKAGES_DIR/environments/autojump_profile"
+  source "<PACKAGES_DIR>/environments/autojump_profile"
 fi
 
 # If, anyone wants to use our prompt:
@@ -74,7 +73,7 @@ else
 fi
 
 # Load custom MOOSE command bash autocomplete rules
-source "$PACKAGES_DIR/environments/autocomplete_moose"
+source "<PACKAGES_DIR>/environments/autocomplete_moose"
 EOF
 }
 ##
