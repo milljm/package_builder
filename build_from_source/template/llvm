@@ -20,28 +20,6 @@ CONFIGURE="false"
 BUILD='true'
 INSTALL='true'
 
-patch_llvm() {
-    # Using GCC, clang_tools_extra fails to build the XPC component on Macs
-    if [ `uname` = "Darwin" ]; then
-        cat << "EOF" > "$1/llvm/tools/clang/tools/extra/darwin_xpc.patch"
---- a/CMakeLists.txt 2019-01-15 17:24:22.000000000 -0700
-+++ b/CMakeLists.txt 2019-06-20 14:18:06.000000000 -0600
-@@ -1,7 +1,4 @@
- option(CLANGD_BUILD_XPC "Build XPC Support For Clangd." OFF)
--if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
--  set(CLANGD_BUILD_XPC ON CACHE BOOL "" FORCE)
--endif ()
- 
- add_subdirectory(clang-apply-replacements)
- add_subdirectory(clang-reorder-fields)
-EOF
-        cd "$1/llvm/tools/clang/tools/extra"
-        patch -p1 < darwin_xpc.patch
-        if [ "$?" != "0" ]; then echo "Failed to patch LLVM"; cleanup 1; fi
-    fi
-    cd "$1"
-}
-
 custom_extract()
 {
     for LLVM_PACKAGE in ${LLVM_PACKAGES[*]}; do
@@ -67,26 +45,23 @@ pre_run() {
     if [ -d "$PACKAGES_DIR/$PACKAGE" ]; then rm -rf "$PACKAGES_DIR/$PACKAGE"; fi
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
-    module load advanced_modules miniconda cmake
-    if [ `uname` != "Darwin" ]; then
-        module load gcc
-    fi
+    module load advanced_modules miniconda cmake gcc
 
     # !!! NOTE: Order is important !!!
     # Extract/Move LLVM, Clang, LLDB, Clang-Extras, compiler-rt, libcxx/abi, openmp
     cd "$1"
     LLVM_PACKAGES=(llvm cfe lld clang-tools-extra compiler-rt libcxx libcxxabi openmp)
     custom_extract
-    patch_llvm "$1"
 
     mkdir "$1/llvm-build"; cd "$1/llvm-build"
-    if [ `uname` = "Darwin" ]; then
-        CC=clang CXX=clang++ cmake -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
+    if [ `uname` != "Darwin" ]; then
+        CC=gcc CXX=g++ cmake -DCMAKE_C_COMPILER="$PACKAGES_DIR/<GCC>/bin/gcc" \
+          -DCMAKE_CXX_COMPILER="$PACKAGES_DIR/<GCC>/bin/g++" \
+          -DGCC_INSTALL_PREFIX="$PACKAGES_DIR/<GCC>" \
+          -DCMAKE_CXX_LINK_FLAGS="-L$PACKAGES_DIR/<GCC>/lib64 -Wl,-rpath,$PACKAGES_DIR/<GCC>/lib64" \
+          -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
           -DCMAKE_INSTALL_RPATH:STRING="$PACKAGES_DIR/$PACKAGE/lib" \
           -DCMAKE_BUILD_WITH_INSTALL_RPATH=1 \
-          -DLLVM_BUILD_EXTERNAL_COMPILER_RT=ON \
-          -DCOMPILER_RT_ENABLE_IOS=OFF \
-          -DCLANGD_BUILD_XPC=OFF \
           -DLLVM_ENABLE_ASSERTIONS=ON \
           -DLLVM_ENABLE_RTTI=ON \
           -DCMAKE_BUILD_TYPE="Release" \
@@ -95,17 +70,12 @@ pre_run() {
           -Wno-dev \
           ../llvm
     else
-        CC=gcc CXX=g++ cmake -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
+        CC=clang CXX=clang++ cmake -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
           -DCMAKE_INSTALL_RPATH:STRING="$PACKAGES_DIR/$PACKAGE/lib" \
-          -DCMAKE_C_COMPILER="$PACKAGES_DIR/<GCC>/bin/gcc" \
-          -DCMAKE_CXX_COMPILER="$PACKAGES_DIR/<GCC>/bin/g++" \
-          -DGCC_INSTALL_PREFIX="$PACKAGES_DIR/<GCC>" \
-          -DCMAKE_CXX_LINK_FLAGS="-L$PACKAGES_DIR/<GCC>/lib64 -Wl,-rpath,$PACKAGES_DIR/<GCC>/lib64" \
-          -DCMAKE_BUILD_WITH_INSTALL_RPATH=1 \
+          -DCMAKE_INSTALL_NAME_DIR:STRING="$PACKAGES_DIR/$PACKAGE/lib" \
+          -DCMAKE_MACOSX_RPATH:BOOL=ON \
+          -DCLANG_DEFAULT_OPENMP_RUNTIME=libomp \
           -DLLVM_BUILD_EXTERNAL_COMPILER_RT=ON \
-          -DCOMPILER_RT_ENABLE_IOS=OFF \
-          -DCLANGD_BUILD_XPC=OFF \
-          -DLLVM_ENABLE_ASSERTIONS=ON \
           -DLLVM_ENABLE_RTTI=ON \
           -DCMAKE_BUILD_TYPE="Release" \
           -DPYTHON_EXECUTABLE=`which python2.7` \
