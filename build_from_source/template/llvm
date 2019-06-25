@@ -17,8 +17,8 @@ ARCH=(Darwin Linux)
 DOWNLOAD=(http://mooseframework.inl.gov/source_packages/llvm-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/cfe-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/clang-tools-extra-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/compiler-rt-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/lld-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/libcxx-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/libcxxabi-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/openmp-<LLVM>.src.tar.xz http://mooseframework.inl.gov/source_packages/lldb-<LLVM>.src.tar.xz)
 EXTRACT="false"
 CONFIGURE="false"
-BUILD='false'
-INSTALL='false'
+BUILD='true'
+INSTALL='true'
 
 custom_extract()
 {
@@ -84,10 +84,9 @@ pre_run() {
           ../llvm
     fi
     if [ "$?" != "0" ]; then echo "Failed to configure LLVM"; cleanup 1; fi
-    make -j $MOOSE_JOBS
-    if [ "$?" != "0" ]; then echo "Failed to build LLVM"; cleanup 1; fi
-    make install
-    if [ "$?" != "0" ]; then echo "Failed to install LLVM"; cleanup 1; fi
+}
+
+post_run() {
     cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<CLANG>"
 #%Module1.0#####################################################################
 ##
@@ -131,15 +130,13 @@ EOF
     fi
     ln -s ../modulefiles/moose/.<CLANG> clang
     cp -R "$1/llvm/tools/clang/bindings" "$PACKAGES_DIR/$PACKAGE/"
-}
 
-post_run() {
     ##### BUILD LLVM Debugger #####
     ## With LLVM built, we can now properly build LLDB
     module purge
     module load advanced_modules miniconda cmake clang
     # check if we are code signing LLDB
-    if [ "$CODESIGN_NAME" = "None" ]; then
+    if [ "$CODESIGN_NAME" = "" ]; then
         CODESIGN_NAME=''
     else
         mkdir -p "$PACKAGES_DIR/$PACKAGE/codesign"
@@ -158,7 +155,7 @@ post_run() {
     # Build the LLVM Debugger
     if [ `uname` = "Darwin" ]; then
         CC=clang CXX=clang++ cmake -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
-          -DLLDB_CODESIGN_IDENTITY=$CODESIGN_NAME \
+          -DLLDB_CODESIGN_IDENTITY="$CODESIGN_NAME" \
           -DPYTHON_EXECUTABLE=`which python2.7` \
           -Wno-dev \
           ../lldb
@@ -177,7 +174,7 @@ post_run() {
     # We have to fix serveral things either Cmake or LLDB is doing wrong when building on Darwin machines
     if [ `uname` = "Darwin" ]; then
         # This is not the python we originally found during cmake configure. So change it back!
-        install_name_tool -change "$PACKAGES_DIR/$PACKAGE/lib/libpython2.7.dylib" "$PACKAGES_DIR/miniconda/lib/libpython2.7.dylib" "$PACKAGES_DIR/$PACKAGE/lib/liblldb.<LLVM>.dylib"
+        install_name_tool -change "@rpath/libpython2.7.dylib" "$PACKAGES_DIR/miniconda/lib/libpython2.7.dylib" "$PACKAGES_DIR/$PACKAGE/lib/liblldb.<LLVM>.dylib"
         if [ "$?" != "0" ]; then echo "Failed to fix libpython link in liblldb.dylib"; cleanup 1; fi
 
     else
