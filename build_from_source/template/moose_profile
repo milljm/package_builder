@@ -30,7 +30,7 @@ post_run() {
 #!/bin/bash
 ### Modules Source ###
 if [ -n "\$MODULESHOME" ] && [ \$(echo \$MODULEPATH | grep -c <PACKAGES_DIR>) -le 0 ]; then
-  ${exp_cm[$index]}"\$MODULEPATH:<PACKAGES_DIR>/Modules/3.2.10/modulefiles"
+  export "\$MODULEPATH:<PACKAGES_DIR>/Modules/3.2.10/modulefiles"
 else
   MY_SHELL=\`ps -o comm= \$\$ | sed -e 's/-//'\`
   if [ "\${MY_SHELL}" = "bash" ]; then
