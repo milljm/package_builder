@@ -1,0 +1,122 @@
+#!/bin/bash
+#############
+## Specifics
+##
+DEP=(modules miniconda cmake mesa)
+PACKAGE="<VTKMESA>"
+
+#####
+# Set the operating system allowed to build this module
+#
+ARCH=(Linux)
+
+#####
+# Setting any of these variables to 'false' effectively skips that step
+# This is useful for items like 'autojump' which requires a git clone/checkout
+DOWNLOAD='http://mooseframework.inl.gov/source_packages/<VTKMESA>.tar.gz'
+EXTRACT='<VTKMESA>.tar.gz'
+CONFIGURE='false'
+BUILD='true'
+INSTALL='true'
+
+pre_run() {
+    unset MODULEPATH
+    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    module load advanced_modules cmake miniconda mesa
+    curl -L -O http://mooseframework.inl.gov/source_packages/<VTKMESA>.diff
+    patch -p1 < <VTKMESA>.diff
+    cd ../
+    mkdir vtk-build; cd vtk-build
+
+    PYVERSION=$(python3 -c 'import sys; print(str(sys.version_info[0])+"."+str(sys.version_info[1]))')
+    CONFIGURE="cmake ../<VTKMESA> -DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/<VTKMESA> -DCMAKE_BUILD_TYPE=Release -DPYTHON_EXECUTABLE=`which python3` -DVTK_OPENGL_HAS_OSMESA=ON -DOSMESA_INCLUDE_DIR=$PACKAGES_DIR/<MESA>/include -DOSMESA_LIBRARY=$PACKAGES_DIR/<MESA>/lib/libOSMesa.so -DVTK_PYTHON_VERSION=$PYVERSION -DVTK_USE_X=OFF -DVTK_WRAP_PYTHON=ON -DVTK_OPENGL_HAS_OSMESA:BOOL=ON -DVTK_DEFAULT_RENDER_WINDOW_OFFSCREEN:BOOL=ON"
+}
+
+post_run() {
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<VTKMESA>_<MESA>"
+#%Module1.0#####################################################################
+##
+## <VTKMESA> Module
+##
+##
+##
+set             BASE_PATH          "$PACKAGES_DIR"
+module load miniconda moose/.<MESA>
+
+
+if { [uname sysname] != "Darwin" } {
+  prepend-path    LD_LIBRARY_PATH    "\$BASE_PATH/<VTKMESA>/lib"
+}
+
+setenv          VTKINCLUDE_DIR                "\$BASE_PATH/<VTKMESA>/include/<VTKMESA_INCLUDE>"
+prepend-path    INCLUDE_PATH                  "\$BASE_PATH/<VTKMESA>/include/<VTKMESA_INCLUDE>"
+setenv          VTKLIB_DIR                    "\$BASE_PATH/<VTKMESA>/lib"
+prepend-path    PYTHONPATH                    "\$BASE_PATH/<VTKMESA>/lib/python$PYVERSION/site-packages"
+EOF
+
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/civet/mpich-clang-petsc_alt-vtk-mesa"
+#%Module1.0#####################################################################
+##
+## Civet support module
+## <PETSC_ALT>
+## <CLANG>
+## <MPICH>
+## <VTKMESA>
+##
+module load moose/.<MPICH>_<CLANG>
+module load moose/.<PETSC_ALT>_<MPICH>_<CLANG>-opt
+module load moose/.<VTKMESA>_<MESA>
+module load moose/.<TBB>
+module load ccache
+module load miniconda moose-tools
+
+EOF
+
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/civet/mpich-clang-petsc_default-vtk-mesa"
+#%Module1.0#####################################################################
+##
+## Civet support module
+## <PETSC_DEFAULT>
+## <CLANG>
+## <MPICH>
+## <VTKMESA>
+##
+module load moose/.<MPICH>_<CLANG>
+module load moose/.<PETSC_DEFAULT>_<MPICH>_<CLANG>-opt
+module load moose/.<VTKMESA>_<MESA>
+module load moose/.<TBB>
+module load ccache
+module load miniconda moose-tools
+
+EOF
+
+    unset CC CXX
+    cd "$PACKAGES_DIR/Modules/<MODULES>/adv_modules"
+    if [ -f vtk-mesa ]; then rm -f vtk-mesa; fi
+    ln -s ../modulefiles/moose/.<VTKMESA>_<MESA> vtk-mesa
+}
+##
+## End Specifics
+##############
+## The following script contains all the common functions.
+## Those functions are executed in the following order:
+
+# download
+# extract
+# pre-run
+# configure
+# make
+# make install
+# post_run
+# cleanup
+
+## pre_run and post_run are the only true specifics that are different
+## with every package
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+DOWNLOAD_ONLY=<DOWNLOAD_ONLY>
+source "$RELATIVE_DIR/functions" $@

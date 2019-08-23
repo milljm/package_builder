@@ -65,7 +65,7 @@ pre_run() {
           -DLLVM_ENABLE_ASSERTIONS=ON \
           -DLLVM_ENABLE_RTTI=ON \
           -DCMAKE_BUILD_TYPE="Release" \
-          -DPYTHON_EXECUTABLE=`which python2.7` \
+          -DPYTHON_EXECUTABLE=`which python3` \
           -DLLVM_TARGETS_TO_BUILD="X86" \
           -Wno-dev \
           ../llvm
@@ -78,7 +78,7 @@ pre_run() {
           -DLLVM_BUILD_EXTERNAL_COMPILER_RT=ON \
           -DLLVM_ENABLE_RTTI=ON \
           -DCMAKE_BUILD_TYPE="Release" \
-          -DPYTHON_EXECUTABLE=`which python2.7` \
+          -DPYTHON_EXECUTABLE=`which python3` \
           -DLLVM_TARGETS_TO_BUILD="X86" \
           -Wno-dev \
           ../llvm

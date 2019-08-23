@@ -1,5 +1,5 @@
-#!/usr/bin/env python2.7
-import os, sys, argparse, platform, re, hashlib, urllib2, tarfile, tempfile, subprocess, time, datetime, shutil
+#!/usr/bin/env python3
+import os, sys, stat, argparse, platform, re, hashlib, tarfile, tempfile, subprocess, time, datetime, shutil
 from signal import SIGTERM
 from contrib import dag
 from contrib import scheduler
@@ -52,7 +52,7 @@ class Job(object):
 
     def getResult(self):
         if self.process.poll():
-            print '\n', '-'*30, 'JOB FAILURE', '-'*30, '\n', self.name, '\n', self.__output
+            print('\n', '-'*30, 'JOB FAILURE', '-'*30, '\n', self.name, '\n', self.__output)
             return False
 
 # Create the Job class instances and store them as nodes in a DAG
@@ -88,7 +88,7 @@ def buildEdges(dag_object, args):
 def buildOnly(dag_object, args):
     if args.build_only:
         if args.build_only not in [x.name for x in dag_object.topological_sort()]:
-            print 'specified package not available to be built', args.build_only
+            print('specified package not available to be built', args.build_only)
             sys.exit(1)
         preds = set([])
         for package in dag_object.topological_sort():
@@ -124,7 +124,7 @@ def alterVersions(version_template, args):
                             tmp_str = tmp_str.replace('<' + env_var + '>', value)
 
                     # Substitute module names and versions
-                    for module_key, module_name in version_template.iteritems():
+                    for module_key, module_name in version_template.items():
                         tmp_str = tmp_str.replace('<' + module_key + '>', module_name)
 
                     # If there are any substitutions remaining, it means this module will
@@ -135,7 +135,7 @@ def alterVersions(version_template, args):
 
                     batchfile.write(tmp_str)
 
-                os.chmod(os.path.join(packages_path, module), 0755)
+                os.chmod(os.path.join(packages_path, module), stat.S_IRUSR | stat.S_IWUSR  | stat.S_IXUSR)
 
     if args.dryrun:
         packages_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'template')
@@ -156,7 +156,7 @@ def getTemplate(args):
 def verifyArgs(args):
     if args.show_available:
         for package in os.listdir(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'template')):
-            print package
+            print(package)
         sys.exit(0)
 
     if platform.platform().upper().find('DARWIN') != -1:
@@ -168,30 +168,30 @@ def verifyArgs(args):
         return args
 
     if args.with_intel64 and not os.path.exists(args.with_intel64):
-        print 'Intel compilers do not exist at specified location: %s' % (args.with_intel64)
+        print('Intel compilers do not exist at specified location: %s' % (args.with_intel64))
         sys.exit(1)
 
     if args.with_intel64 and not os.path.exists(os.path.join(args.with_intel64, 'modulefiles', 'intel')):
-        print 'Unfortunately when building the Intel portion of the compiler stack, I need \nthe ability to load that environment:\n\n\tmodule load intel\n\n', \
-            'However, I am not detecting the presence of such a module:\n\n\t%s' % (os.path.join(args.with_intel64, 'modulefiles', 'intel')), \
-            '\n\nUnfortunately creating such a module automatically is beyond this scripts \ncapabilities. What you need to do, is start with a clean', \
-            'environment, then \nsource the Intel compilers and compare the difference. This difference is \nwhat needs to end up in the module.'
+        print('Unfortunately when building the Intel portion of the compiler stack, I need \nthe ability to load that environment:\n\n\tmodule load intel\n\n',
+            'However, I am not detecting the presence of such a module:\n\n\t%s' % (os.path.join(args.with_intel64, 'modulefiles', 'intel')),
+            '\n\nUnfortunately creating such a module automatically is beyond this scripts \ncapabilities. What you need to do, is start with a clean',
+            'environment, then \nsource the Intel compilers and compare the difference. This difference is \nwhat needs to end up in the module.')
         sys.exit(1)
 
     paths = [args.prefix]
     if args.with_intel64:
-        print 'Opting to build supported modules with an Intel compiler... We will separate this build accordingly.'
+        print('Opting to build supported modules with an Intel compiler... We will separate this build accordingly.')
         paths.append(args.prefix.replace(os.path.basename(args.prefix.rstrip(os.path.sep)), os.path.basename(args.prefix.rstrip(os.path.sep) + '_intel')))
 
     for path in paths:
         if path is None:
-            print 'You must specify a prefix directory'
+            print('You must specify a prefix directory')
             sys.exit(1)
         elif os.path.exists(path) is not True:
             try:
                 os.makedirs(path)
             except:
-                print 'The path specified does not exist. Please create this path, and chown it appropriately before continuing'
+                print('The path specified does not exist. Please create this path, and chown it appropriately before continuing')
                 sys.exit(1)
         else:
             try:
@@ -199,17 +199,17 @@ def verifyArgs(args):
                 test_writeable.close()
                 os.remove(os.path.join(path, 'test_write'))
             except:
-                print 'Unable to write to specified prefix location. Please chown this location manually before continuing'
+                print('Unable to write to specified prefix location. Please chown this location manually before continuing')
                 sys.exit(1)
 
     if args.code_sign_name and not args.code_sign_cert:
-        print 'Codesign name supplied but not a path to the certificate'
+        print('Codesign name supplied but not a path to the certificate')
         sys.exit(1)
     elif args.code_sign_cert and not args.code_sign_name:
-        print 'Codesign certificate path set, but not the name of the certificate'
+        print('Codesign certificate path set, but not the name of the certificate')
         sys.exit(1)
     elif args.code_sign_cert and not os.path.exists(args.code_sign_cert):
-        print 'Path to Codesign cert does not exists'
+        print('Path to Codesign cert does not exists')
         sys.exit(1)
 
     args.prefix = args.prefix.rstrip(os.path.sep)
@@ -267,8 +267,8 @@ def notEnough(prefix):
 
     # This is 30GB
     if drive_stats.f_frsize * drive_stats.f_bavail < 30*1024*1024*1024:
-        print 'Available space:', '.'.join([str(available)[:-suffixes[index][1]],
-                                            str(available)[suffixes[index][1]]]), suffixes[index][0]
+        print('Available space:', '.'.join([str(available)[:-suffixes[index][1]],
+                                            str(available)[suffixes[index][1]]]), suffixes[index][0])
         return True
 
 def getDateAndHash():
@@ -281,26 +281,26 @@ def getDateAndHash():
         git_hash = subprocess.Popen(["git", "rev-parse", "HEAD"], stdout=subprocess.PIPE)
         hash_version = git_hash.communicate()[0]
         if git_hash.poll() != 0:
-            print 'Failed to identify hash of package_builder repository'
+            print('Failed to identify hash of package_builder repository')
             sys.exit(1)
 
     return (date_time, hash_version, version, release)
 
 def machineArch():
   try:
-    uname_process = subprocess.Popen(['uname', '-sm'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    uname_process = subprocess.Popen(['uname', '-sm'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
   except:
-    print 'Error invoking: uname -sm'
+    print('Error invoking: uname -sm')
 
   uname_stdout = uname_process.communicate()
   if uname_stdout[1]:
-    print uname_stdout[1]
+    print(uname_stdout[1])
     sys.exit(1)
   else:
     try:
       uname, arch = re.findall(r'(\S+)', uname_stdout[0])
     except ValueError:
-      print 'uname -sm returned information I did not understand:\n%s' % (uname_stdout[0])
+      print('uname -sm returned information I did not understand:\n%s' % (uname_stdout[0]))
       sys.exit(1)
 
   # Darwin Specific
@@ -309,43 +309,43 @@ def machineArch():
     try:
       sw_ver_process = subprocess.Popen(['sw_vers'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except:
-      print 'Error invoking: sw_vers'
+      print('Error invoking: sw_vers')
       sys.exit(1)
 
     sw_ver_stdout = sw_ver_process.communicate()
     if sw_ver_stdout[1]:
-      print sw_ver_stdout[1]
+      print(sw_ver_stdout[1])
       sys.exit(1)
     else:
       try:
         mac_version = re.findall(r'ProductVersion:\W+(\S+)', sw_ver_stdout[0])[0]
       except IndexError:
-        print 'sw_vers returned information I did not understand:\n%s' % (sw_ver_stdout[0])
+        print('sw_vers returned information I did not understand:\n%s' % (sw_ver_stdout[0]))
         sys.exit(1)
 
       version = None
-      for osx_version, version_name in _mac_version_to_name.iteritems():
+      for osx_version, version_name in _mac_version_to_name.items():
         if mac_version.find(osx_version) != -1:
           version = _mac_version_to_name[osx_version]
           version_num = osx_version
           break
 
       if version == None:
-        print 'Unable to determine OS X friendly name'
+        print('Unable to determine OS X friendly name')
         sys.exit(1)
 
   # Linux Specific
   else:
     version_num = None
     try:
-      lsb_release_process = subprocess.Popen(['lsb_release', '-a'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      lsb_release_process = subprocess.Popen(['lsb_release', '-a'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
     except:
-      print 'Error invoking: lsb_release -a'
+      print('Error invoking: lsb_release -a')
       sys.exit(1)
 
     lsb_stdout = lsb_release_process.communicate()
     if lsb_release_process.poll():
-      print lsb_stdout[1]
+      print(lsb_stdout[1])
       sys.exit(1)
     else:
       fail_message = 'lsb_release -a returned information I did not understand:\n%s' % (lsb_stdout[0])
@@ -353,10 +353,10 @@ def machineArch():
         version = re.findall(r'Release:\W+(\S+)', lsb_stdout[0])[0]
         release = re.findall(r'Distributor ID:\W+(\S+)', lsb_stdout[0])[0]
       except IndexError:
-        print fail_message
+        print(fail_message)
         sys.exit(1)
       if version == None or release == None:
-        print fail_message
+        print(fail_message)
         sys.exit(1)
 
   return (uname, arch, version, release, version_num)
@@ -370,7 +370,7 @@ if __name__ == '__main__':
             missing.append(prereq)
 
     if missing and not args.dryrun:
-        print 'The following missing binaries would prevent some of the modules from building:', '\n\t', " ".join(missing)
+        print('The following missing binaries would prevent some of the modules from building:', '\n\t', " ".join(missing))
         sys.exit(1)
 
     args = parseArguments()
@@ -389,7 +389,7 @@ if __name__ == '__main__':
        and not args.build_only \
        and args.prefix \
        and notEnough(args.prefix):
-        print 'The entire package building process consumes up to 30Gb of free space.\nNot enough free space in: %s' % (args.prefix)
+        print('The entire package building process consumes up to 30Gb of free space.\nNot enough free space in: %s' % (args.prefix))
         sys.exit(1)
 
     templates = getTemplate(args)
@@ -399,14 +399,14 @@ if __name__ == '__main__':
         prepareDownloads(os.path.join(args.temp_dir, 'moose_package_download_temp'))
 
     if args.download_only:
-        print 'Downloads will be saved to:', os.path.join(args.temp_dir, 'moose_package_download_temp')
+        print('Downloads will be saved to:', os.path.join(args.temp_dir, 'moose_package_download_temp'))
     else:
         (build_date, build_hash, version, release) = getDateAndHash()
 
     packages_dag = buildDAG(packages_path, args)
 
     if args.build_only:
-        print 'Attempting to build the following specific packages:\n', ', '.join([x.name for x in packages_dag.topological_sort()])
+        print('Attempting to build the following specific packages:\n', ', '.join([x.name for x in packages_dag.topological_sort()]))
 
     scheduler = scheduler.Scheduler(args, max_processes=int(args.cpu_count), max_slots=int(args.max_modules), term_width=int(args.name_length))
     start_time = time.time()
@@ -417,11 +417,11 @@ if __name__ == '__main__':
         pass
 
     if args.download_only:
-        print '\nDownloads saved to: %s' %(os.path.join(args.temp_dir, 'moose_package_download_temp'))
+        print('\nDownloads saved to: %s' %(os.path.join(args.temp_dir, 'moose_package_download_temp')))
     elif args.dryrun:
         pass
     else:
         with open(os.path.join(args.prefix, 'build'), 'w') as build_file:
             build_file.write("ARCH=%s-%s\nBUILD_DATE=%s\nPR_VERSION=%s" % (release, version, build_date, build_hash))
 
-    print 'Total Time:', str(datetime.timedelta(seconds=int(time.time()) - int(start_time)))
+    print('Total Time:', str(datetime.timedelta(seconds=int(time.time()) - int(start_time))))
