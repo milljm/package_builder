@@ -278,7 +278,7 @@ def getDateAndHash():
     if os.getenv('CIVET_PR_NUM'):
         hash_version = 'https://github.com/idaholab/package_builder/pull/%s' % (os.environ['CIVET_PR_NUM'])
     else:
-        git_hash = subprocess.Popen(["git", "rev-parse", "HEAD"], stdout=subprocess.PIPE)
+        git_hash = subprocess.Popen(["git", "rev-parse", "HEAD"], stdout=subprocess.PIPE, encoding="utf-8")
         hash_version = git_hash.communicate()[0]
         if git_hash.poll() != 0:
             print('Failed to identify hash of package_builder repository')
