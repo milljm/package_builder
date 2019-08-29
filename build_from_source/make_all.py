@@ -36,7 +36,7 @@ class Job(object):
 
         self.process.wait()
         t.seek(0)
-        self.__output = str(t.read())
+        self.__output = t.read()
 
     def killJob(self):
         # Attempt to kill a running Popen process
@@ -52,7 +52,7 @@ class Job(object):
 
     def getResult(self):
         if self.process.poll():
-            print('\n', '-'*30, 'JOB FAILURE', '-'*30, '\n', self.name, '\n', self.__output)
+            print('\n', '-'*30, 'JOB FAILURE', '-'*30, '\n', self.name, '\n', self.__output.decode())
             return False
 
 # Create the Job class instances and store them as nodes in a DAG

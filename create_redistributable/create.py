@@ -224,7 +224,8 @@ Class for building RedHat based packages
       time.sleep(1)
     f.seek(0)
     if package_builder.poll() != 0:
-      print('There was error building the redistributable package using rpmbuild:\n\n', f.read())
+      output = f.read()
+      print('There was error building the redistributable package using rpmbuild:\n\n', output.decode())
       return False
     else:
       # There is only going to be one file in the following location
