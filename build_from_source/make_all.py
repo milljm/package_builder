@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.7
 import os, sys, stat, argparse, platform, re, hashlib, tarfile, tempfile, subprocess, time, datetime, shutil
 from signal import SIGTERM
 from contrib import dag
@@ -32,7 +32,7 @@ class Job(object):
         # Very strange behavior with threading and subprocess not returning the process
         # object immediately
         with global_lock:
-            self.process = subprocess.Popen([self.package_file], stdout=t, stderr=t)
+            self.process = subprocess.Popen([self.package_file], stdout=t, stderr=t, encoding='utf-8')
 
         self.process.wait()
         t.seek(0)
@@ -72,7 +72,7 @@ def buildEdges(dag_object, args):
         name_to_object[node.name] = node
 
     for node in dag_object.topological_sort():
-        with open(node.package_file, 'r') as f:
+        with open(node.package_file, 'r', encoding='utf-8') as f:
             content = f.read()
         deps = search_dep.findall(content)[0].split()
 
@@ -113,11 +113,11 @@ def alterVersions(version_template, args):
         if len(module) > name_length:
             name_length = len(module)
 
-        with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'template', module), 'r') as template_module:
+        with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'template', module), 'r', encoding='utf-8') as template_module:
             tmp_str = template_module.read()
 
             if not args.dryrun:
-                with open(os.path.join(packages_path, module), 'w') as batchfile:
+                with open(os.path.join(packages_path, module), 'w', encoding='utf-8') as batchfile:
                     # Substitute base line environment variables
                     for env_var, value in args.baseline_vars:
                         if value:
@@ -146,11 +146,13 @@ def alterVersions(version_template, args):
 
 def getTemplate(args):
   version_template = {}
-  with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), '../common_files', args.me + '-version_template')) as template_file:
-    template = template_file.read()
-    for item in template.split('\n'):
+  with open(os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                         '../common_files', args.me + '-version_template'),
+            'r', encoding='utf-8') as template_file:
+      template = template_file.read()
+  for item in template.split('\n'):
       if len(item):
-        version_template[item.split('=')[0]] = item.split('=')[1]
+          version_template[item.split('=')[0]] = item.split('=')[1]
   return version_template
 
 def verifyArgs(args):
@@ -195,7 +197,7 @@ def verifyArgs(args):
                 sys.exit(1)
         else:
             try:
-                test_writeable = open(os.path.join(path, 'test_write'), 'a')
+                test_writeable = open(os.path.join(path, 'test_write'), 'a', encoding='utf-8')
                 test_writeable.close()
                 os.remove(os.path.join(path, 'test_write'))
             except:
@@ -291,6 +293,7 @@ def machineArch():
     uname_process = subprocess.Popen(['uname', '-sm'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
   except:
     print('Error invoking: uname -sm')
+    sys.exit(1)
 
   uname_stdout = uname_process.communicate()
   if uname_stdout[1]:
@@ -307,7 +310,7 @@ def machineArch():
   if uname == 'Darwin':
     release = 'osx'
     try:
-      sw_ver_process = subprocess.Popen(['sw_vers'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      sw_ver_process = subprocess.Popen(['sw_vers'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
     except:
       print('Error invoking: sw_vers')
       sys.exit(1)
@@ -421,7 +424,7 @@ if __name__ == '__main__':
     elif args.dryrun:
         pass
     else:
-        with open(os.path.join(args.prefix, 'build'), 'w') as build_file:
+        with open(os.path.join(args.prefix, 'build'), 'w', encoding='utf-8') as build_file:
             build_file.write("ARCH=%s-%s\nBUILD_DATE=%s\nPR_VERSION=%s" % (release, version, build_date, build_hash))
 
     print('Total Time:', str(datetime.timedelta(seconds=int(time.time()) - int(start_time))))

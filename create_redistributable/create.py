@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.7
 import os, sys, re, argparse, shlex, shutil, subprocess, tempfile, time
 
 class PackageCreator:
@@ -321,9 +321,10 @@ Class for building Macintosh Packages
 
 def machineArch():
   try:
-    uname_process = subprocess.Popen(['uname', '-sm'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    uname_process = subprocess.Popen(['uname', '-sm'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
   except:
     print('Error invoking: uname -sm')
+    sys.exit(1)
 
   uname_stdout = uname_process.communicate()
   if uname_stdout[1]:
@@ -340,7 +341,7 @@ def machineArch():
   if uname == 'Darwin':
     release = 'osx'
     try:
-      sw_ver_process = subprocess.Popen(['sw_vers'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      sw_ver_process = subprocess.Popen(['sw_vers'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
     except:
       print('Error invoking: sw_vers')
       sys.exit(1)
@@ -371,7 +372,7 @@ def machineArch():
   else:
     version_num = None
     try:
-      lsb_release_process = subprocess.Popen(['lsb_release', '-a'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      lsb_release_process = subprocess.Popen(['lsb_release', '-a'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
     except:
       print('Error invoking: lsb_release -a')
       sys.exit(1)
