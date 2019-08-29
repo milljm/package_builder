@@ -13,8 +13,8 @@ ARCH=(Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='false'
-EXTRACT='false'
+DOWNLOAD='http://mooseframework.inl.gov/source_packages/<MESA>.tar.xz'
+EXTRACT='<MESA>.tar.xz'
 CONFIGURE='false'
 BUILD='true'
 INSTALL='true'
@@ -25,10 +25,6 @@ pre_run() {
     # Install temporary requirement for Mesa
     pip install --install-option="--prefix=`pwd`/mako-install-temp" mako
     export PYTHONPATH="`pwd`/mako-install-temp/lib/python2.7/site-packages:$PYTHONPATH"
-    git clone https://gitlab.freedesktop.org/mesa/mesa.git
-    cd mesa
-    git checkout <MESA>
-    NOCONFIGURE=true ./autogen.sh
     CONFIGURE="./configure --prefix=$PACKAGES_DIR/<MESA> --enable-opengl --disable-gles1 --disable-gles2 --disable-va --disable-xvmc --disable-vdpau --enable-shared-glapi --disable-texture-float --with-gallium-drivers=swrast --disable-dri --with-dri-drivers='' --disable-egl --with-platforms='' --disable-gbm --disable-glx --disable-osmesa --enable-gallium-osmesa"
 }
 

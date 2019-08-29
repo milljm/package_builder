@@ -36,7 +36,7 @@ class Job(object):
 
         self.process.wait()
         t.seek(0)
-        self.__output = t.read()
+        self.__output = str(t.read())
 
     def killJob(self):
         # Attempt to kill a running Popen process
