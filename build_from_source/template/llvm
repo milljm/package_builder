@@ -156,14 +156,22 @@ EOF
     if [ `uname` = "Darwin" ]; then
         CC=clang CXX=clang++ cmake -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
           -DLLDB_CODESIGN_IDENTITY="$CODESIGN_NAME" \
-          -DPYTHON_EXECUTABLE=`which python2.7` \
+          -DPYTHON_EXECUTABLE=`which python3` \
           -Wno-dev \
           ../lldb
     else
         CC=clang CXX=clang++ cmake -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
-          -DPYTHON_EXECUTABLE=`which python2.7` \
+          -DPYTHON_EXECUTABLE=`which python3` \
           -Wno-dev \
           ../lldb
+
+        # No kidding. lldb links correctly if I supply the CXX flags after the first config attempt.
+        CC=clang CXX=clang++ cmake -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
+          -DPYTHON_EXECUTABLE=`which python3` \
+          -Wno-dev \
+          -DCMAKE_CXX_FLAGS="-L$PACKAGES_DIR/miniconda/lib -Wl,-rpath,$PACKAGES_DIR/miniconda/lib" \
+          ../lldb
+
     fi
     if [ "$?" != "0" ]; then echo "Failed to configure LLDB"; cleanup 1; fi
     make -j $MOOSE_JOBS
@@ -174,7 +182,8 @@ EOF
     # We have to fix serveral things either Cmake or LLDB is doing wrong when building on Darwin machines
     if [ `uname` = "Darwin" ]; then
         # This is not the python we originally found during cmake configure. So change it back!
-        install_name_tool -change "@rpath/libpython2.7.dylib" "$PACKAGES_DIR/miniconda/lib/libpython2.7.dylib" "$PACKAGES_DIR/$PACKAGE/lib/liblldb.<LLVM>.dylib"
+        PYVERSION=$(python3 -c 'import sys; print(str(sys.version_info[0])+"."+str(sys.version_info[1]))')
+        install_name_tool -change "@rpath/libpython${PYVERSION}.dylib" "$PACKAGES_DIR/miniconda/lib/libpython${PYVERSION}.dylib" "$PACKAGES_DIR/$PACKAGE/lib/liblldb.<LLVM>.dylib"
         if [ "$?" != "0" ]; then echo "Failed to fix libpython link in liblldb.dylib"; cleanup 1; fi
 
     else
