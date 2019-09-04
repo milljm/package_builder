@@ -42,7 +42,7 @@ Base class for building packages
     try:
       shutil.copytree(os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), self.__class__.__name__.lower()), \
                       os.path.join(self.temp_dir, self.__class__.__name__.lower()), symlinks=True, ignore=None)
-    except os.error, err:
+    except os.error as err:
       print(err)
       return False
     return True
