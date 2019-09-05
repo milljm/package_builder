@@ -132,7 +132,8 @@ Class for building Debian based packages
       time.sleep(1)
     f.seek(0)
     if package_builder.poll() != 0:
-      print('There was error building the redistributable package using dpkg:\n\n', f.read())
+      output = f.read()
+      print('There was error building the redistributable package using dpkg:\n\n', output.decode())
       return False
     else:
       shutil.move(os.path.join(self.temp_dir, 'deb.deb'), os.path.join(self.args.relative_path, self.redistributable_name))
@@ -156,7 +157,7 @@ Class for building RedHat based packages
     requirements = []
     our_requirements = ['gcc-*fortran', 'lib*11-devel']
     for index, item in enumerate(our_requirements):
-      rpm_process = subprocess.Popen(['rpm', '-qa', item], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      rpm_process = subprocess.Popen(['rpm', '-qa', item], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
       rpm_results = rpm_process.communicate()[0]
       if rpm_results:
         our_requirements[index] = '-'.join(rpm_results.split('-')[:2])
