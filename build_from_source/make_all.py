@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.7
+#!/usr/bin/env python3
 import os, sys, stat, argparse, platform, re, hashlib, tarfile, tempfile, subprocess, time, datetime, shutil
 from signal import SIGTERM
 from contrib import dag
