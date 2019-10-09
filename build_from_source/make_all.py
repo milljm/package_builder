@@ -52,7 +52,7 @@ class Job(object):
 
     def getResult(self):
         if self.process.poll():
-            print('\n', '-'*30, 'JOB FAILURE', '-'*30, '\n', self.name, '\n', self.__output.decode())
+            print('\n', '-'*30, 'JOB FAILURE', '-'*30, '\n', datetime.datetime.now().strftime("%H:%m"), self.name, '\n', self.__output.decode())
             return False
 
 # Create the Job class instances and store them as nodes in a DAG
