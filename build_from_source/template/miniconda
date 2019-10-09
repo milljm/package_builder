@@ -38,7 +38,9 @@ pre_run() {
     try_command 5 "PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda update conda --yes"
     try_command 5 "PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda install coverage reportlab mako numpy scipy scikit-learn h5py hdf5 scikit-image requests pyyaml matplotlib sympy pip lxml pyflakes pandas conda-build mock yaml pyqt qt swig anaconda-client setuptools --yes"
     try_command 5 "PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda install -c plotly plotly-orca --yes"
+    # Perform cleanup
     rm -f "$PACKAGES_DIR/$PACKAGE/.condarc"
+    rm -rf "$PACKAGES_DIR/$PACKAGE/.cph_tmp*"
 }
 post_run() {
     cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/$PACKAGE"

@@ -2,13 +2,13 @@
 #############
 ## Specifics
 ##
-DEP=(modules)
+DEP=(modules zlib expat)
 PACKAGE="<MESA>"
 
 #####
 # Set the operating system allowed to build this module
 #
-ARCH=(Linux)
+ARCH=(Linux Darwin)
 
 #####
 # Setting any of these variables to 'false' effectively skips that step
@@ -22,6 +22,7 @@ INSTALL='true'
 pre_run() {
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    module load moose-tools
     # Install temporary requirement for Mesa
     pip install --install-option="--prefix=`pwd`/mako-install-temp" mako
     export PYTHONPATH="`pwd`/mako-install-temp/lib/python2.7/site-packages:$PYTHONPATH"
