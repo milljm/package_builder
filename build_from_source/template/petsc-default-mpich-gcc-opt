@@ -26,15 +26,10 @@ clean_petsc() {
 }
 
 pre_run() {
-    if [ `uname` = "Darwin" ]; then
-        export PYTHON_BIN=python
-    else
-        export PYTHON_BIN=python2
-    fi
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
     module load advanced_modules cmake moose/.<MPICH>_<GCC>
-    CONFIGURE="$PYTHON_BIN ./configure \
+    CONFIGURE="./configure \
 --prefix=$PACKAGES_DIR/<PETSC_DEFAULT>/<MPICH>_<GCC>-opt \
 --download-hypre=1 \
 --with-ssl=0 \
@@ -49,7 +44,6 @@ pre_run() {
 --download-ptscotch=1 \
 --download-parmetis=1 \
 --download-superlu_dist=1 \
---download-mumps=1 \
 --download-scalapack=1 \
 --with-cxx-dialect=C++11 \
 -CC=mpicc -CXX=mpicxx -FC=mpif90 -F77=mpif77 -F90=mpif90 \
