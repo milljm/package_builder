@@ -56,11 +56,11 @@ set             BASE_PATH        "$PACKAGES_DIR"
 prepend-path    PATH             "\$BASE_PATH/$PACKAGE/bin"
 setenv          MPLBACKEND       qt5Agg
 EOF
-    # Fix swig3.0 being detected outside miniconda's path (Debian stretch causes LLVM to fail due to using system swig3.0 over swig)
-    if [ "`PATH="$PACKAGES_DIR/$PACKAGE/bin:$PATH" which swig3.0`" != "$PACKAGES_DIR/$PACKAGE/bin/swig3.0" ] && [ -f "$PACKAGES_DIR/$PACKAGE/bin/swig" ]; then
-        cd "$PACKAGES_DIR/$PACKAGE/bin"
-        ln -s swig swig3.0
-    fi
+    # Add some necessary symlinks so other packages correctly use Miniconda
+    cd "$PACKAGES_DIR/$PACKAGE/bin"
+    # I don't care about errors. If the file exists, then it's already working.
+    ln -s swig swig3.0
+    ln -s python3-config python-config
 }
 ##
 ## End Specifics
