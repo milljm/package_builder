@@ -25,11 +25,7 @@ pre_run() {
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
     module load moose/.<CLANG>
-    if [ `uname` = "Darwin" ]; then
-        CONFIGURE="../configure --prefix=$PACKAGES_DIR/<MPICH>/<CLANG> --enable-shared --enable-sharedlibs=clang --enable-fast=O3 --enable-debuginfo --enable-totalview --enable-two-level-namespace CC=clang CXX=clang++ FC=gfortran F77=gfortran F90='' CFLAGS='' CXXFLAGS='' FFLAGS='' FCFLAGS='' F90FLAGS='' F77FLAGS='' CPPFLAGS=\"-I`xcrun --show-sdk-path`/usr/include\" LDFLAGS=\"-I`xcrun --show-sdk-path`/usr/include\" --with-sysroot=`xcrun --show-sdk-path`"
-    else
-        CONFIGURE="../configure --prefix=$PACKAGES_DIR/<MPICH>/<CLANG> --enable-shared --enable-sharedlibs=clang --enable-fast=O3 --enable-debuginfo --enable-totalview --enable-two-level-namespace CC=clang CXX=clang++ FC=gfortran F77=gfortran F90='' CFLAGS='' CXXFLAGS='' FFLAGS='' FCFLAGS='' F90FLAGS='' F77FLAGS=''"
-    fi
+    CONFIGURE="../configure --prefix=$PACKAGES_DIR/<MPICH>/<CLANG> --enable-shared --enable-sharedlibs=clang --enable-fast=O3 --enable-debuginfo --enable-totalview --enable-two-level-namespace CC=clang CXX=clang++ FC=gfortran F77=gfortran F90='' CFLAGS='' CXXFLAGS='' FFLAGS='' FCFLAGS='' F90FLAGS='' F77FLAGS=''"
 }
 post_run() {
     cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<MPICH>_<CLANG>"

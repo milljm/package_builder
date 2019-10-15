@@ -74,7 +74,6 @@ pre_run() {
           -DCMAKE_INSTALL_RPATH:STRING="$PACKAGES_DIR/$PACKAGE/lib" \
           -DCMAKE_INSTALL_NAME_DIR:STRING="$PACKAGES_DIR/$PACKAGE/lib" \
           -DCMAKE_MACOSX_RPATH:BOOL=ON \
-          -DCMAKE_OSX_SYSROOT=`xcrun --show-sdk-path` \
           -DCLANG_DEFAULT_OPENMP_RUNTIME=libomp \
           -DLLVM_BUILD_EXTERNAL_COMPILER_RT=ON \
           -DLLVM_ENABLE_RTTI=ON \
