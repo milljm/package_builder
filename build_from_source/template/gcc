@@ -30,9 +30,9 @@ pre_run() {
     # neccessary pre-requisites.
 
     if [ `uname` = 'Darwin' ]; then
-        CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --disable-multilib --enable-languages=c,c++,fortran,jit --enable-checking=release --enable-host-shared --with-pic --with-system-zlib --disable-nls --with-native-system-header-dir=/usr/include --with-sysroot=`xcrun --show-sdk-path`"
+        CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --disable-multilib --enable-languages=c,c++,fortran --enable-checking=release --enable-host-shared --with-pic --with-system-zlib --disable-nls --with-native-system-header-dir=/usr/include --with-sysroot=`xcrun --show-sdk-path`"
     else
-        CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --disable-multilib --enable-languages=c,c++,fortran,jit --enable-checking=release --enable-host-shared --with-pic"
+        CONFIGURE="../<GCC>/configure --prefix=$PACKAGES_DIR/<GCC> --disable-multilib --enable-languages=c,c++,fortran --enable-checking=release --enable-host-shared --with-pic"
     fi
     mkdir ../gcc_build; cd ../gcc_build
 
