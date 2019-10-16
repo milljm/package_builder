@@ -12,7 +12,8 @@ global_lock = threading.Lock()
 _mac_version_to_name = {'10.11' : 'elcapitan',
                         '10.12' : 'sierra',
                         '10.13' : 'highsierra',
-                        '10.14' : 'mojave'}
+                        '10.14' : 'mojave',
+                        '10.15' : 'catalina'}
 
 class Job(object):
     def __init__(self, args, package_file=None, name=None):

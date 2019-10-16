@@ -54,7 +54,24 @@ pre_run() {
     custom_extract
 
     mkdir "$1/llvm-build"; cd "$1/llvm-build"
-    if [ `uname` != "Darwin" ]; then
+    if [ `uname` = "Darwin" ]; then
+        CC=clang CXX=clang++ cmake -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
+          -DCMAKE_INSTALL_RPATH:STRING="$PACKAGES_DIR/$PACKAGE/lib" \
+          -DCMAKE_INSTALL_NAME_DIR:STRING="$PACKAGES_DIR/$PACKAGE/lib" \
+          -DCMAKE_MACOSX_RPATH:BOOL=ON \
+          -DCLANG_DEFAULT_OPENMP_RUNTIME=libomp \
+          -DLLVM_BUILD_EXTERNAL_COMPILER_RT=ON \
+          -DLLVM_ENABLE_RTTI=ON \
+          -DCMAKE_BUILD_TYPE="Release" \
+          -DPYTHON_EXECUTABLE=`which python3` \
+          -DLLVM_TARGETS_TO_BUILD="X86" \
+          -DDEFAULT_SYSROOT=`xcrun --show-sdk-path` \
+          -DLIBCXXABI_SYSROOT=`xcrun --show-sdk-path` \
+          -DLIBCXX_SYSROOT=`xcrun --show-sdk-path` \
+          -Wno-dev \
+          ../llvm
+
+    else
         CC=gcc CXX=g++ cmake -DCMAKE_C_COMPILER="$PACKAGES_DIR/<GCC>/bin/gcc" \
           -DCMAKE_CXX_COMPILER="$PACKAGES_DIR/<GCC>/bin/g++" \
           -DGCC_INSTALL_PREFIX="$PACKAGES_DIR/<GCC>" \
@@ -63,19 +80,6 @@ pre_run() {
           -DCMAKE_INSTALL_RPATH:STRING="$PACKAGES_DIR/$PACKAGE/lib" \
           -DCMAKE_BUILD_WITH_INSTALL_RPATH=1 \
           -DLLVM_ENABLE_ASSERTIONS=ON \
-          -DLLVM_ENABLE_RTTI=ON \
-          -DCMAKE_BUILD_TYPE="Release" \
-          -DPYTHON_EXECUTABLE=`which python3` \
-          -DLLVM_TARGETS_TO_BUILD="X86" \
-          -Wno-dev \
-          ../llvm
-    else
-        CC=clang CXX=clang++ cmake -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
-          -DCMAKE_INSTALL_RPATH:STRING="$PACKAGES_DIR/$PACKAGE/lib" \
-          -DCMAKE_INSTALL_NAME_DIR:STRING="$PACKAGES_DIR/$PACKAGE/lib" \
-          -DCMAKE_MACOSX_RPATH:BOOL=ON \
-          -DCLANG_DEFAULT_OPENMP_RUNTIME=libomp \
-          -DLLVM_BUILD_EXTERNAL_COMPILER_RT=ON \
           -DLLVM_ENABLE_RTTI=ON \
           -DCMAKE_BUILD_TYPE="Release" \
           -DPYTHON_EXECUTABLE=`which python3` \
