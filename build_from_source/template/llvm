@@ -66,8 +66,6 @@ pre_run() {
           -DPYTHON_EXECUTABLE=`which python3` \
           -DLLVM_TARGETS_TO_BUILD="X86" \
           -DDEFAULT_SYSROOT=`xcrun --show-sdk-path` \
-          -DLIBCXXABI_SYSROOT=`xcrun --show-sdk-path` \
-          -DLIBCXX_SYSROOT=`xcrun --show-sdk-path` \
           -Wno-dev \
           ../llvm
 
