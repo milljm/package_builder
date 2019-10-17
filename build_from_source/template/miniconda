@@ -62,6 +62,11 @@ EOF
         cd "$PACKAGES_DIR/$PACKAGE/bin"
         ln -s swig swig3.0
     fi
+    # Fix missing symlink to python3-config (python --> python3, but python-config --> /usr/bin/python-config (which might be python2))
+    if [ "`PATH="$PACKAGES_DIR/$PACKAGE/bin:$PATH" which python-config`" != "$PACKAGES_DIR/$PACKAGE/bin/python-config" ] && [ -f "$PACKAGES_DIR/$PACKAGE/bin/python3-config" ]; then
+        cd "$PACKAGES_DIR/$PACKAGE/bin"
+        ln -s python3-config python-config
+    fi
 }
 ##
 ## End Specifics

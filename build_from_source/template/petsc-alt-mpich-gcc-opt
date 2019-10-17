@@ -31,28 +31,19 @@ pre_run() {
     module load advanced_modules cmake moose/.<MPICH>_<GCC>
     CONFIGURE="./configure \
 --prefix=$PACKAGES_DIR/<PETSC_ALT>/<MPICH>_<GCC>-opt \
---download-hypre=1 \
+--with-debugging=0 \
 --with-ssl=0 \
---with-debugging=no \
 --with-pic=1 \
+--with-openmp=1 \
 --with-shared-libraries=1 \
---with-cc=mpicc \
---with-cxx=mpicxx \
---with-fc=mpif90 \
---download-metis=1 \
---download-parmetis=1 \
---download-ptscotch=1 \
---download-fblaslapack=1 \
---download-superlu_dist=1 \
---download-scalapack=1 \
 --with-cxx-dialect=C++11 \
--CC=mpicc -CXX=mpicxx -FC=mpif90 -F77=mpif77 -F90=mpif90 \
--CFLAGS='-fPIC -fopenmp' \
--CXXFLAGS='-fPIC -fopenmp' \
--FFLAGS='-fPIC -fopenmp' \
--FCFLAGS='-fPIC -fopenmp' \
--F90FLAGS='-fPIC -fopenmp' \
--F77FLAGS='-fPIC -fopenmp'"
+--download-hypre=1 \
+--download-fblaslapack=1 \
+--download-metis=1 \
+--download-ptscotch=1 \
+--download-parmetis=1 \
+--download-superlu_dist=1 \
+--download-scalapack=1"
 
     if [ `uname` = "Darwin" ]; then
 	try_command 3 "clean_petsc; configure; make MAKE_NP=$MOOSE_JOBS PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-darwin-c-opt all; make PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=arch-darwin-c-opt install"
