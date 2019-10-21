@@ -185,9 +185,14 @@ EOF
     if [ `uname` = "Darwin" ]; then
         # This is not the python we originally found during cmake configure. So change it back!
         PYVERSION=$(python3 -c 'import sys; print(str(sys.version_info[0])+"."+str(sys.version_info[1]))')
-        install_name_tool -change "@rpath/libpython${PYVERSION}m.dylib" "$PACKAGES_DIR/miniconda/lib/libpython${PYVERSION}m.dylib" "$PACKAGES_DIR/$PACKAGE/lib/liblldb.<LLVM>.dylib"
-        if [ "$?" != "0" ]; then echo "Failed to fix libpython link in liblldb.dylib"; cleanup 1; fi
-
+        cd "$PACKAGES_DIR/$PACKAGE/lib"
+        for rfile in `ls`; do
+            install_name_tool -change "@rpath/libpython${PYVERSION}m.dylib" "$PACKAGES_DIR/miniconda/lib/libpython${PYVERSION}m.dylib" "$rfile"
+        done
+        cd "$PACKAGES_DIR/$PACKAGE/bin"
+        for rfile in `ls`; do
+            install_name_tool -change "@rpath/libpython${PYVERSION}m.dylib" "$PACKAGES_DIR/miniconda/lib/libpython${PYVERSION}m.dylib" "$rfile"
+        done
     else
         # Create link to drop-in replacement lld (does not yet work on Darwin machines)
         cd "$PACKAGES_DIR/$PACKAGE/bin"; ln -s lld ld
