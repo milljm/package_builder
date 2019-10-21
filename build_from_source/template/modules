@@ -24,9 +24,9 @@ pre_run() {
 	rm -rf "$PACKAGES_DIR/Modules"
     fi
     if [ `uname` = "Darwin" ]; then
-        CONFIGURE="./configure --prefix=$PACKAGES_DIR --with-tcl=$PACKAGES_DIR/<TCL>/lib"
+        CONFIGURE="./configure --prefix=$PACKAGES_DIR/Modules --with-tcl=$PACKAGES_DIR/<TCL>/lib --modulefilesdir=$PACKAGES_DIR/Modules/<MODULES>/modulefiles"
     else
-        CONFIGURE="CPPFLAGS=-DUSE_INTERP_ERRORLINE ./configure --prefix=$PACKAGES_DIR"
+        CONFIGURE="CPPFLAGS=-DUSE_INTERP_ERRORLINE ./configure --prefix=$PACKAGES_DIR/Modules --modulefilesdir=$PACKAGES_DIR/Modules/<MODULES>/modulefiles"
     fi
 }
 post_run() {

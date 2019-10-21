@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.7
+#!/usr/bin/env python3
 import os, sys, re, argparse, shlex, shutil, subprocess, tempfile, time
 
 class PackageCreator:
@@ -240,50 +240,40 @@ class PKG(PackageCreator):
 Class for building Macintosh Packages
 """
   def prepare_area(self):
+    REPLACE_STRINGS = {'<TEMP_DIR>' : os.path.join(self.temp_dir, 'pkg/OSX'),
+                      '<MAC_VERSION>' : self.args.version,
+                      '<MAC_VERSION_NUM>' : self.args.version_num,
+                      '<REDISTRIBUTABLE_FILE>' : self.redistributable_name,
+                      '<PACKAGES_DIR>' : self.args.packages_dir,
+                      '<REDISTRIBUTABLE_VERSION>' : 'Package version: %s' % (str(self.redistributable_version)),
+                      }
+
     create_template = PackageCreator.prepare_area(self)
     if create_template:
-      for directory, directories, files in os.walk(os.path.join(self.temp_dir, 'pkg/OSX.pmdoc')):
-        for xml_file in files:
-          with open(os.path.join(self.temp_dir, 'pkg/OSX.pmdoc', xml_file), 'r+', encoding='utf-8') as tmp_file:
-            xml_string = tmp_file.read()
+      for directory, directories, files in os.walk(os.path.join(self.temp_dir, 'pkg')):
+        for afile in files:
+          with open(os.path.join(directory, afile), 'r+', encoding='utf-8') as tmp_file:
+            try:
+              xml_string = tmp_file.read()
+            # A data file (mose likely the background png)
+            except UnicodeDecodeError:
+              continue
+            for k, v in REPLACE_STRINGS.items():
+              xml_string = xml_string.replace(k, v)
+            for item_list in self.version_template.items():
+              xml_string = xml_string.replace('<' + item_list[0] + '>', item_list[1])
             tmp_file.truncate(0)
             tmp_file.seek(0)
-            xml_string = xml_string.replace('<TEMP_DIR>', os.path.join(self.temp_dir, 'pkg/OSX'))
-            xml_string = xml_string.replace('<MAC_VERSION>', self.args.version)
-            xml_string = xml_string.replace('<MAC_VERSION_NUM>', self.args.version_num)
-            xml_string = xml_string.replace('<REDISTRIBUTABLE_FILE>', self.redistributable_name)
             tmp_file.write(xml_string)
-
-      # Iterate through the all control files that redistributable package uses during installation and
-      # make some path/version specific changes based on machine type
-      for html_file in ['README_Panel.html', 'Welcome_Panel.html', 'cleanup_post.sh', 'payload_post.sh', 'common_post.sh', 'environment_post.sh', 'icecream_post.sh', 'lldb_codesign.sh']:
-        with open(os.path.join(self.temp_dir, 'pkg/OSX', html_file), 'r+', encoding='utf-8') as tmp_file:
-          html_str = tmp_file.read()
-          tmp_file.truncate(0)
-          tmp_file.seek(0)
-
-          # If we are only building a package for OS X El Capitan (10.11), set a special
-          # switch that allows the installer to create a symbolic link to our openMP
-          # implementation (DYLD_LIBRARY_PATH issue)
-          if html_file == 'common_post.sh' and self.args.version in _need_symbolic_link:
-            html_str = html_str.replace('<BOOL>', '1')
-          else:
-            html_str = html_str.replace('<BOOL>', '0')
-
-          html_str = html_str.replace('<PACKAGES_DIR>', self.args.packages_dir)
-          html_str = html_str.replace('<REDISTRIBUTABLE_VERSION>', 'Package version: ' + str(self.redistributable_version))
-
-          for item_list in self.version_template.items():
-            html_str = html_str.replace('<' + item_list[0] + '>', item_list[1])
-
-          tmp_file.write(html_str)
       return True
-    return False
+
+  def create_tarball(self):
+    return True
 
   def create_redistributable(self):
-    os.chdir(self.temp_dir)
-    print('Building redistributable using PackageMaker... This can take a long time')
-    package_builder = subprocess.Popen([self.args.package_maker, '--doc', os.path.join(self.temp_dir, 'pkg/OSX.pmdoc')],
+    os.chdir(os.path.join(self.temp_dir, 'pkg'))
+    print('Building redistributable using pkgbuild... This can take a long time')
+    package_builder = subprocess.Popen(['./build_mac_package.sh', self.args.packages_dir],
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE,
                                        shell=False)
@@ -419,19 +409,9 @@ def verifyArgs(args):
       'See --help for supported package types')
     fail = True
 
-  # Add _package_maker to argparser namespace for easy access
-  args.package_maker = _package_maker
-
   # Add absolute path location of execution script to
   # argparser namespace for easy access
   args.relative_path = os.path.abspath(os.path.dirname(sys.argv[0]))
-
-  # Check to see if Package Maker even exists. Its the
-  # point to this script after all
-  if args.package_type == PKG and not os.path.exists(args.package_maker):
-    print('* Error: Package Maker does not appear to be installed in its default\n',
-          'location of:\n', args.package_maker, '\n')
-    fail = True
 
   # Is what we are trying to distribute available?
   if args.packages_dir:
@@ -464,9 +444,6 @@ def parseArguments(args=None):
 # (_base_name_system-release-version_x86_64.deb)
 _base_name = 'moose-environment'
 
-### PackageMaker location (default on OS X)
-_package_maker = '/Applications/PackageMaker.app/Contents/MacOS/PackageMaker'
-
 ### List of OS X versions that need a symbolic link to openmp
 _need_symbolic_link = ['']
 
@@ -479,7 +456,8 @@ _pathetic_dict = { RPM : ['FEDORA', 'SUSE', 'CENTOS', 'RHEL'],
 _mac_version_to_name = {'10.11' : 'elcapitan',
                         '10.12' : 'sierra',
                         '10.13' : 'highsierra',
-                        '10.14' : 'mojave'}
+                        '10.14' : 'mojave',
+                        '10.15' : 'catalina'}
 
 if __name__ == '__main__':
   args = parseArguments()

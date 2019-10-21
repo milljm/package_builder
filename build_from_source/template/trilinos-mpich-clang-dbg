@@ -198,7 +198,7 @@ module load moose-tools
 
 EOF
 
-    cd "$PACKAGES_DIR/Modules/3.2.10/mpich_clang"
+    cd "$PACKAGES_DIR/Modules/<MODULES>/mpich_clang"
     rm <TRILINOS>-dbg
     ln -s ../modulefiles/moose/.<MPICH>_<CLANG>_<TRILINOS>-dbg <TRILINOS>-dbg
 
