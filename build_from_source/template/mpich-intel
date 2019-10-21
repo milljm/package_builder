@@ -23,7 +23,7 @@ INSTALL='true'
 re_evaluate(){
     pause ${FUNCNAME[0]} "Re-Evaluate variables"
     unset MODULEPATH
-    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    source "$PACKAGES_DIR/Modules/init/bash"
     export MODULEPATH="$MODULEPATH:<WITH_INTEL>/modulefiles"
     module load intel
     export INTEL_VERSION=${INTEL_VERSION-`icc --version | grep ICC | perl -pe 's|.* (\d+)\..*|\1|'`}

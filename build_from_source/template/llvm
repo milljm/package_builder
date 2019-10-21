@@ -44,7 +44,7 @@ custom_extract()
 pre_run() {
     if [ -d "$PACKAGES_DIR/$PACKAGE" ]; then rm -rf "$PACKAGES_DIR/$PACKAGE"; fi
     unset MODULEPATH
-    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    source "$PACKAGES_DIR/Modules/init/bash"
     module load advanced_modules miniconda cmake gcc
 
     # !!! NOTE: Order is important !!!

@@ -21,7 +21,7 @@ INSTALL='true'
 
 pre_run() {
     unset MODULEPATH
-    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    source "$PACKAGES_DIR/Modules/init/bash"
     module load moose-tools
     CONFIGURE="PATH=$PACKAGES_DIR/<PCRE>/bin:$PACKAGES_DIR/<GETTEXT>/bin:$PATH LDFLAGS=-L$PACKAGES_DIR/<GETTEXT>/lib CPPFLAGS=-I$PACKAGES_DIR/<GETTEXT>/include ./configure --prefix=$PACKAGES_DIR/<GLIB>"
 }

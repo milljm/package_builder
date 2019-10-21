@@ -21,7 +21,7 @@ INSTALL='true'
 
 pre_run() {
     unset MODULEPATH
-    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    source "$PACKAGES_DIR/Modules/init/bash"
     module load advanced_modules autotools gcc moose-tools
     export CC=gcc CXX=g++
 }

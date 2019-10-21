@@ -29,7 +29,7 @@ pre_run() {
     fi
 
     unset MODULEPATH
-    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    source "$PACKAGES_DIR/Modules/init/bash"
     module load advanced_modules autotools
 
     for ICECREAM_PACKAGE in ${ICECREAM_PACKAGES[*]}; do

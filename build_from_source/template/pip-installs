@@ -22,7 +22,7 @@ INSTALL='false'
 pre_run() {
     cd $1
     unset MODULEPATH
-    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    source "$PACKAGES_DIR/Modules/init/bash"
     for which_conda in ${DEP[*]}; do
 	module purge
 	module load advanced_modules $which_conda

@@ -28,7 +28,7 @@ pre_run() {
     mkdir -p ${PACKAGES_DIR}_intel/modulefiles
     rm -f "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.intel"
     unset MODULEPATH
-    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    source "$PACKAGES_DIR/Modules/init/bash"
     export MODULEPATH="$MODULEPATH:<WITH_INTEL>/modulefiles"
     module load intel
     export INTEL_VERSION=${INTEL_VERSION-`icc --version | grep ICC | perl -pe 's|.* (\d+)\..*|\1|'`}
