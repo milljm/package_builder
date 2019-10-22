@@ -41,22 +41,22 @@ post_run() {
     go get -u github.com/google/pprof
     if [ "$?" != "0" ]; then echo "failed to build pprof"; cleanup 1; fi
 
-    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/adv_modules/gperf-tools"
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<GPERFTOOLS>"
 #%Module1.0#####################################################################
 ##
 ## gperf-tools modulefile
 ##
 ##
-##
 set          BASE_PATH         "$PACKAGES_DIR"
-prepend-path PATH              "\$BASE_PATH/$PACKAGE/bin"
-prepend-path MANPATH           "\$BASE_PATH/$PACKAGE/share/man"
-prepend-path LIBRARY_PATH      "\$BASE_PATH/$PACKAGE/lib"
-prepend-path CPATH             "\$BASE_PATH/$PACKAGE/include"
+prepend-path PATH              "\$BASE_PATH/<GPERFTOOLS>/bin"
+prepend-path MANPATH           "\$BASE_PATH/<GPERFTOOLS>/share/man"
+prepend-path LIBRARY_PATH      "\$BASE_PATH/<GPERFTOOLS>/lib"
+prepend-path CPATH             "\$BASE_PATH/<GPERFTOOLS>/include"
 prepend-path PKG_CONFIG_PATH   "\$BASE_PATH/<GPERFTOOLS>/lib/pkgconfig"
+setenv       GPERF_DIR         "\$BASE_PATH/<GPERFTOOLS>"
 
 if { [uname sysname] != "Darwin" } {
-  prepend-path LD_LIBRARY_PATH   "\$BASE_PATH/$PACKAGE/lib:\$BASE_PATH/<LIBUNWIND>/lib"
+  prepend-path LD_LIBRARY_PATH   "\$BASE_PATH/<GPERFTOOLS>/lib:\$BASE_PATH/<LIBUNWIND>/lib"
   prepend-path MANPATH           "\$BASE_PATH/<LIBUNWIND>/share/man"
   prepend-path LIBRARY_PATH      "\$BASE_PATH/<LIBUNWIND>/lib"
   prepend-path CPATH             "\$BASE_PATH/<LIBUNWIND>/include"

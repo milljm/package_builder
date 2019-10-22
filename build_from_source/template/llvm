@@ -20,61 +20,41 @@ CONFIGURE="false"
 BUILD='true'
 INSTALL='true'
 
-custom_extract()
-{
-    for LLVM_PACKAGE in ${LLVM_PACKAGES[*]}; do
-      tar -xf "$DOWNLOAD_DIR/$LLVM_PACKAGE-<LLVM>.src.tar.xz" -C .
-      if [ $? -ne 0 ]; then echo 'Failed to extract '$LLVM_PACKAGE; cleanup 1; fi
-      if [ $LLVM_PACKAGE = 'cfe' ]; then
-          mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/clang
-      elif [ $LLVM_PACKAGE = 'lld' ]; then
-          mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/lld
-      elif [ $LLVM_PACKAGE = 'lldb' ]; then
-          mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/lldb
-      elif [ $LLVM_PACKAGE = 'clang-tools-extra' ]; then
-          mv $LLVM_PACKAGE-<LLVM>.src llvm/tools/clang/tools/extra
-      elif [ $LLVM_PACKAGE = 'llvm' ]; then
-          mv $LLVM_PACKAGE-<LLVM>.src $LLVM_PACKAGE
-      else
-          mv $LLVM_PACKAGE-<LLVM>.src llvm/projects/$LLVM_PACKAGE
-      fi
-    done
-}
-
 pre_run() {
     if [ -d "$PACKAGES_DIR/$PACKAGE" ]; then rm -rf "$PACKAGES_DIR/$PACKAGE"; fi
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/init/bash"
-    module load advanced_modules miniconda cmake gcc
-
-    # !!! NOTE: Order is important !!!
-    # Extract/Move LLVM, Clang, LLDB, Clang-Extras, compiler-rt, libcxx/abi, openmp
-    cd "$1"
-    LLVM_PACKAGES=(llvm cfe lld clang-tools-extra compiler-rt libcxx libcxxabi openmp)
-    custom_extract
-
+    module load advanced_modules miniconda cmake
+    git clone git@github.com:llvm/llvm-project.git
+    cd llvm-project
+    git checkout llvmorg-<LLVM>
+    if [ $? -ne 0 ]; then echo 'Failed to clone LLVM project'; cleanup 1; fi
     mkdir "$1/llvm-build"; cd "$1/llvm-build"
+
     if [ `uname` = "Darwin" ]; then
-        CC=clang CXX=clang++ cmake -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
-          -DCMAKE_INSTALL_RPATH:STRING="$PACKAGES_DIR/$PACKAGE/lib" \
-          -DCMAKE_INSTALL_NAME_DIR:STRING="$PACKAGES_DIR/$PACKAGE/lib" \
-          -DCMAKE_MACOSX_RPATH:BOOL=ON \
-          -DCLANG_DEFAULT_OPENMP_RUNTIME=libomp \
-          -DLLVM_BUILD_EXTERNAL_COMPILER_RT=ON \
-          -DLLVM_ENABLE_RTTI=ON \
-          -DCMAKE_BUILD_TYPE="Release" \
-          -DPYTHON_EXECUTABLE=`which python3` \
-          -DLLVM_TARGETS_TO_BUILD="X86" \
-          -DDEFAULT_SYSROOT=`xcrun --show-sdk-path` \
-          -Wno-dev \
-          ../llvm
+        # NOTE: In order for code-signing to work, the administrator of said build machines must first
+        # execute ../llvm-project/lldb/scripts/macos-setup-codesign.sh (be sure to modify script to name
+        # certificate to: moose-codesign)
+        cmake -G "Unix Makefiles" \
+              -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
+              -DLLVM_ENABLE_PROJECTS="clang;lldb;libcxx;libcxxabi;openmp;clang-tools-extra;lld;compiler-rt" \
+              -DCMAKE_INSTALL_NAME_DIR:STRING="$PACKAGES_DIR/$PACKAGE/lib" \
+              -DCMAKE_INSTALL_RPATH:STRING="$PACKAGES_DIR/$PACKAGE/lib" \
+              -DCMAKE_MACOSX_RPATH:BOOL=ON \
+              -DLLDB_CODESIGN_IDENTITY="moose_codesign" \
+              -DPYTHON_EXECUTABLE=`which python3` \
+              -DDEFAULT_SYSROOT=`xcrun --show-sdk-path` \
+              -Wno-dev \
+              ../llvm-project/llvm
 
     else
-        CC=gcc CXX=g++ cmake -DCMAKE_C_COMPILER="$PACKAGES_DIR/<GCC>/bin/gcc" \
+        module load gcc
+        CC=gcc CXX=g++ cmake -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
+          -DCMAKE_C_COMPILER="$PACKAGES_DIR/<GCC>/bin/gcc" \
+          -DLLVM_ENABLE_PROJECTS="clang;lldb;libcxx;libcxxabi;openmp;clang-tools-extra;lld;compiler-rt" \
           -DCMAKE_CXX_COMPILER="$PACKAGES_DIR/<GCC>/bin/g++" \
           -DGCC_INSTALL_PREFIX="$PACKAGES_DIR/<GCC>" \
           -DCMAKE_CXX_LINK_FLAGS="-L$PACKAGES_DIR/<GCC>/lib64 -Wl,-rpath,$PACKAGES_DIR/<GCC>/lib64" \
-          -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
           -DCMAKE_INSTALL_RPATH:STRING="$PACKAGES_DIR/$PACKAGE/lib" \
           -DCMAKE_BUILD_WITH_INSTALL_RPATH=1 \
           -DLLVM_ENABLE_ASSERTIONS=ON \
@@ -83,7 +63,7 @@ pre_run() {
           -DPYTHON_EXECUTABLE=`which python3` \
           -DLLVM_TARGETS_TO_BUILD="X86" \
           -Wno-dev \
-          ../llvm
+          ../llvm-project/llvm
     fi
     if [ "$?" != "0" ]; then echo "Failed to configure LLVM"; cleanup 1; fi
 }
@@ -132,55 +112,6 @@ EOF
     fi
     ln -s ../modulefiles/moose/.<CLANG> clang
     cp -R "$1/llvm/tools/clang/bindings" "$PACKAGES_DIR/$PACKAGE/"
-
-    ##### BUILD LLVM Debugger #####
-    ## With LLVM built, we can now properly build LLDB
-    module purge
-    module load advanced_modules miniconda cmake clang
-    # check if we are code signing LLDB
-    if [ "$CODESIGN_NAME" = "" ]; then
-        CODESIGN_NAME=''
-    else
-        mkdir -p "$PACKAGES_DIR/$PACKAGE/codesign"
-        cp "$CODESIGN_CERT" "$PACKAGES_DIR/$PACKAGE/codesign/moose_codesign.cert"
-        echo "$CODESIGN_NAME" > "$PACKAGES_DIR/$PACKAGE/codesign/codesign_name"
-    fi
-    cd $1
-    tar -xf "$DOWNLOAD_DIR/lldb-<LLVM>.src.tar.xz" -C .
-    mv lldb-<LLVM>.src lldb
-    tar -xf "$DOWNLOAD_DIR/llvm-<LLVM>.src.tar.xz" -C .
-    mv llvm-<LLVM>.src lldb/llvm
-    tar -xf "$DOWNLOAD_DIR/cfe-<LLVM>.src.tar.xz" -C .
-    mv cfe-<LLVM>.src lldb/llvm/tools/clang
-    mkdir "$1/lldb-build"; cd "$1/lldb-build"
-
-    # Build the LLVM Debugger
-    if [ `uname` = "Darwin" ]; then
-        CC=clang CXX=clang++ cmake -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
-          -DLLDB_CODESIGN_IDENTITY="$CODESIGN_NAME" \
-          -DPYTHON_EXECUTABLE=`which python3` \
-          -Wno-dev \
-          ../lldb
-    else
-        CC=clang CXX=clang++ cmake -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
-          -DPYTHON_EXECUTABLE=`which python3` \
-          -Wno-dev \
-          ../lldb
-
-        # No kidding. lldb links correctly if I supply the CXX flags after the first config attempt.
-        CC=clang CXX=clang++ cmake -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
-          -DPYTHON_EXECUTABLE=`which python3` \
-          -Wno-dev \
-          -DCMAKE_CXX_FLAGS="-L$PACKAGES_DIR/miniconda/lib -Wl,-rpath,$PACKAGES_DIR/miniconda/lib" \
-          ../lldb
-
-    fi
-    if [ "$?" != "0" ]; then echo "Failed to configure LLDB"; cleanup 1; fi
-    make -j $MOOSE_JOBS
-    if [ "$?" != "0" ]; then echo "Failed to build LLDB"; cleanup 1; fi
-    make install
-    if [ "$?" != "0" ]; then echo "Failed to install LLDB"; cleanup 1; fi
-
     # We have to fix serveral things either Cmake or LLDB is doing wrong when building on Darwin machines
     if [ `uname` = "Darwin" ]; then
         # This is not the python we originally found during cmake configure. So change it back!
@@ -197,7 +128,6 @@ EOF
         # Create link to drop-in replacement lld (does not yet work on Darwin machines)
         cd "$PACKAGES_DIR/$PACKAGE/bin"; ln -s lld ld
     fi
-
     # Create link to clang-format lisp
     cd "$PACKAGES_DIR"; ln -s "$PACKAGES_DIR/$PACKAGE/share/clang/clang-format.el" .
 }
