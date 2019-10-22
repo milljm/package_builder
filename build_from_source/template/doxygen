@@ -23,29 +23,6 @@ pre_run() {
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/init/bash"
     module load advanced_modules cmake
-
-    # Apply Mojave patch (Xcode 10 deprecated -mmacosx-version-min=10.5)
-    # Mojave is having issues building Doxygen (can not find <string> include)
-    if [ `uname` = 'Darwin' ] && [ `uname -r | cut -d. -f 1` = '18' ]; then
-        module load gcc
-        export CC=gcc CXX=g++
-        cat << EOF > mojave.patch
---- a/CMakeLists.txt    2017-12-25 09:26:10.000000000 -0700
-+++ b/CMakeLists.txt    2018-09-26 07:18:18.000000000 -0600
-@@ -36,7 +36,7 @@
-        set(sqlite3  "1" CACHE INTERNAL "used in settings.h")
- endif()
- 
--set(MACOS_VERSION_MIN 10.5)
-+set(MACOS_VERSION_MIN 10.6)
- if (use_libclang)
-        set(clang    "1" CACHE INTERNAL "used in settings.h")
-         find_package(LLVM CONFIG REQUIRED)
-EOF
-        patch -p1 < mojave.patch
-        if [ "$?" != "0" ]; then echo "failed to patch doxygen"; cleanup 1; fi
-    fi
-
     mkdir build; cd build
     CONFIGURE="cmake -DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/<DOXYGEN> -Wno-dev .."
 }

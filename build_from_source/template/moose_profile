@@ -29,6 +29,10 @@ post_run() {
     cat <<EOF > "$PACKAGES_DIR/environments/moose_profile"
 #!/bin/bash
 ### Modules Source ###
+
+# Silence the module system a bit
+export MODULES_VERBOSITY=concise
+
 if [ -n "\$MODULESHOME" ] && [ \$(echo \$MODULEPATH | grep -c <PACKAGES_DIR>/Modules) -le 0 ]; then
   export MODULEPATH="\$MODULEPATH:<PACKAGES_DIR>/Modules/<MODULES>/modulefiles"
 else
