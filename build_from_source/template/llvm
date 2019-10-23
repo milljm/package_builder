@@ -112,8 +112,11 @@ EOF
         rm -f clang
     fi
     ln -s ../modulefiles/moose/.<CLANG> clang
-    cp -R "$1/llvm/tools/clang/bindings" "$PACKAGES_DIR/$PACKAGE/"
-    # We have to fix serveral things either Cmake or LLDB is doing wrong when building on Darwin machines
+    cp -R "$1/llvm-project/llvm/clang/bindings" "$PACKAGES_DIR/$PACKAGE/"
+
+    # Create link to clang-format lisp
+    cd "$PACKAGES_DIR"; ln -s "$PACKAGES_DIR/$PACKAGE/share/clang/clang-format.el" .
+
     if [ `uname` = "Darwin" ]; then
         # This is not the python we originally found during cmake configure. So change it back!
         PYVERSION=$(python3 -c 'import sys; print(str(sys.version_info[0])+"."+str(sys.version_info[1]))')
@@ -125,12 +128,19 @@ EOF
         for rfile in `ls`; do
             install_name_tool -change "@rpath/libpython${PYVERSION}m.dylib" "$PACKAGES_DIR/miniconda/lib/libpython${PYVERSION}m.dylib" "$rfile"
         done
+
+        # check if we are code signing LLDB
+        if [ "$CODESIGN_NAME" = "" ]; then
+            CODESIGN_NAME=''
+        else
+            mkdir -p "$PACKAGES_DIR/$PACKAGE/codesign"
+            cp "$CODESIGN_CERT" "$PACKAGES_DIR/$PACKAGE/codesign/moose_codesign.cert"
+            echo "$CODESIGN_NAME" > "$PACKAGES_DIR/$PACKAGE/codesign/codesign_name"
+        fi
     else
         # Create link to drop-in replacement lld (does not yet work on Darwin machines)
         cd "$PACKAGES_DIR/$PACKAGE/bin"; ln -s lld ld
     fi
-    # Create link to clang-format lisp
-    cd "$PACKAGES_DIR"; ln -s "$PACKAGES_DIR/$PACKAGE/share/clang/clang-format.el" .
 }
 ##
 ## End Specifics
