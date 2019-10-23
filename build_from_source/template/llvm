@@ -44,6 +44,7 @@ pre_run() {
               -DLLDB_CODESIGN_IDENTITY="moose_codesign" \
               -DPYTHON_EXECUTABLE=`which python3` \
               -DDEFAULT_SYSROOT=`xcrun --show-sdk-path` \
+              -DCMAKE_BUILD_TYPE="Release" \
               -Wno-dev \
               ../llvm-project/llvm
 
