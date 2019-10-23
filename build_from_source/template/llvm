@@ -25,6 +25,10 @@ pre_run() {
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/init/bash"
     module load advanced_modules miniconda cmake
+    PYVERSION=$(python3 -c 'import sys; print(str(sys.version_info[0])+"."+str(sys.version_info[1]))')
+    PYTHON_INCLUDE=$(python-config --include | sed 's|^[^/]*/|/|g' | cut -d\  -f1)
+    PYTHON_LIBRARY="$(python-config --prefix)/lib/libpython${PYVERSION}m.dylib"
+
     git clone git@github.com:llvm/llvm-project.git
     cd llvm-project
     git checkout llvmorg-<LLVM>
@@ -32,22 +36,24 @@ pre_run() {
     mkdir "$1/llvm-build"; cd "$1/llvm-build"
 
     if [ `uname` = "Darwin" ]; then
-        # NOTE: In order for code-signing to work, the administrator of said build machines must first
-        # execute ../llvm-project/lldb/scripts/macos-setup-codesign.sh (be sure to modify script to name
-        # certificate to: moose-codesign)
+        if [ "$CODESIGN_NAME" = "" ]; then
+            CODESIGN_NAME='lldb_codesign'
+        fi
         cmake -G "Unix Makefiles" \
               -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
               -DLLVM_ENABLE_PROJECTS="clang;lldb;libcxx;libcxxabi;openmp;clang-tools-extra;lld;compiler-rt" \
               -DCMAKE_INSTALL_NAME_DIR:STRING="$PACKAGES_DIR/$PACKAGE/lib" \
               -DCMAKE_INSTALL_RPATH:STRING="$PACKAGES_DIR/$PACKAGE/lib" \
               -DCMAKE_MACOSX_RPATH:BOOL=ON \
-              -DLLDB_CODESIGN_IDENTITY="moose_codesign" \
+              -DLLDB_CODESIGN_IDENTITY="${CODESIGN_NAME}" \
               -DPYTHON_EXECUTABLE=`which python3` \
+              -DCLANG_PYTHON_BINDINGS_VERSIONS="${PYVERSION}" \
+              -DPYTHON_INCLUDE_DIR="${PYTHON_INCLUDE}" \
+              -DPYTHON_LIBRARY="${PYTHON_LIBRARY}" \
               -DDEFAULT_SYSROOT=`xcrun --show-sdk-path` \
               -DCMAKE_BUILD_TYPE="Release" \
               -Wno-dev \
               ../llvm-project/llvm
-
     else
         module load gcc
         CC=gcc CXX=g++ cmake -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
@@ -117,7 +123,21 @@ EOF
     # Create link to clang-format lisp
     cd "$PACKAGES_DIR"; ln -s "$PACKAGES_DIR/$PACKAGE/share/clang/clang-format.el" .
 
+    # Do some post installation fixes on LLVM
     if [ `uname` = "Darwin" ]; then
+        # Copy moose-codesign.cer to within the package (renaming it to moose-codesign.cert in the package)
+        #
+        # NOTE: In order for code-signing to work, the administrator of said build machines must first
+        # execute ../llvm-project/lldb/scripts/macos-setup-codesign.sh (be sure to modify script to name
+        # certificate to: moose-codesign), and then extract that certificate from the Keychain, and copy
+        # it to /opt/code_sign/. Civet recipes are expecting: /opt/code_sign/moose-codesign.cer
+        if [ "$CODESIGN_NAME" != "lldb_codesign" ]; then
+            mkdir -p "$PACKAGES_DIR/$PACKAGE/codesign"
+            cp "$CODESIGN_CERT" "$PACKAGES_DIR/$PACKAGE/codesign/moose_codesign.cert"
+            if [ "$?" != "0" ]; then echo "Failed to copy code-signing certificate"; cleanup 1; fi
+            echo "$CODESIGN_NAME" > "$PACKAGES_DIR/$PACKAGE/codesign/codesign_name"
+        fi
+
         # This is not the python we originally found during cmake configure. So change it back!
         PYVERSION=$(python3 -c 'import sys; print(str(sys.version_info[0])+"."+str(sys.version_info[1]))')
         cd "$PACKAGES_DIR/$PACKAGE/lib"
@@ -128,15 +148,6 @@ EOF
         for rfile in `ls`; do
             install_name_tool -change "@rpath/libpython${PYVERSION}m.dylib" "$PACKAGES_DIR/miniconda/lib/libpython${PYVERSION}m.dylib" "$rfile"
         done
-
-        # check if we are code signing LLDB
-        if [ "$CODESIGN_NAME" = "" ]; then
-            CODESIGN_NAME=''
-        else
-            mkdir -p "$PACKAGES_DIR/$PACKAGE/codesign"
-            cp "$CODESIGN_CERT" "$PACKAGES_DIR/$PACKAGE/codesign/moose_codesign.cert"
-            echo "$CODESIGN_NAME" > "$PACKAGES_DIR/$PACKAGE/codesign/codesign_name"
-        fi
     else
         # Create link to drop-in replacement lld (does not yet work on Darwin machines)
         cd "$PACKAGES_DIR/$PACKAGE/bin"; ln -s lld ld

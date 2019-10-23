@@ -6,7 +6,7 @@ if [ -f "<PACKAGES_DIR>/llvm-<LLVM>/codesign/codesign_name" ]; then
     return_code=`echo $?`
     # previous moose-codesign cert detected
     if [ $return_code -eq 0 ]; then
-        security delete-certificate -c `cat <PACKAGES_DIR>/llvm-<LLVM>/codesign/codesign_name` /Library/Keychains/System.keychain > /dev/null 2>&1
+        security delete-certificate -c `cat <PACKAGES_DIR>/llvm-<LLVM>/codesign/codesign_name` -k /Library/Keychains/System.keychain > /dev/null 2>&1
         sleep 5
     fi
     security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain <PACKAGES_DIR>/llvm-<LLVM>/codesign/moose_codesign.cert
