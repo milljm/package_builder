@@ -45,7 +45,6 @@ if { [uname sysname] != "Darwin" } {
 setenv          VTKINCLUDE_DIR                "\$BASE_PATH/<VTK>/<GCC>/include/<VTK_INCLUDE>"
 prepend-path    INCLUDE_PATH                  "\$BASE_PATH/<VTK>/<GCC>/include/<VTK_INCLUDE>"
 setenv          VTKLIB_DIR                    "\$BASE_PATH/<VTK>/<GCC>/lib"
-setenv          VTK6_PYTHON_DIR               "\$BASE_PATH/<VTK>/<GCC>/lib/python2.7/site-packages"
 EOF
 
     cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/civet/mpich-gcc-petsc_default-vtk"
