@@ -36,9 +36,6 @@ pre_run() {
     mkdir "$1/llvm-build"; cd "$1/llvm-build"
 
     if [ `uname` = "Darwin" ]; then
-        if [ "$CODESIGN_NAME" = "" ]; then
-            CODESIGN_NAME='lldb_codesign'
-        fi
         cmake -G "Unix Makefiles" \
               -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
               -DLLVM_ENABLE_PROJECTS="clang;lldb;libcxx;libcxxabi;openmp;clang-tools-extra;lld;compiler-rt" \
@@ -131,7 +128,7 @@ EOF
         # execute ../llvm-project/lldb/scripts/macos-setup-codesign.sh (be sure to modify script to name
         # certificate to: moose-codesign), and then extract that certificate from the Keychain, and copy
         # it to /opt/code_sign/. Civet recipes are expecting: /opt/code_sign/moose-codesign.cer
-        if [ "$CODESIGN_NAME" != "lldb_codesign" ]; then
+        if ! [ -z "$CODESIGN_NAME" ]; then
             mkdir -p "$PACKAGES_DIR/$PACKAGE/codesign"
             cp "$CODESIGN_CERT" "$PACKAGES_DIR/$PACKAGE/codesign/moose_codesign.cert"
             if [ "$?" != "0" ]; then echo "Failed to copy code-signing certificate"; cleanup 1; fi
