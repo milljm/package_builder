@@ -29,15 +29,27 @@ post_run() {
     cat <<EOF > "$PACKAGES_DIR/environments/moose_profile"
 #!/bin/bash
 ### Modules Source ###
+
+# Silence the module system a bit
+export MODULES_VERBOSITY=concise
+
 if [ -n "\$MODULESHOME" ] && [ \$(echo \$MODULEPATH | grep -c <PACKAGES_DIR>/Modules) -le 0 ]; then
-  export MODULEPATH="\$MODULEPATH:<PACKAGES_DIR>/Modules/3.2.10/modulefiles"
+  export MODULEPATH="\$MODULEPATH:<PACKAGES_DIR>/Modules/<MODULES>/modulefiles"
 else
   MY_SHELL=\`ps -o comm= \$\$ | sed -e 's/-//'\`
-  if [ "\${MY_SHELL}" = "bash" ]; then
-    source <PACKAGES_DIR>/Modules/3.2.10/init/bash
-    source <PACKAGES_DIR>/Modules/3.2.10/init/bash_completion
-  elif [ "\${MY_SHELL}" = "sh" ]; then
-    . <PACKAGES_DIR>/Modules/3.2.10/init/sh
+  if [ -f <PACKAGES_DIR>/Modules/init/\${MY_SHELL} ]; then
+    if [ "\${MY_SHELL}" = "sh" ]; then
+      . <PACKAGES_DIR>/Modules/init/sh
+    else
+      source <PACKAGES_DIR>/Modules/init/\${MY_SHELL}
+    fi
+    if [ "\${MY_SHELL}" = "bash" ]; then
+      source <PACKAGES_DIR>/Modules/init/bash_completion
+      # Load custom MOOSE command bash autocomplete rules
+      source "<PACKAGES_DIR>/environments/autocomplete_moose"
+    fi
+  else
+    printf "Your current shell is not supported by Modules.\nYou will not be able to load any modules.\n"
   fi
 fi
 
@@ -49,13 +61,8 @@ if [ -n "\$MOOSE_JUMP" ]; then
   source "<PACKAGES_DIR>/environments/autojump_profile"
 fi
 
-# If, anyone wants to use our prompt:
-if [ -n "\$MOOSE_PROMPT" ]; then
-  PS1="\[\033[1;34m\][\u]\[\033[1;32m\][\w]\[\033[0m\]> "
-fi
-
 # Set helpful environment variables and functions
-if [ \`uname -s\` == 'Darwin' ]; then
+if [ \`uname -s\` = 'Darwin' ]; then
   export MOOSE_JOBS=\`/usr/sbin/sysctl -n hw.ncpu\`
 
   #### ICECREAM Control
@@ -71,9 +78,6 @@ if [ \`uname -s\` == 'Darwin' ]; then
 else
   export MOOSE_JOBS=\`cat /proc/cpuinfo | grep processor | wc -l\`
 fi
-
-# Load custom MOOSE command bash autocomplete rules
-source "<PACKAGES_DIR>/environments/autocomplete_moose"
 EOF
 }
 ##

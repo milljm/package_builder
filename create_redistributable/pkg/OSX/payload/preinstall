@@ -1,0 +1,5 @@
+#!/bin/bash
+# Remove previous <PACKAGES_DIR>, we have no reason to save it anymore.
+if [ -d <PACKAGES_DIR> ]; then
+  rm -rf <PACKAGES_DIR>
+fi

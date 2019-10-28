@@ -23,7 +23,7 @@ INSTALL='false'
 re_evaluate(){
     pause ${FUNCNAME[0]} "Re-Evaluate variables"
     unset MODULEPATH
-    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    source "$PACKAGES_DIR/Modules/init/bash"
     export MODULEPATH="$MODULEPATH:<WITH_INTEL>/modulefiles"
     module load intel
     export INTEL_VERSION=${INTEL_VERSION-`icc --version | grep ICC | perl -pe 's|.* (\d+)\..*|\1|'`}
@@ -38,16 +38,11 @@ clean_petsc() {
 }
 
 pre_run() {
-    if [ `uname` = "Darwin" ]; then
-        export PYTHON_BIN=python
-    else
-        export PYTHON_BIN=python2
-    fi
     unset MODULEPATH
-    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    source "$PACKAGES_DIR/Modules/init/bash"
     export MODULEPATH="$MODULEPATH:${PACKAGES_DIR}_intel/modulefiles"
     module load advanced_modules cmake <MPICH>_intel-${INTEL_VERSION}
-    CONFIGURE="$PYTHON_BIN ./configure \
+    CONFIGURE="./configure \
 --prefix=${PACKAGES_DIR}_intel/<PETSC_DEFAULT>/${PACKAGE} \
 --download-hypre=1 \
 --with-ssl=0 \
@@ -61,7 +56,6 @@ pre_run() {
 --download-parmetis=1 \
 --download-ptscotch=1 \
 --download-superlu_dist=1 \
---download-mumps=1 \
 --download-scalapack=1 \
 --with-cxx-dialect=C++11 \
 --with-blas-lapack-lib=\"$MKLROOT/lib/intel64/libmkl_intel_lp64.a $MKLROOT/lib/intel64/libmkl_sequential.a $MKLROOT/lib/intel64/libmkl_core.a\" \

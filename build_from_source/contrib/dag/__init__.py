@@ -57,7 +57,7 @@ class DAG(object):
             raise KeyError('node %s does not exist' % node_name)
         graph.pop(node_name)
 
-        for node, edges in graph.iteritems():
+        for node, edges in graph.items():
             if node_name in edges:
                 edges.remove(node_name)
 
@@ -72,14 +72,14 @@ class DAG(object):
         if not graph:
             graph = self.graph
         if dep_node not in graph:
-            print dep_node
+            print(dep_node)
             raise DAGEdgeDepError()
         if ind_node not in graph:
             raise DAGEdgeIndError()
         graph[ind_node].add(dep_node)
         is_valid, message = self.validate(graph)
         if not is_valid:
-            print 'ERROR: Cyclic Dependency in modules %s <----> %s\n' % (dep_node.name, ind_node.name)
+            print('ERROR: Cyclic Dependency in modules %s <----> %s\n' % (dep_node.name, ind_node.name))
             sys.exit(1)
 
     def delete_edge(self, ind_node, dep_node, graph=None):
@@ -168,9 +168,9 @@ class DAG(object):
         """
 
         self.reset_graph()
-        for new_node in graph_dict.iterkeys():
+        for new_node in list(graph_dict.keys()):
             self.add_node(new_node)
-        for ind_node, dep_nodes in graph_dict.iteritems():
+        for ind_node, dep_nodes in graph_dict.items():
             if not isinstance(dep_nodes, list):
                 raise TypeError('dict values must be lists')
             for dep_node in dep_nodes:
@@ -185,7 +185,7 @@ class DAG(object):
         if graph is None:
             graph = self.graph
 
-        dependent_nodes = set(node for dependents in graph.itervalues() for node in dependents)
+        dependent_nodes = set(node for dependents in graph.values() for node in dependents)
         return [node for node in graph.keys() if node not in dependent_nodes]
 
     def validate(self, graph=None):

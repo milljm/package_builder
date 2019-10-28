@@ -21,7 +21,7 @@ INSTALL='true'
 
 pre_run() {
     unset MODULEPATH
-    source $PACKAGES_DIR/Modules/<MODULES>/init/bash
+    source $PACKAGES_DIR/Modules/init/bash
     module load moose-tools
     CONFIGURE="CPPFLAGS='-I$PACKAGES_DIR/<FONTCONFIG>/include' ./configure --prefix=$PACKAGES_DIR/<PANGO> --disable-gtk-doc-html"
 }

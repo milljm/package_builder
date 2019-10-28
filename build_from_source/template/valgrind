@@ -62,7 +62,7 @@ diff -ruN a/coregrind/vg_preloaded.c b/coregrind/vg_preloaded.c
 EOF
     patch -p1 < darwin.patch
     unset MODULEPATH
-    source $PACKAGES_DIR/Modules/<MODULES>/init/bash
+    source $PACKAGES_DIR/Modules/init/bash
     module load advanced_modules autotools moose/.<MPICH>_<GCC>
     CONFIGURE='./configure --prefix=$PACKAGES_DIR/<VALGRIND> --disable-dependency-tracking --enable-only64bit --build=amd64-darwin'
 }

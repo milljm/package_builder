@@ -35,15 +35,13 @@ pre_run() {
 
     export CONDARC="$PACKAGES_DIR/$PACKAGE/.condarc"
     PATH="$PACKAGES_DIR/$PACKAGE/bin:$PATH" conda config --set ssl_verify false
+    try_command 5 "PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda update setuptools --yes"
     try_command 5 "PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda update conda --yes"
-    try_command 5 "PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda install -c idaholab python=2.7 coverage reportlab mako numpy scipy scikit-learn h5py hdf5 scikit-image requests vtk=7.1.0 pyyaml matplotlib sympy pip lxml pyflakes pandas conda-build mock yaml pyqt=5.9.2 qt=5.9.6 swig anaconda-client setuptools --yes"
+    try_command 5 "PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda install coverage reportlab mako numpy scipy scikit-learn h5py hdf5 scikit-image requests pyyaml matplotlib sympy pip lxml pyflakes pandas conda-build mock yaml pyqt qt swig anaconda-client setuptools vtk --yes"
     try_command 5 "PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda install -c plotly plotly-orca --yes"
-    if [ `uname` = 'Darwin' ]; then
-        sed -i '' -e 's/^@deprecated/#@deprecated/' "$PACKAGES_DIR/$PACKAGE/lib/python2.7/site-packages/skimage/measure/_structural_similarity.py"
-    else
-        sed -i'' -e 's/^@deprecated/#@deprecated/' "$PACKAGES_DIR/$PACKAGE/lib/python2.7/site-packages/skimage/measure/_structural_similarity.py"
-    fi
+    # Perform cleanup
     rm -f "$PACKAGES_DIR/$PACKAGE/.condarc"
+    rm -rf "$PACKAGES_DIR/$PACKAGE/.cph_tmp*"
 }
 post_run() {
     cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/$PACKAGE"
@@ -63,6 +61,11 @@ EOF
     if [ "`PATH="$PACKAGES_DIR/$PACKAGE/bin:$PATH" which swig3.0`" != "$PACKAGES_DIR/$PACKAGE/bin/swig3.0" ] && [ -f "$PACKAGES_DIR/$PACKAGE/bin/swig" ]; then
         cd "$PACKAGES_DIR/$PACKAGE/bin"
         ln -s swig swig3.0
+    fi
+    # Fix missing symlink to python3-config (python --> python3, but python-config --> /usr/bin/python-config (which might be python2))
+    if [ "`PATH="$PACKAGES_DIR/$PACKAGE/bin:$PATH" which python-config`" != "$PACKAGES_DIR/$PACKAGE/bin/python-config" ] && [ -f "$PACKAGES_DIR/$PACKAGE/bin/python3-config" ]; then
+        cd "$PACKAGES_DIR/$PACKAGE/bin"
+        ln -s python3-config python-config
     fi
 }
 ##

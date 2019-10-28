@@ -22,11 +22,11 @@ INSTALL='false'
 pre_run() {
     cd $1
     unset MODULEPATH
-    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    source "$PACKAGES_DIR/Modules/init/bash"
     for which_conda in ${DEP[*]}; do
 	module purge
 	module load advanced_modules $which_conda
-	pip install --no-cache-dir pybtex livereload==2.5.1 daemonlite pylint==1.6.5 lxml pylatexenc anytree==2.4.3
+	pip install --no-cache-dir pybtex livereload daemonlite pylint lxml pylatexenc anytree mako meson python-config
 	if [ $? -ne 0 ]; then echo "Failed to install dependency packages for $PACKAGE"; cleanup 1; fi
     done
 }

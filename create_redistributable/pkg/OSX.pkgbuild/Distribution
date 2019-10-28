@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="1">
+    <title>MOOSE Compiler Libraries</title>
+    <options customize="allow" allow-external-scripts="no"/>
+    <domains enable_localSystem="true"/>
+    <volume-check script="pm_volume_check();"/>
+    <script>function pm_volume_check() {
+  if(!(my.target.systemVersion &amp;&amp; /* &gt;= */ system.compareVersions(my.target.systemVersion.ProductVersion, '<MAC_VERSION_NUM>') &gt;= 0)) {
+    my.result.title = 'Failure';
+    my.result.message = 'This package was designed to be installed on MacOS <MAC_VERSION>';
+    my.result.type = 'Fatal';
+    return false;
+  }
+  return true;
+}
+</script>
+    <background file="background.png" mime-type="image/png"/>
+    <welcome file="Welcome"/>
+    <readme file="ReadMe"/>
+    <conclusion file="Conclusion"/>
+    <choices-outline>
+        <line choice="choice001"/>
+        <line choice="choice100"/>
+        <line choice="choice200"/>
+        <line choice="choice201"/>
+    </choices-outline>
+    <choice id="choice001" title="MOOSE Environment" tooltip="MOOSE Environment" description="This package will modify your bash profile to source additional MOOSE environment profiles necessary for MOOSE development. You should always have this option checked, unless you really know what you are doing!" start_selected="false">
+        <pkg-ref id="INEL.GOV.mooseCompilerLibraries.environment.pkg"/>
+    </choice>
+    <choice id="choice100" title="Payload_File" tooltip="Payload File" description="This the main payload tarball containing the binary files." start_visible="false">
+        <pkg-ref id="INEL.GOV.mooseCompilerLibraries.payload.pkg"/>
+    </choice>
+    <choice id="choice200" title="Icecream" tooltip="Icecream" description="This package will configure your machine to utilize the Icecream network. By selecting this package, you are instructing the installer to enable a cronjob in the root environment which will maintain a clean connection to the Icecream scheduler. This is only usable whilst on the INL network." start_selected="false">
+        <pkg-ref id="INEL.GOV.mooseCompilerLibraries.icecream.pkg"/>
+    </choice>
+    <choice id="choice201" title="LLDB non-root" tooltip="LLDB non-root" description="Allow any user to run LLDB with out the need to supply sudo credentials each time.  Selecting this option will install a self-signed root trusted certificate into the system Keychain for this purpose." start_selected="false">
+        <pkg-ref id="INEL.GOV.mooseCompilerLibraries.lldb.pkg"/>
+    </choice>
+    <pkg-ref id="INEL.GOV.mooseCompilerLibraries.environment.pkg" installKBytes="4" version="1.0" auth="Root">#environment.pkg</pkg-ref>
+    <pkg-ref id="INEL.GOV.mooseCompilerLibraries.payload.pkg" installKBytes="7823128" version="1.0" auth="Root">#payload.pkg</pkg-ref>
+    <pkg-ref id="INEL.GOV.mooseCompilerLibraries.icecream.pkg" installKBytes="4" version="1.0" auth="Root">#icecream.pkg</pkg-ref>
+    <pkg-ref id="INEL.GOV.mooseCompilerLibraries.lldb.pkg" installKBytes="4" version="1.0" auth="Root">#lldb.pkg</pkg-ref>
+</installer-gui-script>

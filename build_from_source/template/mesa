@@ -1,0 +1,73 @@
+#!/bin/bash
+#############
+## Specifics
+##
+DEP=(modules zlib expat)
+PACKAGE="<MESA>"
+
+#####
+# Set the operating system allowed to build this module
+#
+ARCH=(Linux Darwin)
+
+#####
+# Setting any of these variables to 'false' effectively skips that step
+# This is useful for items like 'autojump' which requires a git clone/checkout
+DOWNLOAD='http://mooseframework.inl.gov/source_packages/<MESA>.tar.xz'
+EXTRACT='<MESA>.tar.xz'
+CONFIGURE='false'
+BUILD='true'
+INSTALL='true'
+
+pre_run() {
+    unset MODULEPATH
+    source "$PACKAGES_DIR/Modules/init/bash"
+    module load moose-tools
+    # Install temporary requirement for Mesa
+    pip install --install-option="--prefix=`pwd`/mako-install-temp" mako
+    export PYTHONPATH="`pwd`/mako-install-temp/lib/python2.7/site-packages:$PYTHONPATH"
+    CONFIGURE="./configure --prefix=$PACKAGES_DIR/<MESA> --enable-opengl --disable-gles1 --disable-gles2 --disable-va --disable-xvmc --disable-vdpau --enable-shared-glapi --disable-texture-float --with-gallium-drivers=swrast --disable-dri --with-dri-drivers='' --disable-egl --with-platforms='' --disable-gbm --disable-glx --disable-osmesa --enable-gallium-osmesa"
+}
+
+post_run() {
+    cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose/.<MESA>"
+#%Module1.0#####################################################################
+##
+## <MESA> Module
+##
+##
+##
+set             BASE_PATH          "$PACKAGES_DIR"
+
+if { [uname sysname] != "Darwin" } {
+  prepend-path    LD_LIBRARY_PATH    "\$BASE_PATH/<MESA>/lib"
+}
+prepend-path      LDFLAGS "-L\$BASE_PATH/<MESA>/lib"
+EOF
+    rm -rf /tmp/mako-install-temp
+}
+##
+## End Specifics
+##############
+## The following script contains all the common functions.
+## Those functions are executed in the following order:
+
+# download
+# extract
+# pre-run
+# configure
+# make
+# make install
+# post_run
+# cleanup
+
+## pre_run and post_run are the only true specifics that are different
+## with every package
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+DOWNLOAD_ONLY=<DOWNLOAD_ONLY>
+source "$RELATIVE_DIR/functions" $@

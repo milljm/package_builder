@@ -167,7 +167,7 @@ class Scheduler(object):
                 result = result + ' '*caveat_cnt
 
             remaining = job_dag.size()
-            print result, "remaining: %-3d active: %-2d" % (remaining, len(self.active)), [x.name for x in self.active]
+            print(result, "remaining: %-3d active: %-2d" % (remaining, len(self.active)), [x.name for x in self.active])
 
     def launchJob(self, job):
         """ call the job's run method """

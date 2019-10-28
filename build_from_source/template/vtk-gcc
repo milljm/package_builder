@@ -22,7 +22,7 @@ INSTALL='true'
 
 pre_run() {
     unset MODULEPATH
-    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    source "$PACKAGES_DIR/Modules/init/bash"
     module load advanced_modules cmake moose/.<MPICH>_<GCC>
     mkdir ../vtk-build; cd ../vtk-build
     CONFIGURE="cmake ../<VTK> -DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/<VTK>/<GCC> -DCMAKE_INSTALL_RPATH:STRING=$PACKAGES_DIR/<VTK>/<GCC>/lib -DCMAKE_INSTALL_RPATH_USE_LINK_PATH:BOOL=ON -DCMAKE_INSTALL_NAME_DIR:STRING=$PACKAGES_DIR/<VTK>/<GCC>/lib -DCMAKE_MACOSX_RPATH:BOOL=ON -DVTK_WRAP_PYTHON=ON -DVTK_Group_MPI:BOOL=ON -Wno-dev"
@@ -45,7 +45,6 @@ if { [uname sysname] != "Darwin" } {
 setenv          VTKINCLUDE_DIR                "\$BASE_PATH/<VTK>/<GCC>/include/<VTK_INCLUDE>"
 prepend-path    INCLUDE_PATH                  "\$BASE_PATH/<VTK>/<GCC>/include/<VTK_INCLUDE>"
 setenv          VTKLIB_DIR                    "\$BASE_PATH/<VTK>/<GCC>/lib"
-setenv          VTK6_PYTHON_DIR               "\$BASE_PATH/<VTK>/<GCC>/lib/python2.7/site-packages"
 EOF
 
     cat <<EOF > "$PACKAGES_DIR/Modules/<MODULES>/civet/mpich-gcc-petsc_default-vtk"

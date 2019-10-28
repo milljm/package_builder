@@ -17,14 +17,15 @@ ARCH=(Darwin Linux)
 # This is useful for items like 'autojump' which requires a git clone/checkout
 DOWNLOAD='http://mooseframework.inl.gov/source_packages/<SLEPC_DEFAULT>.tar.gz'
 EXTRACT='<SLEPC_DEFAULT>.tar.gz'
-CONFIGURE="true"
+CONFIGURE="false"
 BUILD='false'
 INSTALL='false'
 
 pre_run() {
     unset MODULEPATH
-    source "$PACKAGES_DIR/Modules/<MODULES>/init/bash"
+    source "$PACKAGES_DIR/Modules/init/bash"
     module load civet/.civet mpich-gcc-petsc_default_opt
+    CONFIGURE="python2 ./configure --prefix=$PACKAGES_DIR/$BASE_DIR/$PACKAGE"
 }
 
 post_run() {
