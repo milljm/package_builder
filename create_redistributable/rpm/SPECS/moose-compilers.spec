@@ -68,7 +68,7 @@ for a_shell in ${shells[@]}; do
             # overwrite previous initialization
             cat <<EOF > /etc/profile.d/moose-environment.${a_shell}
 # initialize moose-environment modulecmd if available
-if [ -d <PACKAGES_DIR>/Modules/3.2.10 ]; then
+if [ -d <PACKAGES_DIR>/Modules/init ]; then
   . <PACKAGES_DIR>/environments/moose_profile
 fi
 EOF
@@ -79,7 +79,7 @@ EOF
                 fi
                 cat <<EOF >> /etc/bash.bashrc
 #START-INITIALIZE-MOOSE
-if [ -d <PACKAGES_DIR>/Modules/3.2.10 ]; then
+if [ -d <PACKAGES_DIR>/Modules/init ]; then
   . <PACKAGES_DIR>/environments/moose_profile
 fi
 #END-INITIALIZE-MOOSE
@@ -91,14 +91,14 @@ EOF
             # overwrite previous initialization
             cat <<EOF > /etc/csh/login.d/moose-environment.csh
 # initialize moose-environment modulecmd if available
-if (-d <PACKAGES_DIR>/Modules/3.2.10) then
+if (-d <PACKAGES_DIR>/Modules/init) then
   setenv MOOSE_JOB \`cat /proc/cpuinfo | grep processor | wc -l\`
   setenv MOOSE_PPS_WIDTH 180
   if (! \$?MODULEPATH ) then
     set MY_SHELL=\`cat /proc/\$\$/comm\`
-    source "<PACKAGES_DIR>/Modules/3.2.10/init/\${MY_SHELL}"
+    source "<PACKAGES_DIR>/Modules/init/\${MY_SHELL}"
   else
-    setenv MODULEPATH "\${MODULEPATH}:<PACKAGES_DIR>/Modules/3.2.10/modulefiles"
+    setenv MODULEPATH "\${MODULEPATH}:<PACKAGES_DIR>/Modules/<MODULES>/modulefiles"
   endif
 endif
 EOF
@@ -109,15 +109,15 @@ EOF
             fi
             cat <<EOF >> /etc/zsh/zshenv
 #START-INITIALIZE-MOOSE
-if [[ ( -d <PACKAGES_DIR>/Modules/3.2.10 ) ]]
+if [[ ( -d <PACKAGES_DIR>/Modules/init ) ]]
 then
   export MOOSE_JOBS=\`cat /proc/cpuinfo | grep processor | wc -l\`
   export MOOSE_PPS_WIDTH=180
   if [[ -n \${MODULESHOME} ]]
   then
-    export MODULEPATH="\$MODULEPATH:<PACKAGES_DIR>/Modules/3.2.10/modulefiles"
+    export MODULEPATH="\$MODULEPATH:<PACKAGES_DIR>/Modules/<MODULES>/modulefiles"
   else
-    source "<PACKAGES_DIR>/Modules/3.2.10/init/zsh"
+    source "<PACKAGES_DIR>/Modules/init/zsh"
   fi
 fi
 #END-INITIALIZE-MOOSE
@@ -130,13 +130,13 @@ EOF
             cat <<EOF >> /etc/profile
 #START-INITIALIZE-MOOSE
 if [ "\$(cat /proc/\$\$/comm 2>/dev/null)" = "${a_shell}" ]; then
-  if [ -d <PACKAGES_DIR>/Modules/3.2.10 ]; then
+  if [ -d <PACKAGES_DIR>/Modules/init ]; then
     export MOOSE_JOBS=\`cat /proc/cpuinfo | grep processor | wc -l\`
     export MOOSE_PPS_WIDTH=180
     if [ -n "\$MODULESHOME" ]; then
-      ${exp_cm[$index]}"\$MODULEPATH:<PACKAGES_DIR>/Modules/3.2.10/modulefiles"
+      ${exp_cm[$index]}"\$MODULEPATH:<PACKAGES_DIR>/Modules/<MODULES>/modulefiles"
     else
-      source "<PACKAGES_DIR>/Modules/3.2.10/init/${a_shell}"
+      source "<PACKAGES_DIR>/Modules/init/${a_shell}"
     fi
   fi
 fi
