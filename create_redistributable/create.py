@@ -94,18 +94,26 @@ Class for building Debian based packages
   def prepare_area(self):
     prereqs = self.check_prereqs()
     create_template = PackageCreator.prepare_area(self)
+    REPLACE_STRINGS = {'<VERSION>' : str(self.redistributable_version),
+                      '<PACKAGES_DIR>' : self.args.packages_dir}
+
     if create_template and prereqs:
-      for directory, directories, files in os.walk(os.path.join(self.temp_dir, 'deb/DEBIAN')):
-        for xml_file in files:
-          with open(os.path.join(self.temp_dir, 'deb/DEBIAN', xml_file), 'r+', encoding='utf-8') as tmp_file:
-            xml_string = tmp_file.read()
+      for directory, directories, files in os.walk(os.path.join(self.temp_dir, 'deb')):
+        for afile in files:
+          with open(os.path.join(directory, afile), 'r+', encoding='utf-8') as tmp_file:
+            try:
+              xml_string = tmp_file.read()
+            # A data file (mose likely the background png)
+            except UnicodeDecodeError:
+              continue
+            for k, v in REPLACE_STRINGS.items():
+              xml_string = xml_string.replace(k, v)
+            for item_list in self.version_template.items():
+              xml_string = xml_string.replace('<' + item_list[0] + '>', item_list[1])
             tmp_file.truncate(0)
             tmp_file.seek(0)
-            xml_string = xml_string.replace('<VERSION>', str(self.redistributable_version))
-            xml_string = xml_string.replace('<PACKAGES_DIR>', self.args.packages_dir)
             tmp_file.write(xml_string)
       return True
-    return False
 
   def create_tarball(self):
     # We need to copy files instead of using a tarball
@@ -183,23 +191,31 @@ Class for building RedHat based packages
     prereqs = self.check_prereqs()
     requirements = self._get_requirements()
     create_template = PackageCreator.prepare_area(self)
+    REPLACE_STRINGS = {'<VERSION>' : str(self.redistributable_version),
+                      '<PACKAGES_DIR>' : self.args.packages_dir,
+                      '<PACKAGES_BASENAME>' : os.path.join(*[x for x in os.path.dirname(self.args.packages_dir).split(os.sep)]),
+                      '<PACKAGES_PARENT>' : os.path.basename(self.args.packages_dir),
+                      '<REQUIREMENTS>' : ' '.join(requirements)}
+
     if create_template and requirements and prereqs:
-      with open(os.path.join(self.temp_dir, 'rpm/SPECS/moose-compilers.spec'), 'r+', encoding='utf-8') as tmp_file:
-        xml_string = tmp_file.read()
-        # set major_version based on spec file
-        self.major_version = re.findall(r'Version: (\d.\d)', xml_string)[0]
-        tmp_file.truncate(0)
-        tmp_file.seek(0)
-        xml_string = xml_string.replace('<VERSION>', str(self.redistributable_version))
-        xml_string = xml_string.replace('<PACKAGES_DIR>', self.args.packages_dir)
-        xml_string = xml_string.replace('<PACKAGES_BASENAME>', os.path.join(*[x for x in os.path.dirname(self.args.packages_dir).split(os.sep)]))
-        xml_string = xml_string.replace('<PACKAGES_PARENT>', os.path.basename(self.args.packages_dir))
-        xml_string = xml_string.replace('<REQUIREMENTS>', ' '.join(requirements))
-        tmp_file.write(xml_string)
       for directory in ['BUILD', 'BUILDROOT', 'RPMS', 'SRPMS', 'SOURCES']:
         os.makedirs(os.path.join(self.temp_dir, 'rpm', directory))
+      for directory, directories, files in os.walk(os.path.join(self.temp_dir, 'rpm')):
+        for afile in files:
+          with open(os.path.join(directory, afile), 'r+', encoding='utf-8') as tmp_file:
+            try:
+              xml_string = tmp_file.read()
+            # A data file (mose likely the background png)
+            except UnicodeDecodeError:
+              continue
+            for k, v in REPLACE_STRINGS.items():
+              xml_string = xml_string.replace(k, v)
+            for item_list in self.version_template.items():
+              xml_string = xml_string.replace('<' + item_list[0] + '>', item_list[1])
+            tmp_file.truncate(0)
+            tmp_file.seek(0)
+            tmp_file.write(xml_string)
       return True
-    return False
 
   def create_tarball(self):
     tarball_results = PackageCreator.create_tarball(self)
