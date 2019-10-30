@@ -75,7 +75,12 @@ fi
 EOF
     chown """$USER:staff""" """$use_this_profile"""
 }
-# Use bash_profile by default.
-profiles=("""$HOME/.zshrc""" """$HOME/.bash_profile""")
+
+# Catalina, use zshrc by default
+if [ `uname -r | cut -d. -f1` -ge 19 ]; then
+    profiles=("""$HOME/.bash_profile""" """$HOME/.zshrc""")
+else
+    profiles=("""$HOME/.zshrc""" """$HOME/.bash_profile""")
+fi
 detectAndCreateProfile
 verifyItWorkes
