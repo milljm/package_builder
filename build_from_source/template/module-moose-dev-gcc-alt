@@ -47,6 +47,9 @@ if { [ info exists ::env(MOOSE_DIR) ] } {
     prepend-path PYTHONPATH "\$MOOSE_DIR/python"
   }
 }
+if { [uname sysname] == "Darwin" && [module-info mode load] } {
+   puts stderr "Warning, the GCC compiler is not completely functional.\nFor more information, please see:\n\n\thttps://mooseframework.inl.gov/help/faq.html"
+}
 EOF
 }
 ##
