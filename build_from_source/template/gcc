@@ -62,6 +62,10 @@ set GCC_LIB_PATHS "\$GCC_PATH/lib64:\$GCC_PATH/lib:\$GCC_PATH/lib/gcc/${GCC_TOOL
 
 if { [uname sysname] != "Darwin" } {
   prepend-path LD_LIBRARY_PATH \$GCC_LIB_PATHS
+} else {
+  if { [is-loaded advanced_modules] && [module-info mode load] } {
+     puts stderr "Warning, the GCC compiler is not completely functional.\nFor more information, please see:\n\n\thttps://mooseframework.inl.gov/help/faq.html"
+  }
 }
 
 prepend-path PATH                        "\$GCC_PATH/bin"
