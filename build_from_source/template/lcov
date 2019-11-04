@@ -14,13 +14,19 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='http://mooseframework.inl.gov/source_packages/<LCOV>.tar.gz'
-EXTRACT='<LCOV>.tar.gz'
+DOWNLOAD='false'
+EXTRACT='false'
 CONFIGURE='false'
 BUILD='false'
 INSTALL='true'
 
 pre_run() {
+    LCOV_VERSION=$(echo <LCOV> | cut -d- -f2)
+    git clone https://github.com/linux-test-project/lcov.git
+    cd lcov
+    git checkout $LCOV_VERSION
+    if [ "$?" != "0" ]; then echo "Failed to clone lcov"; cleanup 1; fi
+
     if [ `uname` = 'Darwin' ]; then
         sed -i '' -e 's|/usr/local|<PACKAGES_DIR>/<LCOV>|g' Makefile
     else
