@@ -46,7 +46,7 @@ pre_run() {
 --download-scalapack=1 \
 PETSC_ARCH=moose-environment"
 
-    try_command 3 "clean_petsc; configure; make MAKE_NP=$MOOSE_JOBS PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=moose-environment all; make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=moose-environment install"
+    try_command 3 "clean_petsc; configure; make MAKE_NP=$MOOSE_JOBS PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=moose-environment all; make PETSC_DIR=$1/<PETSC_ALT> PETSC_ARCH=moose-environment install"
 
     # So we do not run configure a second time
     CONFIGURE="false"
