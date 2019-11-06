@@ -26,7 +26,7 @@ pre_run() {
     source "$PACKAGES_DIR/Modules/init/bash"
     module load advanced_modules miniconda cmake
     PYVERSION=$(python3 -c 'import sys; print(str(sys.version_info[0])+"."+str(sys.version_info[1]))')
-    PYTHON_INCLUDE=$(python-config --include | sed 's|^[^/]*/|/|g' | cut -d\  -f1)
+    PYTHON_INCLUDE=$(python-config --includes | sed 's|^[^/]*/|/|g' | cut -d\  -f1)
     PYTHON_LIBRARY="$(python-config --prefix)/lib/libpython${PYVERSION}m.dylib"
 
     git clone git@github.com:llvm/llvm-project.git
@@ -65,6 +65,9 @@ pre_run() {
           -DLLVM_ENABLE_RTTI=ON \
           -DCMAKE_BUILD_TYPE="Release" \
           -DPYTHON_EXECUTABLE=`which python3` \
+          -DCLANG_PYTHON_BINDINGS_VERSIONS="${PYVERSION}" \
+          -DPYTHON_INCLUDE_DIR="${PYTHON_INCLUDE}" \
+          -DPYTHON_LIBRARY="${PYTHON_LIBRARY}" \
           -DLLVM_TARGETS_TO_BUILD="X86" \
           -Wno-dev \
           ../llvm-project/llvm
