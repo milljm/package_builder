@@ -44,13 +44,11 @@ pre_run() {
 --download-parmetis=1 \
 --download-superlu_dist=1 \
 --download-scalapack=1 \
---download-slepc=1"
+--download-slepc=1 \
+PETSC_ARCH=moose-environment"
 
-    if [ `uname` = "Darwin" ]; then
-	try_command 3 "clean_petsc; configure; make MAKE_NP=$MOOSE_JOBS PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-darwin-c-debug all; make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-darwin-c-debug install"
-    else
-	try_command 3 "clean_petsc; configure; make MAKE_NP=$MOOSE_JOBS PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-debug all; make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=arch-linux2-c-debug install"
-    fi
+    try_command 3 "clean_petsc; configure; make MAKE_NP=$MOOSE_JOBS PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=moose-environment all; make PETSC_DIR=$1/<PETSC_DEFAULT> PETSC_ARCH=moose-environment install"
+
     # So we do not run configure a second time
     CONFIGURE="false"
 }
