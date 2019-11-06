@@ -117,9 +117,6 @@ EOF
     ln -s ../modulefiles/moose/.<CLANG> clang
     cp -R "$1/llvm-project/llvm/clang/bindings" "$PACKAGES_DIR/$PACKAGE/"
 
-    # Create link to clang-format lisp
-    cd "$PACKAGES_DIR"; ln -s "$PACKAGES_DIR/$PACKAGE/share/clang/clang-format.el" .
-
     # Do some post installation fixes on LLVM
     if [ `uname` = "Darwin" ]; then
         # Copy moose-codesign.cer to within the package (renaming it to moose-codesign.cert in the package)
@@ -149,6 +146,8 @@ EOF
         # Create link to drop-in replacement lld (does not yet work on Darwin machines)
         cd "$PACKAGES_DIR/$PACKAGE/bin"; ln -s lld ld
     fi
+    cd "$PACKAGES_DIR"
+    ln -s $PACKAGE llvm-current
 }
 ##
 ## End Specifics
