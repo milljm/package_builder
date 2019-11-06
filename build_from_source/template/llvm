@@ -24,7 +24,7 @@ pre_run() {
     if [ -d "$PACKAGES_DIR/$PACKAGE" ]; then rm -rf "$PACKAGES_DIR/$PACKAGE"; fi
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/init/bash"
-    module load advanced_modules cmake
+    module load advanced_modules miniconda cmake
     git clone git@github.com:llvm/llvm-project.git
     cd llvm-project
     git checkout llvmorg-<LLVM>
@@ -32,7 +32,6 @@ pre_run() {
     mkdir "$1/llvm-build"; cd "$1/llvm-build"
 
     if [ `uname` = "Darwin" ]; then
-        module load miniconda
         PYVERSION=$(python3 -c 'import sys; print(str(sys.version_info[0])+"."+str(sys.version_info[1]))')
         PYTHON_INCLUDE=$(python-config --includes | sed 's|^[^/]*/|/|g' | cut -d\  -f1)
         PYTHON_LIBRARY="$(python-config --prefix)/lib/libpython${PYVERSION}m.dylib"
