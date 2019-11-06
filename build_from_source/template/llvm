@@ -24,11 +24,7 @@ pre_run() {
     if [ -d "$PACKAGES_DIR/$PACKAGE" ]; then rm -rf "$PACKAGES_DIR/$PACKAGE"; fi
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/init/bash"
-    module load advanced_modules miniconda cmake
-    PYVERSION=$(python3 -c 'import sys; print(str(sys.version_info[0])+"."+str(sys.version_info[1]))')
-    PYTHON_INCLUDE=$(python-config --includes | sed 's|^[^/]*/|/|g' | cut -d\  -f1)
-    PYTHON_LIBRARY="$(python-config --prefix)/lib/libpython${PYVERSION}m.dylib"
-
+    module load advanced_modules cmake
     git clone git@github.com:llvm/llvm-project.git
     cd llvm-project
     git checkout llvmorg-<LLVM>
@@ -36,6 +32,10 @@ pre_run() {
     mkdir "$1/llvm-build"; cd "$1/llvm-build"
 
     if [ `uname` = "Darwin" ]; then
+        module load miniconda
+        PYVERSION=$(python3 -c 'import sys; print(str(sys.version_info[0])+"."+str(sys.version_info[1]))')
+        PYTHON_INCLUDE=$(python-config --includes | sed 's|^[^/]*/|/|g' | cut -d\  -f1)
+        PYTHON_LIBRARY="$(python-config --prefix)/lib/libpython${PYVERSION}m.dylib"
         cmake -G "Unix Makefiles" \
               -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
               -DLLVM_ENABLE_PROJECTS="clang;lldb;libcxx;libcxxabi;openmp;clang-tools-extra;lld;compiler-rt" \
@@ -64,11 +64,6 @@ pre_run() {
           -DLLVM_ENABLE_ASSERTIONS=ON \
           -DLLVM_ENABLE_RTTI=ON \
           -DCMAKE_BUILD_TYPE="Release" \
-          -DPYTHON_EXECUTABLE=`which python3` \
-          -DCLANG_PYTHON_BINDINGS_VERSIONS="${PYVERSION}" \
-          -DPYTHON_INCLUDE_DIR="${PYTHON_INCLUDE}" \
-          -DPYTHON_LIBRARY="${PYTHON_LIBRARY}" \
-          -DLLVM_TARGETS_TO_BUILD="X86" \
           -Wno-dev \
           ../llvm-project/llvm
     fi

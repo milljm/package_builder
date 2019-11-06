@@ -70,7 +70,7 @@ post_run() {
     if [ `uname` = 'Darwin' ]; then
         LDFLAGS="-L$PACKAGES_DIR/$PACKAGE/contribs/lzo-2.09/lib -llzo2 `pkg-config libzstd libarchive --libs`" CPPFLAGS="-I$PACKAGES_DIR/$PACKAGE/contribs/lzo-2.09/include `pkg-config libzstd libarchive --cflags`" CFLAGS="`pkg-config libzstd libarchive --cflags`" ./configure --prefix="$PACKAGES_DIR/$PACKAGE" --without-man
     else
-        LDFLAGS="-L$PACKAGES_DIR/$PACKAGE/contribs/lzo-2.09/lib -llzo2 -L$PACKAGES_DIR/$PACKAGE/contribs/libcap-ng-0.7.8/lib -lcap-ng `pkg-config libzstd libarchive --libs`" CPPFLAGS="-I$PACKAGES_DIR/$PACKAGE/contribs/libcap-ng-0.7.8/include -I$PACKAGES_DIR/$PACKAGE/contribs/lzo-2.09/include `pkg-config libzstd libarchive --cflags`" CFLAGS="`pkg-config libzstd libarchive --cflags`" ./configure --prefix="$PACKAGES_DIR/$PACKAGE" --without-man
+        LD_LIBRARY_PATH="`pkg-config libzstd --variable=prefix`/lib:`pkg-config libzstd --variable=prefix`:$LD_LIBRARY_PATH" LDFLAGS="-L$PACKAGES_DIR/$PACKAGE/contribs/lzo-2.09/lib -llzo2 -L$PACKAGES_DIR/$PACKAGE/contribs/libcap-ng-0.7.8/lib -lcap-ng `pkg-config libzstd libarchive --libs`" CPPFLAGS="-I$PACKAGES_DIR/$PACKAGE/contribs/libcap-ng-0.7.8/include -I$PACKAGES_DIR/$PACKAGE/contribs/lzo-2.09/include `pkg-config libzstd libarchive --cflags`" CFLAGS="`pkg-config libzstd libarchive --cflags`" ./configure --prefix="$PACKAGES_DIR/$PACKAGE" --without-man
     fi
 
     if [ $? -ne 0 ]; then echo 'Failed to configure icecream'; cleanup 1; fi
