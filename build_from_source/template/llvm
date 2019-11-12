@@ -25,10 +25,6 @@ pre_run() {
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/init/bash"
     module load advanced_modules miniconda cmake
-    PYVERSION=$(python3 -c 'import sys; print(str(sys.version_info[0])+"."+str(sys.version_info[1]))')
-    PYTHON_INCLUDE=$(python-config --include | sed 's|^[^/]*/|/|g' | cut -d\  -f1)
-    PYTHON_LIBRARY="$(python-config --prefix)/lib/libpython${PYVERSION}m.dylib"
-
     git clone git@github.com:llvm/llvm-project.git
     cd llvm-project
     git checkout llvmorg-<LLVM>
@@ -36,6 +32,9 @@ pre_run() {
     mkdir "$1/llvm-build"; cd "$1/llvm-build"
 
     if [ `uname` = "Darwin" ]; then
+        PYVERSION=$(python3 -c 'import sys; print(str(sys.version_info[0])+"."+str(sys.version_info[1]))')
+        PYTHON_INCLUDE=$(python-config --includes | sed 's|^[^/]*/|/|g' | cut -d\  -f1)
+        PYTHON_LIBRARY="$(python-config --prefix)/lib/libpython${PYVERSION}m.dylib"
         cmake -G "Unix Makefiles" \
               -DCMAKE_INSTALL_PREFIX="$PACKAGES_DIR/$PACKAGE" \
               -DLLVM_ENABLE_PROJECTS="clang;lldb;libcxx;libcxxabi;openmp;clang-tools-extra;lld;compiler-rt" \
@@ -60,12 +59,11 @@ pre_run() {
           -DGCC_INSTALL_PREFIX="$PACKAGES_DIR/<GCC>" \
           -DCMAKE_CXX_LINK_FLAGS="-L$PACKAGES_DIR/<GCC>/lib64 -Wl,-rpath,$PACKAGES_DIR/<GCC>/lib64" \
           -DCMAKE_INSTALL_RPATH:STRING="$PACKAGES_DIR/$PACKAGE/lib" \
+          -DLLDB_DISABLE_PYTHON=ON \
           -DCMAKE_BUILD_WITH_INSTALL_RPATH=1 \
           -DLLVM_ENABLE_ASSERTIONS=ON \
           -DLLVM_ENABLE_RTTI=ON \
           -DCMAKE_BUILD_TYPE="Release" \
-          -DPYTHON_EXECUTABLE=`which python3` \
-          -DLLVM_TARGETS_TO_BUILD="X86" \
           -Wno-dev \
           ../llvm-project/llvm
     fi
@@ -117,9 +115,6 @@ EOF
     ln -s ../modulefiles/moose/.<CLANG> clang
     cp -R "$1/llvm-project/llvm/clang/bindings" "$PACKAGES_DIR/$PACKAGE/"
 
-    # Create link to clang-format lisp
-    cd "$PACKAGES_DIR"; ln -s "$PACKAGES_DIR/$PACKAGE/share/clang/clang-format.el" .
-
     # Do some post installation fixes on LLVM
     if [ `uname` = "Darwin" ]; then
         # Copy moose-codesign.cer to within the package (renaming it to moose-codesign.cert in the package)
@@ -149,6 +144,9 @@ EOF
         # Create link to drop-in replacement lld (does not yet work on Darwin machines)
         cd "$PACKAGES_DIR/$PACKAGE/bin"; ln -s lld ld
     fi
+    cd "$PACKAGES_DIR"
+    rm -f llvm-current
+    ln -s $PACKAGE llvm-current
 }
 ##
 ## End Specifics

@@ -114,6 +114,9 @@ EOF
     if [ `uname` = "Darwin" ]; then
         install_name_tool -id "$PACKAGES_DIR/<GCC>/lib/libgccjit.so" "$PACKAGES_DIR/<GCC>/lib/libgccjit.so"
     fi
+    cd "$PACKAGES_DIR"
+    rm -f gcc-current
+    ln -s <GCC> gcc-current
 }
 ##
 ## End Specifics

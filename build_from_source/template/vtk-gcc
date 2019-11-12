@@ -23,9 +23,13 @@ INSTALL='true'
 pre_run() {
     unset MODULEPATH
     source "$PACKAGES_DIR/Modules/init/bash"
-    module load advanced_modules cmake moose/.<MPICH>_<GCC>
+    module load advanced_modules miniconda cmake moose/.<MPICH>_<GCC>
+    PYVERSION=$(python3 -c 'import sys; print(str(sys.version_info[0])+"."+str(sys.version_info[1]))')
+    PYTHON_INCLUDE=$(python-config --includes | sed 's|^[^/]*/|/|g' | cut -d\  -f1)
+    PYTHON_LIBRARY="$(python-config --prefix)/lib/libpython${PYVERSION}m.dylib"
+
     mkdir ../vtk-build; cd ../vtk-build
-    CONFIGURE="cmake ../<VTK> -DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/<VTK>/<GCC> -DCMAKE_INSTALL_RPATH:STRING=$PACKAGES_DIR/<VTK>/<GCC>/lib -DCMAKE_INSTALL_RPATH_USE_LINK_PATH:BOOL=ON -DCMAKE_INSTALL_NAME_DIR:STRING=$PACKAGES_DIR/<VTK>/<GCC>/lib -DCMAKE_MACOSX_RPATH:BOOL=ON -DVTK_WRAP_PYTHON=ON -DVTK_Group_MPI:BOOL=ON -Wno-dev"
+    CONFIGURE="cmake ../<VTK> -DCMAKE_INSTALL_PREFIX=$PACKAGES_DIR/<VTK>/<GCC> -DCMAKE_INSTALL_RPATH:STRING=$PACKAGES_DIR/<VTK>/<GCC>/lib -DCMAKE_INSTALL_RPATH_USE_LINK_PATH:BOOL=ON -DCMAKE_INSTALL_NAME_DIR:STRING=$PACKAGES_DIR/<VTK>/<GCC>/lib -DCMAKE_MACOSX_RPATH:BOOL=ON -DVTK_Group_MPI:BOOL=ON -DCMAKE_BUILD_TYPE=Release -Wno-dev"
 }
 
 post_run() {

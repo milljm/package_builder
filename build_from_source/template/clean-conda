@@ -25,6 +25,8 @@ pre_run() {
     PATH="$PACKAGES_DIR/miniconda/bin:$PATH" conda clean --lock --tarballs --index-cache --packages --source-cache --yes
     rm -rf "$PACKAGES_DIR/miniconda/pkgs/"*
     touch "$PACKAGES_DIR/miniconda/pkgs/urls.txt"
+    # Clean up these empty temp directories conda install seems to leave behind
+    rm -rf "$PACKAGES_DIR/miniconda/".cph_tmp*
 }
 post_run() {
     return
