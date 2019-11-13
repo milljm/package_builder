@@ -35,10 +35,11 @@ pre_run() {
 
     export CONDARC="$PACKAGES_DIR/$PACKAGE/.condarc"
     PATH="$PACKAGES_DIR/$PACKAGE/bin:$PATH" conda config --set ssl_verify false
-    try_command 5 "PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda update setuptools --yes"
-    try_command 5 "PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda update conda --yes"
-    try_command 5 "PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda install -c conda-forge coverage reportlab mako numpy scipy scikit-learn h5py hdf5 scikit-image requests pyyaml matplotlib sympy pip lxml pyflakes pandas conda-build mock yaml pyqt qt swig anaconda-client setuptools vtk gnuplot --yes"
-    try_command 5 "PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda install -c plotly plotly-orca --yes"
+    try_command 2 "PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda update setuptools --yes"
+    try_command 2 "PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda update conda --yes"
+    try_command 2 "PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda install coverage reportlab mako numpy scipy scikit-learn h5py hdf5 scikit-image requests pyyaml matplotlib sympy pip lxml pyflakes pandas conda-build mock yaml pyqt qt swig anaconda-client setuptools vtk --yes"
+    try_command 2 "PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda install -c plotly plotly-orca --yes"
+    try_command 2 "PATH=$PACKAGES_DIR/$PACKAGE/bin:$PATH conda install -c conda-forge gnuplot --yes"
     # Perform cleanup
     rm -f "$PACKAGES_DIR/$PACKAGE/.condarc"
     rm -rf "$PACKAGES_DIR/$PACKAGE/.cph_tmp*"
