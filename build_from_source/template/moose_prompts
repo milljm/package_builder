@@ -1,0 +1,65 @@
+#!/bin/bash
+#############
+## Specifics
+##
+DEP=(moose_profile)
+PACKAGE='moose_prompts'
+SERIAL=True
+
+#####
+# Set the operating system allowed to build this module
+#
+ARCH=(Darwin Linux)
+
+#####
+# Setting any of these variables to 'false' effectively skips that step
+# This is useful for items like 'autojump' which requires a git clone/checkout
+DOWNLOAD='false'
+EXTRACT='false'
+CONFIGURE="false"
+BUILD='false'
+INSTALL='false'
+
+pre_run() {
+    return
+}
+post_run() {
+    # Supported prompts (sh bash zsh). More to follow as we learn about them.
+    supported_shells=(sh bash zsh)
+    for _shell in ${supported_shells[@]}; do
+        if [ ${_shell} = 'sh' ] || [ ${_shell} = 'bash' ]; then
+            cat <<EOF > "<PACKAGES_DIR>/environments/prompt_${_shell}"
+PS1="\[\033[1;34m\][\u]\[\033[1;32m\][\w]\[\033[0m\]> "
+EOF
+        elif [ ${_shell} = 'zsh' ]; then
+            cat <<EOF > "<PACKAGES_DIR>/environments/prompt_${_shell}"
+PROMPT="[%F{green}%m%f][%F{blue}%3~%f] > "
+EOF
+        fi
+    done
+}
+##
+## End Specifics
+##############
+## The following script contains all the common functions.
+## Those functions are executed in the following order:
+
+# download
+# extract
+# pre-run
+# configure
+# make
+# make install
+# post_run
+# cleanup 0|1  (exit return code)
+
+## pre_run and post_run are the only true specifics that are different
+## with every package
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+DOWNLOAD_ONLY=<DOWNLOAD_ONLY>
+source "$RELATIVE_DIR/functions" $@
