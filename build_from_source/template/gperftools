@@ -65,8 +65,10 @@ if { [uname sysname] != "Darwin" } {
   # obtain pkg-config
   module load moose-tools
 }
-
 EOF
+    cd "$PACKAGES_DIR/Modules/<MODULES>/adv_modules"
+    rm -f gperf-tools
+    ln -s ../modulefiles/moose/.<GPERFTOOLS> gperf-tools
 }
 ##
 ## End Specifics

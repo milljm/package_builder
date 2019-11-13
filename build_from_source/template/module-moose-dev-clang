@@ -38,7 +38,7 @@ module load moose/.<MPICH>_<CLANG>
 module load moose/.<PETSC_DEFAULT>_<MPICH>_<CLANG>-opt
 module load moose/.<TBB>
 module load moose/.<GPERFTOOLS>
-module load miniconda moose-tools
+module load miniconda
 
 # If MOOSE_DIR is set, help the user out by prepending the moose/python path
 if { [ info exists ::env(MOOSE_DIR) ] } {
