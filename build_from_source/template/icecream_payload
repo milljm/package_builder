@@ -1,0 +1,100 @@
+#!/bin/bash
+#############
+## Specifics
+##
+DEP=(common_files modules gcc llvm icecream)
+PACKAGE='icecream_payload'
+
+#####
+# Set the operating system allowed to build this module
+#
+ARCH=(Darwin)
+
+#####
+# Setting any of these variables to 'false' effectively skips that step
+# This is useful for items like 'autojump' which requires a git clone/checkout
+DOWNLOAD=(http://mooseframework.inl.gov/source_packages/libtool-2.4.6.tar.gz http://mooseframework.inl.gov/source_packages/lzo-2.09.tar.gz http://mooseframework.inl.gov/source_packages/libcap-ng-0.7.8.tar.gz http://mooseframework.inl.gov/source_packages/icecream-master.tar.gz)
+EXTRACT='false'
+CONFIGURE="false"
+BUILD='false'
+INSTALL='false'
+
+pre_run() {
+    # Dependency packages that need to be built (but not distributed)
+    # So we will install these into the DOWNLOAD_DIR location which gets deleted when completed
+    if [ `uname` != 'Darwin' ]; then
+        ICECREAM_PACKAGES=(libtool-2.4.6.tar.gz lzo-2.09.tar.gz libcap-ng-0.7.8.tar.gz)
+    else
+        ICECREAM_PACKAGES=(libtool-2.4.6.tar.gz lzo-2.09.tar.gz)
+    fi
+
+    unset MODULEPATH
+    source "$PACKAGES_DIR/Modules/init/bash"
+    module load advanced_modules autotools
+
+    for ICECREAM_PACKAGE in ${ICECREAM_PACKAGES[*]}; do
+      target_dir=$(tar -tf "$DOWNLOAD_DIR/$ICECREAM_PACKAGE" | sed -e 's@/.*@@' | uniq)
+      cd "$1"
+      tar -xf "$DOWNLOAD_DIR/$ICECREAM_PACKAGE" -C .
+      if [ $? -ne 0 ]; then echo 'Failed to extract '$ICECREAM_PACKAGE; cleanup 1; fi
+      cd $target_dir
+      if [ $? -ne 0 ]; then echo "Failed to enter source directory $1/$target_dir"; cleanup 1; fi
+      ./configure --prefix="$1/install_deps/$target_dir"
+      if [ $? -ne 0 ]; then echo 'Failed to configure Icecream pacakge: '$ICECREAM_PACKAGE; cleanup 1; fi
+      make -j $MOOSE_JOBS
+      if [ $? -ne 0 ]; then echo 'Failed to build Icecream pacakge: '$ICECREAM_PACKAGE; cleanup 1; fi
+      make install
+      if [ $? -ne 0 ]; then echo 'Failed to install Icecream pacakge: '$ICECREAM_PACKAGE; cleanup 1; fi
+      if [ -d "$1/install_deps/$target_dir/lib64" ] && ! [ -d "$1/install_deps/$target_dir/lib" ]; then
+          ln -s "$1/install_deps/$target_dir/lib64" "$1/install_deps/$target_dir/lib"
+      fi
+    done
+}
+post_run() {
+    cd "$1"
+    tar -xf "$DOWNLOAD_DIR/icecream-master.tar.gz" -C .
+    if [ $? -ne 0 ]; then echo 'Failed to extract icecream-master.tar.gz'; cleanup 1; fi
+    cd $(tar -tf "$DOWNLOAD_DIR/icecream-master.tar.gz" | sed -e 's@/.*@@' | uniq)
+    if [ $? -ne 0 ]; then echo 'Failed to enter source directory '$(tar -tf "$DOWNLOAD_DIR/icecream-master.tar.gz" | sed -e 's@/.*@@' | uniq | cut -d. -f 2); cleanup 1; fi
+    PATH="$1/install_deps/libtool-2.4.6/bin:$PATH" ./autogen.sh
+    if [ `uname` != 'Darwin' ]; then
+        LDFLAGS="-L$1/install_deps/lzo-2.09/lib -llzo2 -L$1/install_deps/libcap-ng-0.7.8/lib -lcap-ng" CPPFLAGS="-I$1/install_deps/libcap-ng-0.7.8/include -I$1/install_deps/lzo-2.09/include" ./configure --prefix="$PACKAGES_DIR/$PACKAGE" --without-man
+    else
+        LDFLAGS="-L$1/install_deps/lzo-2.09/lib -llzo2" CPPFLAGS="-I$1/install_deps/lzo-2.09/include" ./configure --prefix="$PACKAGES_DIR/$PACKAGE" --without-man
+    fi
+    if [ $? -ne 0 ]; then echo 'Failed to configure icecream'; cleanup 1; fi
+    make -j $MOOSE_JOBS
+    if [ $? -ne 0 ]; then echo 'Failed to build icecream'; cleanup 1; fi
+    make install
+    if [ $? -ne 0 ]; then echo 'Failed to install icecream'; cleanup 1; fi
+    if [ `uname` = "Darwin" ]; then
+        PATH="$PACKAGES_DIR/$PACKAGE/bin:$PATH" icecc-create-env --clang "$PACKAGES_DIR/llvm-<LLVM>/bin/clang"
+        if [ $? -ne 0 ]; then echo 'Failed to create LLVM Icecream payload'; cleanup 1; fi
+        mv *.tar.gz "$PACKAGES_DIR/icecream/clang_<LLVM>.tar.gz"
+    fi
+}
+##
+## End Specifics
+##############
+## The following script contains all the common functions.
+## Those functions are executed in the following order:
+
+# download
+# extract
+# pre-run
+# configure
+# make
+# make install
+# post_run
+# cleanup
+
+## pre_run and post_run are the only true specifics that are different
+## with every package
+PACKAGES_DIR="<PACKAGES_DIR>"
+RELATIVE_DIR="<RELATIVE_DIR>"
+DOWNLOAD_DIR="<DOWNLOAD_DIR>"
+TEMP_PREFIX="<TEMP_PREFIX>"
+MOOSE_JOBS=<MOOSE_JOBS>
+KEEP_FAILED=<KEEP_FAILED>
+DOWNLOAD_ONLY=<DOWNLOAD_ONLY>
+source "$RELATIVE_DIR/functions" $@

@@ -62,33 +62,29 @@ pre_run() {
     done
 }
 post_run() {
+
     cd $1
-    git clone https://github.com/icecc/icecream.git
+    git clone https://github.com/milljm/icecream.git
     cd icecream
-    git checkout 1.3
+    git checkout 1.3.x
     PATH="$PACKAGES_DIR/$PACKAGE/contribs/libtool-2.4.6/bin:$PATH" ./autogen.sh
     if [ `uname` = 'Darwin' ]; then
         LDFLAGS="-L$PACKAGES_DIR/$PACKAGE/contribs/lzo-2.09/lib -llzo2 `pkg-config libzstd libarchive --libs`" CPPFLAGS="-I$PACKAGES_DIR/$PACKAGE/contribs/lzo-2.09/include `pkg-config libzstd libarchive --cflags`" CFLAGS="`pkg-config libzstd libarchive --cflags`" ./configure --prefix="$PACKAGES_DIR/$PACKAGE" --without-man
     else
         LD_LIBRARY_PATH="`pkg-config libzstd --variable=prefix`/lib:`pkg-config libarchive --variable=prefix`/lib:$LD_LIBRARY_PATH" LDFLAGS="-L$PACKAGES_DIR/$PACKAGE/contribs/lzo-2.09/lib -llzo2 -L$PACKAGES_DIR/$PACKAGE/contribs/libcap-ng-0.7.8/lib -lcap-ng `pkg-config libzstd libarchive --libs`" CPPFLAGS="-I$PACKAGES_DIR/$PACKAGE/contribs/libcap-ng-0.7.8/include -I$PACKAGES_DIR/$PACKAGE/contribs/lzo-2.09/include `pkg-config libzstd libarchive --cflags`" CFLAGS="`pkg-config libzstd libarchive --cflags`" ./configure --prefix="$PACKAGES_DIR/$PACKAGE" --without-man
     fi
-
     if [ $? -ne 0 ]; then echo 'Failed to configure icecream'; cleanup 1; fi
     make -j $MOOSE_JOBS
     if [ $? -ne 0 ]; then echo 'Failed to build icecream'; cleanup 1; fi
     make install
     if [ $? -ne 0 ]; then echo 'Failed to install icecream'; cleanup 1; fi
-    if [ `uname` = 'Darwin' ]; then
-        PATH="$PACKAGES_DIR/icecream/bin:$PATH" icecc-create-env --clang "$PACKAGES_DIR/llvm-<LLVM>/bin/clang"
-        if [ $? -ne 0 ]; then echo 'Failed to create LLVM Icecream payload'; cleanup 1; fi
-        mv *.tar.gz "$PACKAGES_DIR/$PACKAGE/clang_<LLVM>.tar.gz"
-    else
-        PATH="$PACKAGES_DIR/icecream/bin:$PATH" icecc-create-env --clang "$PACKAGES_DIR/llvm-<LLVM>/bin/clang" "$PACKAGES_DIR/llvm-<LLVM>/bin/clang++"
-        if [ $? -ne 0 ]; then echo 'Failed to create LLVM Icecream payload'; cleanup 1; fi
-        mv *.tar.gz "$PACKAGES_DIR/$PACKAGE/clang_<LLVM>.tar.gz"
-        PATH="$PACKAGES_DIR/icecream/bin:$PATH" icecc-create-env --gcc "$PACKAGES_DIR/<GCC>/bin/gcc" "$PACKAGES_DIR/<GCC>/bin/g++"
-        if [ $? -ne 0 ]; then echo 'Failed to create GCC Icecream payload'; cleanup 1; fi
-        mv *.tar.gz "$PACKAGES_DIR/$PACKAGE/<GCC>.tar.gz"
+    if [ `uname` != "Darwin" ]; then
+       PATH="$PACKAGES_DIR/icecream/bin:$PATH" icecc-create-env --clang "$PACKAGES_DIR/llvm-<LLVM>/bin/clang" "$PACKAGES_DIR/llvm-<LLVM>/bin/clang++"
+       if [ $? -ne 0 ]; then echo 'Failed to create LLVM Icecream payload'; cleanup 1; fi
+       mv *.tar.gz "$PACKAGES_DIR/$PACKAGE/clang_<LLVM>.tar.gz"
+       PATH="$PACKAGES_DIR/icecream/bin:$PATH" icecc-create-env --gcc "$PACKAGES_DIR/<GCC>/bin/gcc" "$PACKAGES_DIR/<GCC>/bin/g++"
+       if [ $? -ne 0 ]; then echo 'Failed to create GCC Icecream payload'; cleanup 1; fi
+       mv *.tar.gz "$PACKAGES_DIR/$PACKAGE/<GCC>.tar.gz"
     fi
     cd "$PACKAGES_DIR/$PACKAGE/libexec/icecc/bin"
     ln -s "$PACKAGES_DIR/$PACKAGE/bin/icecc" clang
