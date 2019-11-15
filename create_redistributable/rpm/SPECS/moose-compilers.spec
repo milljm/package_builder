@@ -40,14 +40,16 @@ AutoReqProv: no
 # Prevent check-buildroot from running. We do not need it.
 %define __arch_install_post /usr/lib/rpm/check-rpaths
 
+# We are copying files, not building. No need for fascist build
+%define _unpackaged_files_terminate_build 0
+
 %description
 This package contains the neccessary libraries/binaries to utilize the MOOSE framework and assocaited applications.
 
 %prep
-%setup -q -n <PACKAGES_BASENAME>
 
 %build
-
+cp -R <PACKAGES_DIR> .
 
 %install
 export QA_SKIP_RPATHS=true

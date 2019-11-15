@@ -158,46 +158,15 @@ Class for building RedHat based packages
     print('rpmbuild not found! Unable to build rpm packages.')
     return False
 
-  def _get_requirements(self):
-    # RPM based distros have different package names for 'fortran'
-    # and libX11-devel, so try and discover exactly which package
-    # that actually is
-    requirements = []
-    our_requirements = ['gcc-*fortran', 'lib*11-devel']
-    for index, item in enumerate(our_requirements):
-      rpm_process = subprocess.Popen(['rpm', '-qa', item], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
-      rpm_results = rpm_process.communicate()[0]
-      if rpm_results:
-        our_requirements[index] = '-'.join(rpm_results.split('-')[:2])
-        requirements.append(our_requirements[index])
-    if len(requirements) == len(our_requirements):
-      return requirements
-    else:
-      print('\nERROR: While building the list of dependencies the final redistributable will\n',
-            'require your users to install, I could not determine the correct package names\n',
-            'to add. The following is that list:\n\n\t',
-            ' '.join(set(our_requirements) - set(requirements)),
-            '\n\nThe unfortunate reason this happens, is due to the different ways each OS\n',
-            'using RPM as its package management system can name things differently, and\n',
-            'I am simply searching for the wrong package.\n\n',
-            'The easy fix, is to edit this script, find the line: "our_requirements = " and\n',
-            'modify the contents of that list to match the correct package installed using:\n\n\t',
-            'rpm -qa <package name>\n\n',
-            'Or... perhaps you really do not have the above packages installed... In which\n',
-            'case, simply installing that package and re-running this script will suffice.\n\n')
-      return False
-
   def prepare_area(self):
     prereqs = self.check_prereqs()
-    requirements = self._get_requirements()
     create_template = PackageCreator.prepare_area(self)
     REPLACE_STRINGS = {'<VERSION>' : str(self.redistributable_version),
                       '<PACKAGES_DIR>' : self.args.packages_dir,
                       '<PACKAGES_BASENAME>' : os.path.join(*[x for x in os.path.dirname(self.args.packages_dir).split(os.sep)]),
-                      '<PACKAGES_PARENT>' : os.path.basename(self.args.packages_dir),
-                      '<REQUIREMENTS>' : ' '.join(requirements)}
+                      '<PACKAGES_PARENT>' : os.path.basename(self.args.packages_dir)}
 
-    if create_template and requirements and prereqs:
+    if create_template and prereqs:
       for directory in ['BUILD', 'BUILDROOT', 'RPMS', 'SRPMS', 'SOURCES']:
         os.makedirs(os.path.join(self.temp_dir, 'rpm', directory))
       for directory, directories, files in os.walk(os.path.join(self.temp_dir, 'rpm')):
@@ -218,12 +187,7 @@ Class for building RedHat based packages
       return True
 
   def create_tarball(self):
-    tarball_results = PackageCreator.create_tarball(self)
-    if tarball_results:
-      # move tarball into position inside the SOURCES directory
-      shutil.move(os.path.join(self.temp_dir, 'rpm/payload.tar.gz'), os.path.join(self.temp_dir, 'rpm/SOURCES', self.base_name + '.tar.gz' ))
-      return True
-    return False
+    return True
 
   def create_redistributable(self):
     print('Building redistributable using rpmbuild... This can take a long time')
