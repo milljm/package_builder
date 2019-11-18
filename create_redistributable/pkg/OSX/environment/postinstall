@@ -60,6 +60,9 @@ function detectAndCreateProfile()
 # Uncomment to enable autojump:
 # export MOOSE_JUMP=true
 
+# Uncomment to enable pretty prompt:
+# export MOOSE_PROMPT=true
+
 # Source MOOSE profile
 if [ -f <PACKAGES_DIR>/environments/moose_profile ]; then
         . <PACKAGES_DIR>/environments/moose_profile

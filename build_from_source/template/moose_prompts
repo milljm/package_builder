@@ -2,8 +2,9 @@
 #############
 ## Specifics
 ##
-DEP=(modules)
-PACKAGE="<GNUPLOT>"
+DEP=(moose_profile)
+PACKAGE='moose_prompts'
+SERIAL=True
 
 #####
 # Set the operating system allowed to build this module
@@ -13,29 +14,29 @@ ARCH=(Darwin Linux)
 #####
 # Setting any of these variables to 'false' effectively skips that step
 # This is useful for items like 'autojump' which requires a git clone/checkout
-DOWNLOAD='http://mooseframework.inl.gov/source_packages/<GNUPLOT>.tar.gz'
-EXTRACT='<GNUPLOT>.tar.gz'
-CONFIGURE="true"
-BUILD='true'
-INSTALL='true'
+DOWNLOAD='false'
+EXTRACT='false'
+CONFIGURE="false"
+BUILD='false'
+INSTALL='false'
 
 pre_run() {
     return
 }
 post_run() {
-    # Remove previous module section
-    if [ `uname` = 'Darwin' ]; then
-        sed -i '' -e '/#GNUPLOT/,/#ENDGNUPLOT/d' "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
-    else
-        sed -i'' -e '/#GNUPLOT/,/#ENDGNUPLOT/d' "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
-    fi
-    # Append new paths to moose-tools module
-    cat <<EOF >> "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"
-#GNUPLOT
-prepend-path    PATH            "\$BASE_PATH/<GNUPLOT>/bin"
-prepend-path    MANPATH         "\$BASE_PATH/<GNUPLOT>/share/man"
-#ENDGNUPLOT
+    # Supported prompts (sh bash zsh). More to follow as we learn about them.
+    supported_shells=(sh bash zsh)
+    for _shell in ${supported_shells[@]}; do
+        if [ ${_shell} = 'sh' ] || [ ${_shell} = 'bash' ]; then
+            cat <<EOF > "<PACKAGES_DIR>/environments/prompt_${_shell}"
+PS1="\[\033[1;34m\][\u]\[\033[1;32m\][\w]\[\033[0m\]> "
 EOF
+        elif [ ${_shell} = 'zsh' ]; then
+            cat <<EOF > "<PACKAGES_DIR>/environments/prompt_${_shell}"
+PROMPT="[%F{green}%m%f][%F{blue}%3~%f] > "
+EOF
+        fi
+    done
 }
 ##
 ## End Specifics
@@ -50,7 +51,7 @@ EOF
 # make
 # make install
 # post_run
-# cleanup
+# cleanup 0|1  (exit return code)
 
 ## pre_run and post_run are the only true specifics that are different
 ## with every package

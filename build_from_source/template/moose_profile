@@ -36,17 +36,15 @@ export MODULES_VERBOSITY=concise
 if [ -n "\$MODULESHOME" ] && [ \$(echo \$MODULEPATH | grep -c <PACKAGES_DIR>/Modules) -le 0 ]; then
   export MODULEPATH="\$MODULEPATH:<PACKAGES_DIR>/Modules/<MODULES>/modulefiles"
 else
-  MY_SHELL=\`ps -o comm= \$\$ | sed -e 's/-//'\`
+  export MY_SHELL=\`ps -o comm= \$\$ | sed -e 's/-//'\`
   if [ -f <PACKAGES_DIR>/Modules/init/\${MY_SHELL} ]; then
-    if [ "\${MY_SHELL}" = "sh" ]; then
-      . <PACKAGES_DIR>/Modules/init/sh
-    else
-      source <PACKAGES_DIR>/Modules/init/\${MY_SHELL}
-    fi
     if [ "\${MY_SHELL}" = "bash" ]; then
+      source <PACKAGES_DIR>/Modules/init/bash
       source <PACKAGES_DIR>/Modules/init/bash_completion
       # Load custom MOOSE command bash autocomplete rules
       source "<PACKAGES_DIR>/environments/autocomplete_moose"
+    else
+      source <PACKAGES_DIR>/Modules/init/\${MY_SHELL}
     fi
   else
     printf "Your current shell is not supported by Modules.\nYou will not be able to load any modules.\n"
@@ -77,6 +75,11 @@ if [ \`uname -s\` = 'Darwin' ]; then
   fi
 else
   export MOOSE_JOBS=\`cat /proc/cpuinfo | grep processor | wc -l\`
+fi
+
+# Set MOOSE_PROMPT if desired
+if [ -n "\$MOOSE_PROMPT" ] && [ -f "<PACKAGES_DIR>/environments/prompt_\${MY_SHELL}" ]; then
+  source "<PACKAGES_DIR>/environments/prompt_\${MY_SHELL}"
 fi
 EOF
 }

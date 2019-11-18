@@ -51,6 +51,10 @@ pre_run() {
     if [ $? -ne 0 ]; then echo "Failure while building seacas-tools"; cleanup 1; fi
     make install
     if [ $? -ne 0 ]; then echo "Failure while installing seacas-tools"; cleanup 1; fi
+    # Remove the pesky build directory that is chmod -go for some reason
+    rm -rf "$PACKAGES_DIR/$PACKAGE/TPL/netcdf/netcdf-c/build"
+    # More clean up
+    rm -rf "$PACKAGES_DIR/$PACKAGE/build"
 }
 post_run() {
     cat <<EOF >> "$PACKAGES_DIR/Modules/<MODULES>/modulefiles/moose-tools"

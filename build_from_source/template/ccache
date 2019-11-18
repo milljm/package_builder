@@ -34,11 +34,21 @@ set              BASE_PATH        "$PACKAGES_DIR"
 
 prepend-path     PATH               "\$BASE_PATH/<CCACHE>/bin"
 prepend-path     MANPATH            "\$BASE_PATH/<CCACHE>/share/man"
+setenv           CCACHE_SLOPPINESS  "time_macros"
 
-setenv           CC                 "ccache mpicc"
-setenv           CXX                "ccache mpicxx"
+if { [ info exists ::env(CC) ] } {
+  set _CC [getenv CC]
+  setenv CC "ccache \$_CC"
+} else {
+  setenv CC "ccache"
+}
 
-setenv           CCACHE_SLOPPINESS  "time_macros" 
+if { [ info exists ::env(CXX) ] } {
+  set _CXX [getenv CXX]
+  setenv CXX "ccache \$_CXX"
+} else {
+  setenv CXX "ccache"
+}
 EOF
 }
 ##
